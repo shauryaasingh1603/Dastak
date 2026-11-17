@@ -13,6 +13,7 @@ import 'package:dastak/src/auth/models.dart';
 import 'package:dastak/src/data/field_repository.dart';
 import 'package:dastak/src/l10n.dart';
 import 'package:dastak/src/theme.dart';
+import 'package:dastak/src/ui/booth_list_screen.dart';
 import 'package:dastak/src/ui/home_screen.dart';
 import 'package:dastak/src/ui/login_screen.dart';
 import 'package:dastak/src/ui/waiting_screen.dart';
@@ -40,51 +41,63 @@ class _SampleRepository extends FieldRepository {
         ),
       );
 
+  static const booths = [
+    BoothSummary(
+      partNo: 22,
+      stationHi: 'प्राथमिक विद्यालय जफ़राबाद, कक्ष सं. 1',
+      familyCount: 47,
+    ),
+    BoothSummary(partNo: 23, stationHi: 'पंचायत भवन नाथूपुर', familyCount: 40),
+    BoothSummary(
+      partNo: 39,
+      stationHi: 'कन्या पूर्व माध्यमिक विद्यालय, उत्तरी भाग',
+      familyCount: 52,
+    ),
+    BoothSummary(partNo: 45, stationHi: null, familyCount: 0),
+  ];
+
   @override
-  Future<HomeData> loadHome() async => const HomeData(
-    booths: [
-      BoothSummary(
-        partNo: 45,
-        nameHi: 'प्राथमिक विद्यालय जफ़राबाद',
-        familyCount: 47,
-      ),
-      BoothSummary(partNo: 46, nameHi: 'पंचायत भवन नाथूपुर', familyCount: 40),
-    ],
-    families: [
-      FamilyRow(
-        id: '1',
-        code: '371-045-F0001',
-        partNo: 45,
-        houseNo: '12',
-        headNameHi: 'रामलाल यादव',
-        priority: 1,
-      ),
-      FamilyRow(
-        id: '2',
-        code: '371-045-F0002',
-        partNo: 45,
-        houseNo: '13क',
-        headNameHi: 'श्रीमती सावित्री मिश्रा',
-        priority: 2,
-      ),
-      FamilyRow(
-        id: '3',
-        code: '371-045-F0003',
-        partNo: 45,
-        houseNo: '15',
-        headNameHi: 'मोहम्मद इमरान सिद्दीक़ी',
-        priority: 3,
-      ),
-      FamilyRow(
-        id: '4',
-        code: '371-045-F0004',
-        partNo: 45,
-        houseNo: '21',
-        headNameHi: 'क्षत्रपाल त्रिपाठी',
-        priority: 1,
-      ),
-    ],
-  );
+  Future<List<BoothSummary>> loadBooths(String userId) async => booths;
+
+  @override
+  Future<List<FamilyRow>> loadBoothFamilies(int partNo) async => [
+    FamilyRow(
+      id: '1',
+      code: '371-0$partNo-F0001',
+      partNo: partNo,
+      sectionNo: 1,
+      houseNo: '12',
+      headNameHi: 'रामलाल यादव',
+      priority: 1,
+    ),
+    FamilyRow(
+      id: '2',
+      code: '371-0$partNo-F0002',
+      partNo: partNo,
+      sectionNo: 1,
+      houseNo: '13क',
+      headNameHi: 'श्रीमती सावित्री मिश्रा',
+      priority: 2,
+    ),
+    FamilyRow(
+      id: '3',
+      code: '371-0$partNo-F0003',
+      partNo: partNo,
+      sectionNo: 2,
+      houseNo: '4',
+      headNameHi: 'मोहम्मद इमरान सिद्दीक़ी',
+      priority: 3,
+    ),
+    FamilyRow(
+      id: '4',
+      code: '371-0$partNo-F0004',
+      partNo: partNo,
+      sectionNo: 2,
+      houseNo: '21',
+      headNameHi: 'क्षत्रपाल त्रिपाठी',
+      priority: 1,
+    ),
+  ];
 }
 
 Future<void> _loadFont(String family, List<String> paths) async {
@@ -191,6 +204,18 @@ void main() {
       tester,
       'home',
       HomeScreen(auth: auth, profile: profile, repository: _SampleRepository()),
+    ),
+  );
+  testWidgets(
+    'booth list',
+    (tester) => shoot(
+      tester,
+      'booth_list',
+      BoothListScreen(
+        booths: _SampleRepository.booths,
+        repository: _SampleRepository(),
+        initialIndex: 1,
+      ),
     ),
   );
 }

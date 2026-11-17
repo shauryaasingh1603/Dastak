@@ -4,8 +4,13 @@ import '../../l10n/app_localizations.dart';
 import '../auth/auth_controller.dart';
 import '../auth/models.dart';
 import '../data/field_repository.dart';
+import 'booth_list_screen.dart';
 import 'messages.dart';
+import 'widgets.dart';
 
+/// Today's summary: who is signed in and which booths they work in. Each
+/// booth opens its own family list, so a volunteer with several booths never
+/// sees them all mixed together.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
@@ -23,7 +28,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  HomeData? _data;
+  List<BoothSummary>? _booths;
   bool _loading = true;
   bool _failed = false;
 
@@ -36,10 +41,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final data = await widget.repository.loadHome();
+      final booths = await widget.repository.loadBooths(widget.profile.id);
       if (!mounted) return;
       setState(() {
-        _data = data;
+        _booths = booths;
         _failed = false;
         _loading = false;
       });
@@ -52,6 +57,20 @@ class _HomeScreenState extends State<HomeScreen> {
       // The failure may mean this phone lost access rather than the network.
       widget.auth.verifyAccess();
     }
+  }
+
+  void _openBooth(int index) {
+    final booths = _booths;
+    if (booths == null) return;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BoothListScreen(
+          booths: booths,
+          initialIndex: index,
+          repository: widget.repository,
+        ),
+      ),
+    );
   }
 
   Future<void> _confirmLogout() async {
@@ -79,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final data = _data;
+    final booths = _booths;
 
     return Scaffold(
       appBar: AppBar(
@@ -94,95 +113,60 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: _load,
-        child: CustomScrollView(
+        child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              sliver: SliverList.list(
-                children: [
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.homeGreeting(widget.profile.name),
-                            style: theme.textTheme.titleLarge,
-                          ),
-                          Text(
-                            '${roleText(l10n, widget.profile.role)} · ${widget.profile.mobile}',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.homeGreeting(widget.profile.name),
+                      style: theme.textTheme.titleLarge,
                     ),
-                  ),
-                  if (_failed) ...[
-                    const SizedBox(height: 12),
-                    _Banner(
-                      icon: Icons.wifi_off,
-                      text: data == null ? l10n.errNetwork : l10n.homeOffline,
-                      action: TextButton(
-                        onPressed: _load,
-                        child: Text(l10n.retry),
+                    Text(
+                      '${roleText(l10n, widget.profile.role)} · ${widget.profile.mobile}',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
-                  const SizedBox(height: 20),
-                  Text(l10n.homeBooths, style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 8),
-                  if (data == null && _loading)
-                    const Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  else if (data != null && data.booths.isEmpty)
-                    _Banner(icon: Icons.info_outline, text: l10n.homeNoBooths)
-                  else if (data != null)
-                    Card(
-                      child: Column(
-                        children: [
-                          for (final (index, booth) in data.booths.indexed) ...[
-                            if (index > 0) const Divider(height: 1),
-                            ListTile(
-                              title: Text(
-                                l10n.homeBoothLine(booth.partNo, booth.nameHi),
-                              ),
-                              trailing: Text(
-                                l10n.homeFamilyCount(booth.familyCount),
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  if (data != null && data.booths.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-                    Text(l10n.listTitle, style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    if (data.families.isEmpty)
-                      _Banner(icon: Icons.info_outline, text: l10n.listEmpty),
-                  ],
-                ],
-              ),
-            ),
-            if (data != null)
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                sliver: SliverList.separated(
-                  itemCount: data.families.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) =>
-                      _FamilyTile(family: data.families[index]),
                 ),
               ),
+            ),
+            if (_failed) ...[
+              const SizedBox(height: 12),
+              InfoBanner(
+                icon: Icons.wifi_off,
+                text: booths == null ? l10n.errNetwork : l10n.homeOffline,
+                action: TextButton(onPressed: _load, child: Text(l10n.retry)),
+              ),
+            ],
+            const SizedBox(height: 20),
+            Text(l10n.homeBooths, style: theme.textTheme.titleMedium),
+            if (booths != null && booths.length > 1)
+              Text(
+                l10n.homeBoothsHint,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            const SizedBox(height: 8),
+            if (booths == null && _loading)
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (booths != null && booths.isEmpty)
+              InfoBanner(icon: Icons.info_outline, text: l10n.homeNoBooths)
+            else if (booths != null)
+              for (final (index, booth) in booths.indexed) ...[
+                if (index > 0) const SizedBox(height: 8),
+                _BoothCard(booth: booth, onTap: () => _openBooth(index)),
+              ],
           ],
         ),
       ),
@@ -190,102 +174,72 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _FamilyTile extends StatelessWidget {
-  const _FamilyTile({required this.family});
+class _BoothCard extends StatelessWidget {
+  const _BoothCard({required this.booth, required this.onTap});
 
-  final FamilyRow family;
+  final BoothSummary booth;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    family.headNameHi ?? family.code,
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  Text(
-                    family.houseNo != null && family.houseNo!.isNotEmpty
-                        ? l10n.houseNo(family.houseNo!)
-                        : family.code,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (family.isHighPriority)
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+          child: Row(
+            children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
+                width: 56,
+                height: 56,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.errorContainer,
-                  borderRadius: BorderRadius.circular(20),
+                  color: scheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                child: Text(
+                  '${booth.partNo}',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: scheme.onPrimaryContainer,
+                    height: 1.1,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.priority_high,
-                      size: 16,
-                      color: theme.colorScheme.onErrorContainer,
-                    ),
                     Text(
-                      l10n.priorityHigh,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onErrorContainer,
+                      l10n.boothNumber(booth.partNo),
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    if (booth.stationHi != null)
+                      Text(
+                        booth.stationHi!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    Text(
+                      l10n.homeFamilyCount(booth.familyCount),
+                      style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
                 ),
               ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Banner extends StatelessWidget {
-  const _Banner({required this.icon, required this.text, this.action});
-
-  final IconData icon;
-  final String text;
-  final Widget? action;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
-      decoration: BoxDecoration(
-        color: scheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: scheme.onSecondaryContainer),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(color: scheme.onSecondaryContainer),
-            ),
+              Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+            ],
           ),
-          ?action,
-        ],
+        ),
       ),
     );
   }

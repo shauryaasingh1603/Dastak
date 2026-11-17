@@ -244,12 +244,6 @@ abstract class AppLocalizations {
   /// **'आपके बूथ'**
   String get homeBooths;
 
-  /// No description provided for @homeBoothLine.
-  ///
-  /// In hi, this message translates to:
-  /// **'बूथ {partNo} · {name}'**
-  String homeBoothLine(int partNo, String name);
-
   /// No description provided for @homeNoBooths.
   ///
   /// In hi, this message translates to:
@@ -262,6 +256,54 @@ abstract class AppLocalizations {
   /// **'{count} परिवार'**
   String homeFamilyCount(int count);
 
+  /// No description provided for @homeBoothsHint.
+  ///
+  /// In hi, this message translates to:
+  /// **'बूथ पर टैप करें – उस बूथ के परिवार खुलेंगे'**
+  String get homeBoothsHint;
+
+  /// No description provided for @boothNumber.
+  ///
+  /// In hi, this message translates to:
+  /// **'बूथ {partNo}'**
+  String boothNumber(int partNo);
+
+  /// No description provided for @sectionHeader.
+  ///
+  /// In hi, this message translates to:
+  /// **'अनुभाग {sectionNo}'**
+  String sectionHeader(int sectionNo);
+
+  /// No description provided for @sectionUnknown.
+  ///
+  /// In hi, this message translates to:
+  /// **'अनुभाग दर्ज नहीं'**
+  String get sectionUnknown;
+
+  /// No description provided for @listSearchHint.
+  ///
+  /// In hi, this message translates to:
+  /// **'नाम या मकान नं. खोजें'**
+  String get listSearchHint;
+
+  /// No description provided for @listEmpty.
+  ///
+  /// In hi, this message translates to:
+  /// **'इस बूथ में कोई परिवार नहीं है'**
+  String get listEmpty;
+
+  /// No description provided for @listNoMatch.
+  ///
+  /// In hi, this message translates to:
+  /// **'खोज से कोई परिवार नहीं मिला'**
+  String get listNoMatch;
+
+  /// No description provided for @listShowing.
+  ///
+  /// In hi, this message translates to:
+  /// **'{shown} / {total} परिवार'**
+  String listShowing(int shown, int total);
+
   /// No description provided for @homeOffline.
   ///
   /// In hi, this message translates to:
@@ -273,12 +315,6 @@ abstract class AppLocalizations {
   /// In hi, this message translates to:
   /// **'मेरी सूची'**
   String get listTitle;
-
-  /// No description provided for @listEmpty.
-  ///
-  /// In hi, this message translates to:
-  /// **'इस सूची में कोई परिवार नहीं है'**
-  String get listEmpty;
 
   /// No description provided for @houseNo.
   ///

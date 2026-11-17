@@ -71,14 +71,17 @@ void main() {
       expect(profile.mobile, mobile);
       stdout.writeln('signed in as ${profile.name} (${profile.role})');
 
-      final home = await FieldRepository(client).loadHome();
+      final repository = FieldRepository(client);
+      final booths = await repository.loadBooths(profile.id);
       stdout.writeln(
-        'booths: ${home.booths.map((b) => '${b.partNo}=${b.familyCount}').join(', ')}; '
-        'families: ${home.families.length}',
+        'booths: ${booths.map((b) => '${b.partNo}=${b.familyCount}').join(', ')}',
       );
-      expect(home.booths, isNotEmpty);
-      final myParts = home.booths.map((b) => b.partNo).toSet();
-      expect(home.families.every((f) => myParts.contains(f.partNo)), isTrue);
+      expect(booths, isNotEmpty);
+      for (final booth in booths) {
+        final families = await repository.loadBoothFamilies(booth.partNo);
+        expect(families.length, booth.familyCount);
+        expect(families.every((f) => f.partNo == booth.partNo), isTrue);
+      }
 
       await auth.verifyAccess();
       expect(auth.state, isA<AuthSignedIn>());
@@ -92,8 +95,8 @@ void main() {
       expect((auth.state as AuthSignedOut).reason, LoginError.revoked);
       expect(
         await FieldRepository(client)
-            .loadHome()
-            .then((h) => h.families.length, onError: (_) => 0),
+            .loadBooths(profile.id)
+            .then((b) => b.length, onError: (_) => 0),
         0,
       );
     },

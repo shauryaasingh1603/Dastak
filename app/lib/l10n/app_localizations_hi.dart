@@ -92,11 +92,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get homeBooths => 'आपके बूथ';
 
   @override
-  String homeBoothLine(int partNo, String name) {
-    return 'बूथ $partNo · $name';
-  }
-
-  @override
   String get homeNoBooths =>
       'अभी कोई बूथ नहीं सौंपा गया है। कार्यालय से संपर्क करें।';
 
@@ -106,13 +101,40 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get homeBoothsHint => 'बूथ पर टैप करें – उस बूथ के परिवार खुलेंगे';
+
+  @override
+  String boothNumber(int partNo) {
+    return 'बूथ $partNo';
+  }
+
+  @override
+  String sectionHeader(int sectionNo) {
+    return 'अनुभाग $sectionNo';
+  }
+
+  @override
+  String get sectionUnknown => 'अनुभाग दर्ज नहीं';
+
+  @override
+  String get listSearchHint => 'नाम या मकान नं. खोजें';
+
+  @override
+  String get listEmpty => 'इस बूथ में कोई परिवार नहीं है';
+
+  @override
+  String get listNoMatch => 'खोज से कोई परिवार नहीं मिला';
+
+  @override
+  String listShowing(int shown, int total) {
+    return '$shown / $total परिवार';
+  }
+
+  @override
   String get homeOffline => 'नेट नहीं है – पिछली जानकारी दिख रही है';
 
   @override
   String get listTitle => 'मेरी सूची';
-
-  @override
-  String get listEmpty => 'इस सूची में कोई परिवार नहीं है';
 
   @override
   String houseNo(String no) {
