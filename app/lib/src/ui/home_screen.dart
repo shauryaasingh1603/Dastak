@@ -7,7 +7,12 @@ import '../data/field_repository.dart';
 import 'messages.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.auth, required this.profile, required this.repository});
+  const HomeScreen({
+    super.key,
+    required this.auth,
+    required this.profile,
+    required this.repository,
+  });
 
   final AuthController auth;
   final Profile profile;
@@ -56,8 +61,14 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => AlertDialog(
         content: Text(l10n.logoutConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.no)),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.yes)),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.no),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.yes),
+          ),
         ],
       ),
     );
@@ -74,7 +85,11 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text(l10n.homeTitle),
         actions: [
-          IconButton(onPressed: _confirmLogout, tooltip: l10n.logout, icon: const Icon(Icons.logout)),
+          IconButton(
+            onPressed: _confirmLogout,
+            tooltip: l10n.logout,
+            icon: const Icon(Icons.logout),
+          ),
         ],
       ),
       body: RefreshIndicator(
@@ -92,10 +107,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(l10n.homeGreeting(widget.profile.name), style: theme.textTheme.titleLarge),
+                          Text(
+                            l10n.homeGreeting(widget.profile.name),
+                            style: theme.textTheme.titleLarge,
+                          ),
                           Text(
                             '${roleText(l10n, widget.profile.role)} · ${widget.profile.mobile}',
-                            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
@@ -106,7 +126,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     _Banner(
                       icon: Icons.wifi_off,
                       text: data == null ? l10n.errNetwork : l10n.homeOffline,
-                      action: TextButton(onPressed: _load, child: Text(l10n.retry)),
+                      action: TextButton(
+                        onPressed: _load,
+                        child: Text(l10n.retry),
+                      ),
                     ),
                   ],
                   const SizedBox(height: 20),
@@ -126,10 +149,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           for (final (index, booth) in data.booths.indexed) ...[
                             if (index > 0) const Divider(height: 1),
                             ListTile(
-                              title: Text(l10n.homeBoothLine(booth.partNo, booth.nameHi)),
+                              title: Text(
+                                l10n.homeBoothLine(booth.partNo, booth.nameHi),
+                              ),
                               trailing: Text(
                                 l10n.homeFamilyCount(booth.familyCount),
-                                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           ],
@@ -140,7 +167,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 20),
                     Text(l10n.listTitle, style: theme.textTheme.titleMedium),
                     const SizedBox(height: 8),
-                    if (data.families.isEmpty) _Banner(icon: Icons.info_outline, text: l10n.listEmpty),
+                    if (data.families.isEmpty)
+                      _Banner(icon: Icons.info_outline, text: l10n.listEmpty),
                   ],
                 ],
               ),
@@ -151,7 +179,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 sliver: SliverList.separated(
                   itemCount: data.families.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) => _FamilyTile(family: data.families[index]),
+                  itemBuilder: (context, index) =>
+                      _FamilyTile(family: data.families[index]),
                 ),
               ),
           ],
@@ -179,20 +208,27 @@ class _FamilyTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(family.headNameHi ?? family.code, style: theme.textTheme.titleMedium),
                   Text(
-                    [
-                      if (family.houseNo != null && family.houseNo!.isNotEmpty) l10n.houseNo(family.houseNo!),
-                      family.code,
-                    ].join(' · '),
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    family.headNameHi ?? family.code,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  Text(
+                    family.houseNo != null && family.houseNo!.isNotEmpty
+                        ? l10n.houseNo(family.houseNo!)
+                        : family.code,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
             ),
             if (family.isHighPriority)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.errorContainer,
                   borderRadius: BorderRadius.circular(20),
@@ -200,7 +236,11 @@ class _FamilyTile extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.priority_high, size: 16, color: theme.colorScheme.onErrorContainer),
+                    Icon(
+                      Icons.priority_high,
+                      size: 16,
+                      color: theme.colorScheme.onErrorContainer,
+                    ),
                     Text(
                       l10n.priorityHigh,
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -230,12 +270,20 @@ class _Banner extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
-      decoration: BoxDecoration(color: scheme.secondaryContainer, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: scheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         children: [
           Icon(icon, color: scheme.onSecondaryContainer),
           const SizedBox(width: 10),
-          Expanded(child: Text(text, style: TextStyle(color: scheme.onSecondaryContainer))),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(color: scheme.onSecondaryContainer),
+            ),
+          ),
           ?action,
         ],
       ),

@@ -67,6 +67,19 @@ App unit tests:
 cd app && flutter test
 ```
 
+Render the main screens to images (written to `app/test_live/previews/`), to
+check the Hindi layout without a phone:
+
+```bash
+cd app && flutter test --update-goldens test_live/screens_preview_test.dart
+```
+
+Release APKs for testing (signed with the debug key until an upload key exists):
+
+```bash
+cd app && flutter build apk --release --split-per-abi --target-platform android-arm,android-arm64
+```
+
 Sign-in end to end against the real backend (needs a registered test volunteer
 and an admin access token):
 

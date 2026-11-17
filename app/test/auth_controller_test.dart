@@ -6,8 +6,16 @@ import 'package:dastak/src/auth/key_value_store.dart';
 import 'package:dastak/src/auth/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-const _profile = Profile(id: 'u1', name: 'रामलाल', role: 'volunteer', mobile: '9000000001');
-const _approved = LoginApproved(SessionTokens(accessToken: 'a', refreshToken: 'r'), _profile);
+const _profile = Profile(
+  id: 'u1',
+  name: 'रामलाल',
+  role: 'volunteer',
+  mobile: '9000000001',
+);
+const _approved = LoginApproved(
+  SessionTokens(accessToken: 'a', refreshToken: 'r'),
+  _profile,
+);
 
 /// Scriptable stand-in for the server.
 class FakeBackend implements AuthBackend {
@@ -48,8 +56,12 @@ class FakeBackend implements AuthBackend {
   }
 
   @override
-  Future<LoginStatus> checkStatus({required String requestId, required String deviceSecret}) async {
-    final answer = statuses[checks < statuses.length ? checks : statuses.length - 1];
+  Future<LoginStatus> checkStatus({
+    required String requestId,
+    required String deviceSecret,
+  }) async {
+    final answer =
+        statuses[checks < statuses.length ? checks : statuses.length - 1];
     checks++;
     if (answer is LoginException) throw answer;
     return answer as LoginStatus;
@@ -83,13 +95,13 @@ void main() {
   var wipes = 0;
 
   AuthController build() => AuthController(
-        backend: backend,
-        store: store,
-        deviceModel: 'Test Phone',
-        // Long enough that tests drive polling by hand.
-        pollInterval: const Duration(hours: 1),
-        onAccessLost: () async => wipes++,
-      );
+    backend: backend,
+    store: store,
+    deviceModel: 'Test Phone',
+    // Long enough that tests drive polling by hand.
+    pollInterval: const Duration(hours: 1),
+    onAccessLost: () async => wipes++,
+  );
 
   setUp(() {
     backend = FakeBackend();
@@ -136,28 +148,31 @@ void main() {
     expect(store.values.containsKey('pending_login'), isFalse);
   });
 
-  test('a registered number waits with the code, then signs in on approval', () async {
-    await auth.start();
-    expect(await auth.submitMobile('+91 90000 00001'), isNull);
+  test(
+    'a registered number waits with the code, then signs in on approval',
+    () async {
+      await auth.start();
+      expect(await auth.submitMobile('+91 90000 00001'), isNull);
 
-    final waiting = auth.state as AuthWaiting;
-    expect(waiting.pending.matchCode, '4821');
-    expect(backend.lastMobile, '9000000001');
-    expect(backend.lastSecret!.length, 64);
+      final waiting = auth.state as AuthWaiting;
+      expect(waiting.pending.matchCode, '4821');
+      expect(backend.lastMobile, '9000000001');
+      expect(backend.lastSecret!.length, 64);
 
-    await auth.pollOnce();
-    expect(auth.state, isA<AuthWaiting>(), reason: 'still pending');
+      await auth.pollOnce();
+      expect(auth.state, isA<AuthWaiting>(), reason: 'still pending');
 
-    backend.statuses = [_approved];
-    backend.checks = 0;
-    await auth.pollOnce();
+      backend.statuses = [_approved];
+      backend.checks = 0;
+      await auth.pollOnce();
 
-    expect((auth.state as AuthSignedIn).profile.name, 'रामलाल');
-    expect(backend.hasSession, isTrue);
-    expect(store.values.containsKey('pending_login'), isFalse);
-    expect(store.values.containsKey('approved_login'), isFalse);
-    expect(store.values.containsKey('profile'), isTrue);
-  });
+      expect((auth.state as AuthSignedIn).profile.name, 'रामलाल');
+      expect(backend.hasSession, isTrue);
+      expect(store.values.containsKey('pending_login'), isFalse);
+      expect(store.values.containsKey('approved_login'), isFalse);
+      expect(store.values.containsKey('profile'), isTrue);
+    },
+  );
 
   test('each request uses a new secret but the same device id', () async {
     await auth.start();
@@ -182,7 +197,11 @@ void main() {
   test('losing the network while waiting keeps waiting and recovers', () async {
     await auth.start();
     await auth.submitMobile('9000000001');
-    backend.statuses = [const LoginException(LoginError.network), const LoginPending(), _approved];
+    backend.statuses = [
+      const LoginException(LoginError.network),
+      const LoginPending(),
+      _approved,
+    ];
 
     await auth.pollOnce();
     expect((auth.state as AuthWaiting).offline, isTrue);
@@ -192,23 +211,26 @@ void main() {
     expect(auth.state, isA<AuthSignedIn>());
   });
 
-  test('a session issued just as the network drops is kept and used later', () async {
-    await auth.start();
-    await auth.submitMobile('9000000001');
-    backend.statuses = [_approved, const LoginClosed(LoginError.generic)];
-    backend.adoptFailsWithNetwork = true;
+  test(
+    'a session issued just as the network drops is kept and used later',
+    () async {
+      await auth.start();
+      await auth.submitMobile('9000000001');
+      backend.statuses = [_approved, const LoginClosed(LoginError.generic)];
+      backend.adoptFailsWithNetwork = true;
 
-    await auth.pollOnce();
-    expect(auth.state, isA<AuthWaiting>());
-    expect(backend.checks, 1);
+      await auth.pollOnce();
+      expect(auth.state, isA<AuthWaiting>());
+      expect(backend.checks, 1);
 
-    // The server would now say the request is spent; the phone must not ask.
-    backend.adoptFailsWithNetwork = false;
-    await auth.pollOnce();
-    expect(auth.state, isA<AuthSignedIn>());
-    expect(backend.checks, 1);
-    expect(backend.adopts, 2);
-  });
+      // The server would now say the request is spent; the phone must not ask.
+      backend.adoptFailsWithNetwork = false;
+      await auth.pollOnce();
+      expect(auth.state, isA<AuthSignedIn>());
+      expect(backend.checks, 1);
+      expect(backend.adopts, 2);
+    },
+  );
 
   test('the wait survives an app restart', () async {
     await auth.start();
@@ -270,7 +292,12 @@ void main() {
     });
 
     test('a changed name on the server is picked up', () async {
-      backend.profileAnswer = const Profile(id: 'u1', name: 'रामलाल यादव', role: 'bla2', mobile: '9000000001');
+      backend.profileAnswer = const Profile(
+        id: 'u1',
+        name: 'रामलाल यादव',
+        role: 'bla2',
+        mobile: '9000000001',
+      );
       await auth.start();
       await auth.verifyAccess();
       await pumpEventQueue();

@@ -75,21 +75,38 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(l10n.loginTitle, textAlign: TextAlign.center, style: theme.textTheme.titleMedium),
+                  Text(
+                    l10n.loginTitle,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 32),
-                  Text(l10n.loginMobileLabel, style: theme.textTheme.titleMedium),
+                  Text(
+                    l10n.loginMobileLabel,
+                    style: theme.textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _mobile,
                     keyboardType: TextInputType.phone,
                     textInputAction: TextInputAction.done,
-                    autofillHints: const [AutofillHints.telephoneNumberNational],
+                    autofillHints: const [
+                      AutofillHints.telephoneNumberNational,
+                    ],
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(10),
                     ],
-                    style: theme.textTheme.headlineSmall?.copyWith(letterSpacing: 2),
-                    decoration: InputDecoration(hintText: l10n.loginMobileHint, prefixText: '+91  '),
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      letterSpacing: 2,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: l10n.loginMobileHint,
+                      hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      prefixText: '+91  ',
+                    ),
                     onSubmitted: (_) => _submit(),
                   ),
                   if (_error != null) ...[
@@ -100,14 +117,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   FilledButton(
                     onPressed: _busy ? null : _submit,
                     child: _busy
-                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3))
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 3),
+                          )
                         : Text(l10n.loginSubmit),
                   ),
                   const SizedBox(height: 20),
                   Text(
                     l10n.loginHelp,
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -129,13 +152,18 @@ class _ErrorBox extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: scheme.errorContainer, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: scheme.errorContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.error_outline, color: scheme.onErrorContainer),
           const SizedBox(width: 10),
-          Expanded(child: Text(text, style: TextStyle(color: scheme.onErrorContainer))),
+          Expanded(
+            child: Text(text, style: TextStyle(color: scheme.onErrorContainer)),
+          ),
         ],
       ),
     );

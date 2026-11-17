@@ -2,7 +2,12 @@ import 'dart:convert';
 
 /// The signed-in field user.
 class Profile {
-  const Profile({required this.id, required this.name, required this.role, required this.mobile});
+  const Profile({
+    required this.id,
+    required this.name,
+    required this.role,
+    required this.mobile,
+  });
 
   final String id;
   final String name;
@@ -14,16 +19,22 @@ class Profile {
   bool get isBla2 => role == 'bla2';
 
   factory Profile.fromJson(Map<String, dynamic> json) => Profile(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        role: json['role'] as String,
-        mobile: (json['mobile'] as String?) ?? '',
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    role: json['role'] as String,
+    mobile: (json['mobile'] as String?) ?? '',
+  );
 
-  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'role': role, 'mobile': mobile};
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'role': role,
+    'mobile': mobile,
+  };
 
   String encode() => jsonEncode(toJson());
-  static Profile decode(String source) => Profile.fromJson(jsonDecode(source) as Map<String, dynamic>);
+  static Profile decode(String source) =>
+      Profile.fromJson(jsonDecode(source) as Map<String, dynamic>);
 }
 
 /// A sign-in request that is waiting for an admin. Kept on the phone so the
@@ -46,25 +57,34 @@ class PendingLogin {
   final String deviceSecret;
 
   factory PendingLogin.fromJson(Map<String, dynamic> json) => PendingLogin(
-        requestId: json['request_id'] as String,
-        matchCode: json['match_code'] as String,
-        mobile: json['mobile'] as String,
-        deviceSecret: json['device_secret'] as String,
-      );
+    requestId: json['request_id'] as String,
+    matchCode: json['match_code'] as String,
+    mobile: json['mobile'] as String,
+    deviceSecret: json['device_secret'] as String,
+  );
 
   String encode() => jsonEncode({
-        'request_id': requestId,
-        'match_code': matchCode,
-        'mobile': mobile,
-        'device_secret': deviceSecret,
-      });
+    'request_id': requestId,
+    'match_code': matchCode,
+    'mobile': mobile,
+    'device_secret': deviceSecret,
+  });
 
   static PendingLogin decode(String source) =>
       PendingLogin.fromJson(jsonDecode(source) as Map<String, dynamic>);
 }
 
 /// Why a sign-in step failed, in terms the UI can explain.
-enum LoginError { invalidMobile, notRegistered, tooMany, network, generic, rejected, expired, revoked }
+enum LoginError {
+  invalidMobile,
+  notRegistered,
+  tooMany,
+  network,
+  generic,
+  rejected,
+  expired,
+  revoked,
+}
 
 class LoginException implements Exception {
   const LoginException(this.error);
@@ -96,10 +116,10 @@ class LoginApproved extends LoginStatus {
   final Profile profile;
 
   String encode() => jsonEncode({
-        'access_token': tokens.accessToken,
-        'refresh_token': tokens.refreshToken,
-        'profile': profile.toJson(),
-      });
+    'access_token': tokens.accessToken,
+    'refresh_token': tokens.refreshToken,
+    'profile': profile.toJson(),
+  });
 
   static LoginApproved decode(String source) {
     final json = jsonDecode(source) as Map<String, dynamic>;

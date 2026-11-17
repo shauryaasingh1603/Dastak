@@ -42,6 +42,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   supabase: ^2.16.5
+  cupertino_ui: ^1.1.7
 
 dev_dependencies:
   flutter_test:

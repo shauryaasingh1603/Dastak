@@ -23,5 +23,6 @@ class SecureSessionStorage extends LocalStorage {
   Future<void> removePersistedSession() => _store.delete(_key);
 
   @override
-  Future<void> persistSession(String persistSessionString) => _store.write(_key, persistSessionString);
+  Future<void> persistSession(String persistSessionString) =>
+      _store.write(_key, persistSessionString);
 }

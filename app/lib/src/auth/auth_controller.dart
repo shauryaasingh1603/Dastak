@@ -135,7 +135,8 @@ class AuthController extends ChangeNotifier {
               requestId: current.pending.requestId,
               deviceSecret: current.pending.deviceSecret,
             );
-      if (_state is! AuthWaiting) return; // cancelled while the call was in flight
+      // Cancelled while the call was in flight.
+      if (_state is! AuthWaiting) return;
       switch (status) {
         case LoginPending():
           if (current.offline) _set(AuthWaiting(current.pending));
@@ -249,12 +250,19 @@ class AuthController extends ChangeNotifier {
 /// not exactly one. Accepts spaces, dashes and a leading +91 or 0.
 String? normalizeMobile(String input) {
   var digits = input.replaceAll(RegExp(r'\D'), '');
-  if (digits.length == 12 && digits.startsWith('91')) digits = digits.substring(2);
-  if (digits.length == 11 && digits.startsWith('0')) digits = digits.substring(1);
+  if (digits.length == 12 && digits.startsWith('91')) {
+    digits = digits.substring(2);
+  }
+  if (digits.length == 11 && digits.startsWith('0')) {
+    digits = digits.substring(1);
+  }
   return RegExp(r'^[6-9]\d{9}$').hasMatch(digits) ? digits : null;
 }
 
 String _randomHex(int bytes) {
   final random = Random.secure();
-  return List.generate(bytes, (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0')).join();
+  return List.generate(
+    bytes,
+    (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ).join();
 }

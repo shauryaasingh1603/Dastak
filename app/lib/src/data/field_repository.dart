@@ -1,7 +1,11 @@
 import 'package:supabase/supabase.dart';
 
 class BoothSummary {
-  const BoothSummary({required this.partNo, required this.nameHi, required this.familyCount});
+  const BoothSummary({
+    required this.partNo,
+    required this.nameHi,
+    required this.familyCount,
+  });
   final int partNo;
   final String nameHi;
   final int familyCount;
@@ -29,13 +33,13 @@ class FamilyRow {
   bool get isHighPriority => priority == 1;
 
   factory FamilyRow.fromJson(Map<String, dynamic> json) => FamilyRow(
-        id: json['id'] as String,
-        code: json['code'] as String,
-        partNo: json['part_no'] as int,
-        houseNo: json['house_no'] as String?,
-        headNameHi: json['head_name_hi'] as String?,
-        priority: json['priority'] as int,
-      );
+    id: json['id'] as String,
+    code: json['code'] as String,
+    partNo: json['part_no'] as int,
+    houseNo: json['house_no'] as String?,
+    headNameHi: json['head_name_hi'] as String?,
+    priority: json['priority'] as int,
+  );
 }
 
 class HomeData {
@@ -64,17 +68,29 @@ class FieldRepository {
         .limit(1000);
     final families = familyRows.map(FamilyRow.fromJson).toList();
 
-    final assignmentRows = await _client.from('assignments').select('part_no, to_date');
-    final today = DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30)).toIso8601String().substring(0, 10);
+    final assignmentRows = await _client
+        .from('assignments')
+        .select('part_no, to_date');
+    final today = DateTime.now()
+        .toUtc()
+        .add(const Duration(hours: 5, minutes: 30))
+        .toIso8601String()
+        .substring(0, 10);
     final parts = <int>{
       for (final f in families) f.partNo,
       for (final a in assignmentRows)
-        if (a['to_date'] == null || (a['to_date'] as String).compareTo(today) >= 0) a['part_no'] as int,
+        if (a['to_date'] == null ||
+            (a['to_date'] as String).compareTo(today) >= 0)
+          a['part_no'] as int,
     };
 
     final boothRows = parts.isEmpty
         ? const <Map<String, dynamic>>[]
-        : await _client.from('booths').select('part_no, name_hi').inFilter('part_no', parts.toList()).order('part_no');
+        : await _client
+              .from('booths')
+              .select('part_no, name_hi')
+              .inFilter('part_no', parts.toList())
+              .order('part_no');
 
     final counts = <int, int>{};
     for (final f in families) {

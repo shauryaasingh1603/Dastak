@@ -7,15 +7,42 @@ const fontFamily = 'NotoSansDevanagari';
 /// 20 sp titles, readable outdoors on low-end phones.
 ThemeData buildTheme() {
   final scheme = ColorScheme.fromSeed(seedColor: _brand, primary: _brand);
-  final base = ThemeData(colorScheme: scheme, fontFamily: fontFamily, useMaterial3: true);
+  final base = ThemeData(
+    colorScheme: scheme,
+    fontFamily: fontFamily,
+    useMaterial3: true,
+  );
   // Devanagari has tall matras above and below the line; give it room.
-  final text = base.textTheme.apply(fontFamily: fontFamily).copyWith(
-        bodyLarge: base.textTheme.bodyLarge?.copyWith(fontSize: 17, height: 1.5),
-        bodyMedium: base.textTheme.bodyMedium?.copyWith(fontSize: 16, height: 1.5),
-        bodySmall: base.textTheme.bodySmall?.copyWith(fontSize: 14, height: 1.45),
-        titleLarge: base.textTheme.titleLarge?.copyWith(fontSize: 22, fontWeight: FontWeight.w700, height: 1.4),
-        titleMedium: base.textTheme.titleMedium?.copyWith(fontSize: 18, fontWeight: FontWeight.w700, height: 1.4),
-        labelLarge: base.textTheme.labelLarge?.copyWith(fontSize: 17, fontWeight: FontWeight.w500, height: 1.4),
+  final text = base.textTheme
+      .apply(fontFamily: fontFamily)
+      .copyWith(
+        bodyLarge: base.textTheme.bodyLarge?.copyWith(
+          fontSize: 17,
+          height: 1.5,
+        ),
+        bodyMedium: base.textTheme.bodyMedium?.copyWith(
+          fontSize: 16,
+          height: 1.5,
+        ),
+        bodySmall: base.textTheme.bodySmall?.copyWith(
+          fontSize: 14,
+          height: 1.45,
+        ),
+        titleLarge: base.textTheme.titleLarge?.copyWith(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          height: 1.4,
+        ),
+        titleMedium: base.textTheme.titleMedium?.copyWith(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          height: 1.4,
+        ),
+        labelLarge: base.textTheme.labelLarge?.copyWith(
+          fontSize: 17,
+          fontWeight: FontWeight.w500,
+          height: 1.4,
+        ),
       );
   return base.copyWith(
     textTheme: text,
@@ -23,7 +50,10 @@ ThemeData buildTheme() {
     appBarTheme: AppBarTheme(
       backgroundColor: scheme.primary,
       foregroundColor: scheme.onPrimary,
-      titleTextStyle: text.titleLarge?.copyWith(color: scheme.onPrimary, fontSize: 20),
+      titleTextStyle: text.titleLarge?.copyWith(
+        color: scheme.onPrimary,
+        fontSize: 20,
+      ),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
@@ -33,7 +63,10 @@ ThemeData buildTheme() {
       ),
     ),
     textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(minimumSize: const Size(48, 48), textStyle: text.labelLarge),
+      style: TextButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        textStyle: text.labelLarge,
+      ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,

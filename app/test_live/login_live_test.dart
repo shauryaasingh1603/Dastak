@@ -18,7 +18,8 @@ import 'package:supabase/supabase.dart';
 class _EnvProxy extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) =>
-      super.createHttpClient(context)..findProxy = HttpClient.findProxyFromEnvironment;
+      super.createHttpClient(context)
+        ..findProxy = HttpClient.findProxyFromEnvironment;
 }
 
 void main() {
@@ -26,54 +27,77 @@ void main() {
   final mobile = Platform.environment['DASTAK_TEST_MOBILE'];
   final ready = adminToken != null && mobile != null;
 
-  test('enter mobile, admin approves, phone signs in and sees only its booths', () async {
-    HttpOverrides.global = _EnvProxy();
-    const noRefresh = AuthClientOptions(autoRefreshToken: false);
-    final client = SupabaseClient(supabaseUrl, supabaseKey, authOptions: noRefresh);
-    final admin = SupabaseClient(supabaseUrl, supabaseKey, accessToken: () async => adminToken);
+  test(
+    'enter mobile, admin approves, phone signs in and sees only its booths',
+    () async {
+      HttpOverrides.global = _EnvProxy();
+      const noRefresh = AuthClientOptions(autoRefreshToken: false);
+      final client = SupabaseClient(
+        supabaseUrl,
+        supabaseKey,
+        authOptions: noRefresh,
+      );
+      final admin = SupabaseClient(
+        supabaseUrl,
+        supabaseKey,
+        accessToken: () async => adminToken,
+      );
 
-    final auth = AuthController(
-      backend: SupabaseAuthBackend(client),
-      store: MemoryKeyValueStore(),
-      deviceModel: 'live-test',
-      pollInterval: const Duration(hours: 1),
-    );
-    addTearDown(auth.dispose);
-    await auth.start();
+      final auth = AuthController(
+        backend: SupabaseAuthBackend(client),
+        store: MemoryKeyValueStore(),
+        deviceModel: 'live-test',
+        pollInterval: const Duration(hours: 1),
+      );
+      addTearDown(auth.dispose);
+      await auth.start();
 
-    expect(await auth.submitMobile('9999999990'), LoginError.notRegistered);
-    expect(await auth.submitMobile(mobile!), isNull);
-    final pending = (auth.state as AuthWaiting).pending;
-    expect(pending.matchCode, matches(r'^\d{4}$'));
+      expect(await auth.submitMobile('9999999990'), LoginError.notRegistered);
+      expect(await auth.submitMobile(mobile!), isNull);
+      final pending = (auth.state as AuthWaiting).pending;
+      expect(pending.matchCode, matches(r'^\d{4}$'));
 
-    await auth.pollOnce();
-    expect(auth.state, isA<AuthWaiting>(), reason: 'not approved yet');
+      await auth.pollOnce();
+      expect(auth.state, isA<AuthWaiting>(), reason: 'not approved yet');
 
-    final decision = await admin.rpc('decide_login_request', params: {
-      'p_request_id': pending.requestId,
-      'p_approve': true,
-    });
-    expect(decision['ok'], isTrue);
+      final decision = await admin.rpc(
+        'decide_login_request',
+        params: {'p_request_id': pending.requestId, 'p_approve': true},
+      );
+      expect(decision['ok'], isTrue);
 
-    await auth.pollOnce();
-    final profile = (auth.state as AuthSignedIn).profile;
-    expect(profile.mobile, mobile);
-    stdout.writeln('signed in as ${profile.name} (${profile.role})');
+      await auth.pollOnce();
+      final profile = (auth.state as AuthSignedIn).profile;
+      expect(profile.mobile, mobile);
+      stdout.writeln('signed in as ${profile.name} (${profile.role})');
 
-    final home = await FieldRepository(client).loadHome();
-    stdout.writeln('booths: ${home.booths.map((b) => '${b.partNo}=${b.familyCount}').join(', ')}; '
-        'families: ${home.families.length}');
-    expect(home.booths, isNotEmpty);
-    final myParts = home.booths.map((b) => b.partNo).toSet();
-    expect(home.families.every((f) => myParts.contains(f.partNo)), isTrue);
+      final home = await FieldRepository(client).loadHome();
+      stdout.writeln(
+        'booths: ${home.booths.map((b) => '${b.partNo}=${b.familyCount}').join(', ')}; '
+        'families: ${home.families.length}',
+      );
+      expect(home.booths, isNotEmpty);
+      final myParts = home.booths.map((b) => b.partNo).toSet();
+      expect(home.families.every((f) => myParts.contains(f.partNo)), isTrue);
 
-    await auth.verifyAccess();
-    expect(auth.state, isA<AuthSignedIn>());
+      await auth.verifyAccess();
+      expect(auth.state, isA<AuthSignedIn>());
 
-    // The admin signs this phone out: the next check must lock it.
-    await admin.from('users').update({'active_session_id': null}).eq('mobile', mobile);
-    await auth.verifyAccess();
-    expect((auth.state as AuthSignedOut).reason, LoginError.revoked);
-    expect(await FieldRepository(client).loadHome().then((h) => h.families.length, onError: (_) => 0), 0);
-  }, skip: ready ? null : 'set DASTAK_ADMIN_TOKEN and DASTAK_TEST_MOBILE', timeout: const Timeout(Duration(minutes: 2)));
+      // The admin signs this phone out: the next check must lock it.
+      await admin
+          .from('users')
+          .update({'active_session_id': null})
+          .eq('mobile', mobile);
+      await auth.verifyAccess();
+      expect((auth.state as AuthSignedOut).reason, LoginError.revoked);
+      expect(
+        await FieldRepository(client)
+            .loadHome()
+            .then((h) => h.families.length, onError: (_) => 0),
+        0,
+      );
+    },
+    skip: ready ? null : 'set DASTAK_ADMIN_TOKEN and DASTAK_TEST_MOBILE',
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
 }

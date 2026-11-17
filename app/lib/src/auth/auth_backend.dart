@@ -22,7 +22,10 @@ abstract class AuthBackend {
 
   /// Asks whether the admin has decided. Throws [LoginException] with
   /// [LoginError.network] when the server cannot be reached.
-  Future<LoginStatus> checkStatus({required String requestId, required String deviceSecret});
+  Future<LoginStatus> checkStatus({
+    required String requestId,
+    required String deviceSecret,
+  });
 
   /// Stores the approved session on the phone.
   Future<void> adoptSession(SessionTokens tokens);
@@ -44,8 +47,9 @@ class SupabaseAuthBackend implements AuthBackend {
   bool get hasSession => _client.auth.currentSession != null;
 
   @override
-  Stream<void> get sessionEnded =>
-      _client.auth.onAuthStateChange.where((state) => state.event == AuthChangeEvent.signedOut);
+  Stream<void> get sessionEnded => _client.auth.onAuthStateChange.where(
+    (state) => state.event == AuthChangeEvent.signedOut,
+  );
 
   @override
   Future<({String requestId, String matchCode})> requestLogin({
@@ -56,12 +60,17 @@ class SupabaseAuthBackend implements AuthBackend {
   }) async {
     final Map<String, dynamic> result;
     try {
-      result = Map<String, dynamic>.from(await _client.rpc('request_login', params: {
-        'p_mobile': mobile,
-        'p_device_id': deviceId,
-        'p_device_secret': deviceSecret,
-        'p_device_model': deviceModel,
-      }) as Map);
+      result = Map<String, dynamic>.from(
+        await _client.rpc(
+          'request_login',
+          params: {
+            'p_mobile': mobile,
+            'p_device_id': deviceId,
+            'p_device_secret': deviceSecret,
+            'p_device_model': deviceModel,
+          },
+        ) as Map,
+      );
     } on PostgrestException {
       throw const LoginException(LoginError.generic);
     } catch (_) {
@@ -69,7 +78,10 @@ class SupabaseAuthBackend implements AuthBackend {
     }
 
     if (result['ok'] == true) {
-      return (requestId: result['request_id'] as String, matchCode: result['match_code'] as String);
+      return (
+        requestId: result['request_id'] as String,
+        matchCode: result['match_code'] as String,
+      );
     }
     throw LoginException(switch (result['code']) {
       'NOT_REGISTERED' => LoginError.notRegistered,
@@ -79,7 +91,10 @@ class SupabaseAuthBackend implements AuthBackend {
   }
 
   @override
-  Future<LoginStatus> checkStatus({required String requestId, required String deviceSecret}) async {
+  Future<LoginStatus> checkStatus({
+    required String requestId,
+    required String deviceSecret,
+  }) async {
     final Map<String, dynamic> body;
     try {
       final response = await _client.functions.invoke(
@@ -120,7 +135,10 @@ class SupabaseAuthBackend implements AuthBackend {
   @override
   Future<void> adoptSession(SessionTokens tokens) async {
     try {
-      await _client.auth.setSession(tokens.refreshToken, accessToken: tokens.accessToken);
+      await _client.auth.setSession(
+        tokens.refreshToken,
+        accessToken: tokens.accessToken,
+      );
     } on AuthException {
       throw const LoginException(LoginError.generic);
     } catch (_) {
@@ -133,7 +151,10 @@ class SupabaseAuthBackend implements AuthBackend {
     try {
       // Row-level security returns only the caller's own row, and no row at
       // all once the phone has lost access.
-      final row = await _client.from('users').select('id, name, role, mobile').maybeSingle();
+      final row = await _client
+          .from('users')
+          .select('id, name, role, mobile')
+          .maybeSingle();
       return row == null ? null : Profile.fromJson(row);
     } on PostgrestException catch (e) {
       // The token itself was refused: treat as lost access.

@@ -17,7 +17,10 @@ class WaitingScreen extends StatelessWidget {
     final scheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.waitingTitle), automaticallyImplyLeading: false),
+      appBar: AppBar(
+        title: Text(l10n.waitingTitle),
+        automaticallyImplyLeading: false,
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -27,7 +30,11 @@ class WaitingScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(l10n.waitingCodeLabel, textAlign: TextAlign.center, style: theme.textTheme.titleMedium),
+                  Text(
+                    l10n.waitingCodeLabel,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 12),
                   Semantics(
                     label: state.pending.matchCode.split('').join(' '),
@@ -44,7 +51,10 @@ class WaitingScreen extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: scheme.primary, width: 2),
+                                border: Border.all(
+                                  color: scheme.primary,
+                                  width: 2,
+                                ),
                               ),
                               child: Text(
                                 digit,
@@ -61,12 +71,18 @@ class WaitingScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Text(l10n.waitingInstruction, textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
+                  Text(
+                    l10n.waitingInstruction,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyLarge,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     '+91 ${state.pending.mobile}',
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 28),
                   Row(
@@ -75,18 +91,29 @@ class WaitingScreen extends StatelessWidget {
                       if (state.offline)
                         Icon(Icons.wifi_off, color: scheme.error)
                       else
-                        const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 3)),
+                        const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 3),
+                        ),
                       const SizedBox(width: 12),
                       Flexible(
                         child: Text(
-                          state.offline ? l10n.waitingOffline : l10n.waitingChecking,
-                          style: theme.textTheme.bodyMedium?.copyWith(color: state.offline ? scheme.error : null),
+                          state.offline
+                              ? l10n.waitingOffline
+                              : l10n.waitingChecking,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: state.offline ? scheme.error : null,
+                          ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 28),
-                  TextButton(onPressed: auth.cancelWaiting, child: Text(l10n.waitingCancel)),
+                  TextButton(
+                    onPressed: auth.cancelWaiting,
+                    child: Text(l10n.waitingCancel),
+                  ),
                 ],
               ),
             ),
