@@ -1,0 +1,51 @@
+{
+  "@@locale": "hi",
+  "appTitle": "दस्तक",
+
+  "loginTitle": "लॉगिन",
+  "loginMobileLabel": "मोबाइल नंबर डालें",
+  "loginMobileHint": "10 अंकों का नंबर",
+  "loginSubmit": "आगे बढ़ें",
+  "loginHelp": "आपका नंबर कार्यालय में दर्ज होना चाहिए। लॉगिन के लिए एडमिन की मंज़ूरी ज़रूरी है।",
+
+  "waitingTitle": "मंज़ूरी का इंतज़ार",
+  "waitingCodeLabel": "आपका कोड",
+  "waitingInstruction": "यह कोड एडमिन को बताएँ। मंज़ूरी मिलते ही ऐप अपने आप खुल जाएगा।",
+  "waitingChecking": "मंज़ूरी की जाँच हो रही है…",
+  "waitingOffline": "नेट नहीं है – नेट आते ही जाँच होगी",
+  "waitingCancel": "नंबर बदलें",
+
+  "errMobileInvalid": "सही मोबाइल नंबर डालें",
+  "errNotRegistered": "यह नंबर दर्ज नहीं है। कार्यालय से संपर्क करें।",
+  "errTooMany": "बहुत बार कोशिश हुई। थोड़ी देर बाद फिर कोशिश करें।",
+  "errNetwork": "नेट नहीं है – दोबारा कोशिश करें",
+  "errGeneric": "कुछ गड़बड़ हुई। दोबारा कोशिश करें।",
+  "loginRejected": "एडमिन ने मंज़ूरी नहीं दी। कार्यालय से संपर्क करें।",
+  "loginExpired": "अनुरोध का समय समाप्त हो गया। दोबारा कोशिश करें।",
+  "accessRevoked": "इस फ़ोन से लॉगिन हटा दिया गया है। दोबारा लॉगिन करें।",
+
+  "homeTitle": "आज का सारांश",
+  "homeGreeting": "नमस्ते, {name}",
+  "@homeGreeting": { "placeholders": { "name": { "type": "String" } } },
+  "roleVolunteer": "स्वयंसेवक",
+  "roleBla2": "बीएलए-2",
+  "homeBooths": "आपके बूथ",
+  "homeBoothLine": "बूथ {partNo} · {name}",
+  "@homeBoothLine": { "placeholders": { "partNo": { "type": "int" }, "name": { "type": "String" } } },
+  "homeNoBooths": "अभी कोई बूथ नहीं सौंपा गया है। कार्यालय से संपर्क करें।",
+  "homeFamilyCount": "{count} परिवार",
+  "@homeFamilyCount": { "placeholders": { "count": { "type": "int" } } },
+  "homeOffline": "नेट नहीं है – पिछली जानकारी दिख रही है",
+
+  "listTitle": "मेरी सूची",
+  "listEmpty": "इस सूची में कोई परिवार नहीं है",
+  "houseNo": "मकान नं. {no}",
+  "@houseNo": { "placeholders": { "no": { "type": "String" } } },
+  "priorityHigh": "उच्च प्राथमिकता",
+
+  "logout": "लॉगआउट",
+  "logoutConfirm": "क्या आप लॉगआउट करना चाहते हैं? दोबारा लॉगिन के लिए एडमिन की मंज़ूरी लगेगी।",
+  "yes": "हाँ",
+  "no": "नहीं",
+  "retry": "दोबारा कोशिश करें"
+}

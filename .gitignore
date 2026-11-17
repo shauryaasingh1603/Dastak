@@ -1,0 +1,31 @@
+# Dependencies and build output
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Local environment and secrets
+.env*.local
+*.jks
+*.keystore
+key.properties
+service-account*.json
+
+# Voter data must never be committed. Only generated mock data is allowed,
+# and it lives under tools/mock/out/, which is ignored too.
+*.xlsx
+*.xls
+*.csv
+/data/
+tools/mock/out/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
