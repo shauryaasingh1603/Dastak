@@ -47,6 +47,15 @@ Admins page.
 - The Supabase URL and publishable key in `admin/.env` and `app/lib/config.dart`
   are public values. No secret key belongs in this repository.
 
+## Where things run
+
+- Admin website: https://dastak-admin-green.vercel.app (Vercel project
+  `dastak-admin`). It was deployed by uploading the `admin/` files directly,
+  because Vercel's GitHub app has no access to this repository yet. Until the
+  repository is connected in the Vercel project's Git settings (root directory
+  `admin`), a push here does not redeploy the site.
+- Backend: Supabase project `dastak`, Mumbai.
+
 ## Running things
 
 Admin website:
