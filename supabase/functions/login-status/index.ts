@@ -13,10 +13,18 @@ const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const noStore = { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false };
 
+// The web preview of the app calls this from a browser. Any origin may ask:
+// the answer depends only on the request id and the phone's secret.
+const cors = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    headers: { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 }
 
@@ -30,6 +38,7 @@ function sessionIdOf(accessToken: string): string | null {
 }
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
   let body: { request_id?: string; device_secret?: string };
