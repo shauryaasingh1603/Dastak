@@ -32,3 +32,4 @@ __pycache__/
 
 # Built APKs handed over for testing
 /dist/
+/tools/import/out/
