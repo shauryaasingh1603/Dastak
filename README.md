@@ -96,6 +96,22 @@ and an admin access token):
 cd app && DASTAK_TEST_MOBILE=<mobile> DASTAK_ADMIN_TOKEN=<jwt> flutter test test_live/login_live_test.dart
 ```
 
+## Loading the visit list
+
+The real list was loaded on 18 Nov 2026 from the campaign workbook:
+
+```bash
+python3 -I tools/import/import_visit_list.py AC371_Zafrabad_Visit_List_before_16Dec.xlsx
+```
+
+This writes a reconciliation report and the rows (as SQL and JSON) to
+`tools/import/out/`, which git ignores. The rows were sent in batches to
+`import_booths` / `import_people`, which only work with a one-time import
+token (see `supabase/migrations/20261118113000_import_functions.sql`); the
+token was expired and the functions closed to the public afterwards.
+Every listed person is their own record; households are confirmed in the
+field. Never commit the workbook or anything in `tools/import/out/`.
+
 ## Backend
 
 Supabase project `dastak` (Mumbai, `ap-south-1`). Schema changes go in

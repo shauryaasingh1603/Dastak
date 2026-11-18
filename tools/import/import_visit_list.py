@@ -199,6 +199,7 @@ def main():
 
     os.makedirs(args.out, exist_ok=True)
     write_sql(os.path.join(args.out, 'load.sql'), booths, people)
+    write_json(args.out, booths, people)
     write_report(os.path.join(args.out, 'report.md'), args, booths, asdd, poss, people, set_aside, flags)
     print(f"read {len(asdd)} + {len(poss)} rows; loadable {len(people)}; set aside {len(set_aside)}")
     print(f"wrote {os.path.join(args.out, 'report.md')} and load.sql")
@@ -238,6 +239,19 @@ def write_sql(path, booths, people):
                     'asdd_reason, old_part_no, old_serial, likely_new_part, match_confidence)\n')
             f.write('join fam on fam.code = v.code;\n')
         f.write('commit;\n')
+
+
+def write_json(out, booths, people):
+    """The same rows as JSON, for the import_booths / import_people functions."""
+    with open(os.path.join(out, 'booths.json'), 'w', encoding='utf-8') as f:
+        json.dump([{'part_no': p, 'polling_station_hi': n} for p, n in sorted(booths.items())], f, ensure_ascii=False)
+    keys = ['code', 'part', 'house', 'name', 'priority', 'epic', 'roll_ref', 'relation', 'relative', 'age',
+            'gender', 'source', 'asdd_reason', 'old_part', 'old_serial', 'likely_part', 'confidence']
+    with open(os.path.join(out, 'people.jsonl'), 'w', encoding='utf-8') as f:
+        for p in people:
+            row = {k: p[k] for k in keys}
+            row['review'] = bool(p['review'])
+            f.write(json.dumps(row, ensure_ascii=False) + '\n')
 
 
 def write_report(path, args, booths, asdd, poss, people, set_aside, flags):
