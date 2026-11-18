@@ -108,7 +108,7 @@ void main() {
     },
   );
 
-  test('form edits waiting to be sent are merged into one update', () async {
+  test('form edits are queued in order, latest last', () async {
     final formId = (await store.saveVisit(
       const VisitDraft(
         familyId: 'f1',
@@ -137,13 +137,45 @@ void main() {
       'visit',
       'form',
       'form_event',
+      'form',
+      'form',
       'form_event',
     ]);
-    final formItem = data.outbox[1];
-    expect(formItem.payload['route'], 'ONLINE');
-    expect(formItem.payload['reference_no'], 'B2');
+    expect(data.outbox[4].payload['route'], 'ONLINE');
+    expect(data.outbox[4].payload['reference_no'], 'B2');
     expect(data.form(formId)!.status, FormStatus.submitted);
     expect(data.eventsOf(formId).map((e) => e.status), ['FILLED', 'SUBMITTED']);
+  });
+
+  test('an edit made while a send is in flight is not lost', () async {
+    final formId = (await store.saveVisit(
+      const VisitDraft(
+        familyId: 'f1',
+        nobodyHome: false,
+        members: [
+          MemberEntry(voterId: 'v1', outcome: Outcome.eligible, formType: '6'),
+        ],
+      ),
+    )).single;
+    final inFlight = await store
+        .pendingBatch(); // visit, form (no route), FILLED
+    await store.updateForm(
+      formId,
+      route: SubmitRoute.self,
+      referenceNo: 'R9',
+      filedOn: '2026-11-21',
+    );
+    await store.applyPushResults(inFlight, [
+      for (final _ in inFlight) (ok: true, code: null, messageHi: null),
+    ]);
+    final left = store.data.outbox.single;
+    expect(left.entity, 'form');
+    expect(left.payload['route'], 'SELF');
+    expect(
+      store.data.form(formId)!.pending,
+      isTrue,
+      reason: 'still has a change to send',
+    );
   });
 
   test(

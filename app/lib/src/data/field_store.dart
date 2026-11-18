@@ -481,36 +481,22 @@ class FieldStore extends ChangeNotifier {
     return formId;
   }
 
-  /// Adds an outbox item. A form's details are sent as its latest state, so a
-  /// waiting update to the same form is replaced instead of queued twice.
+  /// Adds an outbox item. Items are never merged: an item may already be on
+  /// its way to the server, and changing it then would lose the change when
+  /// the server confirms the copy it received. Repeats are cheap, because the
+  /// server treats each one as an idempotent upsert.
   Future<void> _enqueue(
     String entity,
     String uuid,
     Map<String, dynamic> payload,
   ) async {
-    final encoded = jsonEncode(payload);
-    if (entity == 'form') {
-      final waiting =
-          await (db.select(db.outbox)..where(
-                (t) =>
-                    t.entity.equals('form') &
-                    t.uuid.equals(uuid) &
-                    t.state.equals('pending'),
-              ))
-              .getSingleOrNull();
-      if (waiting != null) {
-        await (db.update(db.outbox)..where((t) => t.seq.equals(waiting.seq)))
-            .write(OutboxCompanion(payload: Value(encoded)));
-        return;
-      }
-    }
     await db
         .into(db.outbox)
         .insert(
           OutboxCompanion.insert(
             uuid: uuid,
             entity: entity,
-            payload: encoded,
+            payload: jsonEncode(payload),
             createdAt: DateTime.now().toUtc(),
           ),
         );
