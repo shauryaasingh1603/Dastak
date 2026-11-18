@@ -10,8 +10,10 @@ import 'package:dastak/src/theme.dart';
 import 'package:dastak/src/ui/field_scope.dart';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
+import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'fake_geolocator.dart';
 import 'sample_snapshot.dart';
 
 class _SignedInBackend implements AuthBackend {
@@ -53,7 +55,11 @@ class Harness {
   final AuthController auth;
   final SyncService sync;
 
+  /// The phone's location, scripted. Precise and on by default.
+  static FakeGeolocator gps = FakeGeolocator();
+
   static Future<Harness> create({String role = 'volunteer'}) async {
+    GeolocatorPlatform.instance = gps = FakeGeolocator();
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     final db = LocalDb(NativeDatabase.memory());
     final store = FieldStore(db);

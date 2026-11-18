@@ -916,30 +916,6 @@ abstract class AppLocalizations {
   /// **'फॉर्म {type} पहले से दर्ज है'**
   String formAlreadyOpen(String type);
 
-  /// No description provided for @gpsSearching.
-  ///
-  /// In hi, this message translates to:
-  /// **'स्थान ढूँढ रहे हैं…'**
-  String get gpsSearching;
-
-  /// No description provided for @gpsOk.
-  ///
-  /// In hi, this message translates to:
-  /// **'स्थान दर्ज हुआ ✓'**
-  String get gpsOk;
-
-  /// No description provided for @gpsWeak.
-  ///
-  /// In hi, this message translates to:
-  /// **'स्थान सटीक नहीं – फिर भी सेव होगा'**
-  String get gpsWeak;
-
-  /// No description provided for @gpsOff.
-  ///
-  /// In hi, this message translates to:
-  /// **'स्थान बंद है – फिर भी सेव होगा'**
-  String get gpsOff;
-
   /// No description provided for @visitSaved.
   ///
   /// In hi, this message translates to:
@@ -1269,6 +1245,96 @@ abstract class AppLocalizations {
   /// In hi, this message translates to:
   /// **'दोबारा कब जाना है'**
   String get visitRevisit;
+
+  /// No description provided for @locTitle.
+  ///
+  /// In hi, this message translates to:
+  /// **'स्थान की अनुमति ज़रूरी है'**
+  String get locTitle;
+
+  /// No description provided for @locExplain.
+  ///
+  /// In hi, this message translates to:
+  /// **'हर भेंट सेव करते समय उसी जगह का सटीक स्थान (GPS) दर्ज होता है। ऐप पीछे से (बैकग्राउंड में) आपका स्थान नहीं लेता – सिर्फ़ सेव दबाने पर।'**
+  String get locExplain;
+
+  /// No description provided for @locAllow.
+  ///
+  /// In hi, this message translates to:
+  /// **'अनुमति दें'**
+  String get locAllow;
+
+  /// No description provided for @locOpenSettings.
+  ///
+  /// In hi, this message translates to:
+  /// **'सेटिंग खोलें'**
+  String get locOpenSettings;
+
+  /// No description provided for @locTurnOn.
+  ///
+  /// In hi, this message translates to:
+  /// **'लोकेशन चालू करें'**
+  String get locTurnOn;
+
+  /// No description provided for @locCheckAgain.
+  ///
+  /// In hi, this message translates to:
+  /// **'दोबारा जाँचें'**
+  String get locCheckAgain;
+
+  /// No description provided for @locDenied.
+  ///
+  /// In hi, this message translates to:
+  /// **'स्थान की अनुमति नहीं मिली। “अनुमति दें” दबाएँ और “ऐप इस्तेमाल करते समय” व “सटीक” चुनें।'**
+  String get locDenied;
+
+  /// No description provided for @locBlocked.
+  ///
+  /// In hi, this message translates to:
+  /// **'स्थान की अनुमति बंद है। सेटिंग खोलें, “स्थान” चुनें, फिर “ऐप इस्तेमाल करते समय” और “सटीक स्थान” चालू करें।'**
+  String get locBlocked;
+
+  /// No description provided for @locApproximate.
+  ///
+  /// In hi, this message translates to:
+  /// **'अभी सिर्फ़ अनुमानित स्थान की अनुमति है। सटीक स्थान चालू करें।'**
+  String get locApproximate;
+
+  /// No description provided for @locServiceOff.
+  ///
+  /// In hi, this message translates to:
+  /// **'फ़ोन की लोकेशन बंद है। लोकेशन चालू करें।'**
+  String get locServiceOff;
+
+  /// No description provided for @visitLocationNote.
+  ///
+  /// In hi, this message translates to:
+  /// **'सेव दबाने पर इसी जगह का सटीक स्थान दर्ज होगा'**
+  String get visitLocationNote;
+
+  /// No description provided for @visitLocating.
+  ///
+  /// In hi, this message translates to:
+  /// **'सटीक स्थान दर्ज हो रहा है…'**
+  String get visitLocating;
+
+  /// No description provided for @visitSavedWithGps.
+  ///
+  /// In hi, this message translates to:
+  /// **'भेंट सेव हुई · स्थान दर्ज (±{meters} मीटर)'**
+  String visitSavedWithGps(int meters);
+
+  /// No description provided for @visitSavedRoughGps.
+  ///
+  /// In hi, this message translates to:
+  /// **'भेंट सेव हुई · स्थान दर्ज, पर सटीक नहीं (±{meters} मीटर)'**
+  String visitSavedRoughGps(int meters);
+
+  /// No description provided for @visitSavedNoGps.
+  ///
+  /// In hi, this message translates to:
+  /// **'भेंट सेव हुई · स्थान नहीं मिल पाया (रिकॉर्ड में दर्ज)'**
+  String get visitSavedNoGps;
 }
 
 class _AppLocalizationsDelegate

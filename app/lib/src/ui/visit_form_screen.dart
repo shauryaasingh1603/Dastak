@@ -10,6 +10,7 @@ import 'dates.dart';
 import 'field_scope.dart';
 import 'form_detail_screen.dart';
 import 'labels.dart';
+import 'location_gate.dart';
 import 'widgets.dart';
 
 class _MemberState {
@@ -44,15 +45,8 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
   String? _revisitOn;
   String? _error;
   bool _saving = false;
-  LocationFix? _fix;
-
-  @override
-  void initState() {
-    super.initState();
-    takeFix().then((fix) {
-      if (mounted) setState(() => _fix = fix);
-    });
-  }
+  bool _locating = false;
+  LocationAccess? _locationProblem;
 
   @override
   void didChangeDependencies() {
@@ -102,10 +96,28 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
     }
     setState(() {
       _error = null;
+      _locationProblem = null;
       _saving = true;
     });
+
+    // Precise location is required; ask now if it was turned off since sign-in.
+    final access = await locationAccess(ask: true);
+    if (!mounted) return;
+    if (access != LocationAccess.granted) {
+      setState(() {
+        _locationProblem = access;
+        _saving = false;
+      });
+      return;
+    }
+
+    // The fix is taken now, at the door, when save is pressed.
+    setState(() => _locating = true);
+    final fix = await takePreciseFix();
+    if (!mounted) return;
+    setState(() => _locating = false);
+
     final scope = FieldScope.of(context);
-    final fix = _fix;
     final metPerson = _metPerson == null
         ? null
         : _metPerson == 'OTHER'
@@ -134,15 +146,21 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
         ],
         remarks: _remarks.text,
         revisitOn: _revisitOn,
-        gpsLat: fix?.lat,
-        gpsLng: fix?.lng,
-        gpsAccuracy: fix?.accuracy,
-        gpsFlag: fix == null ? 'GPS_OFF' : fix.flag,
+        gpsLat: fix.lat,
+        gpsLng: fix.lng,
+        gpsAccuracy: fix.accuracy,
+        gpsFlag: fix.flag,
       ),
     );
     if (!mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(SnackBar(content: Text(l10n.visitSaved)));
+    final metres = fix.accuracy?.round();
+    final message = !fix.hasPosition
+        ? l10n.visitSavedNoGps
+        : fix.flag == 'GPS_INACCURATE'
+        ? l10n.visitSavedRoughGps(metres ?? 0)
+        : l10n.visitSavedWithGps(metres ?? 0);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
     if (formIds.isEmpty) {
       Navigator.of(context).pop();
     } else {
@@ -197,7 +215,22 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
               style: theme.textTheme.titleMedium,
             ),
           const SizedBox(height: 6),
-          _GpsLine(fix: _fix),
+          Row(
+            children: [
+              Icon(
+                Icons.my_location,
+                size: 18,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  l10n.visitLocationNote,
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
           Card(
             child: SwitchListTile(
@@ -271,56 +304,28 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
             const SizedBox(height: 8),
             InfoBanner(icon: Icons.error_outline, text: _error!, error: true),
           ],
+          if (_locationProblem != null) ...[
+            const SizedBox(height: 8),
+            LocationProblem(
+              access: _locationProblem!,
+              onAsk: _save,
+              onRecheck: _save,
+            ),
+          ],
           const SizedBox(height: 12),
           FilledButton.icon(
             onPressed: _saving ? null : _save,
-            icon: const Icon(Icons.save_outlined),
-            label: Text(l10n.save),
+            icon: _locating
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  )
+                : const Icon(Icons.save_outlined),
+            label: Text(_locating ? l10n.visitLocating : l10n.save),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _GpsLine extends StatelessWidget {
-  const _GpsLine({required this.fix});
-
-  final LocationFix? fix;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final (text, icon, color) = switch (fix) {
-      null => (
-        l10n.gpsSearching,
-        Icons.location_searching,
-        theme.colorScheme.onSurfaceVariant,
-      ),
-      LocationFix(flag: null) => (
-        l10n.gpsOk,
-        Icons.location_on,
-        const Color(0xFF1F7A4D),
-      ),
-      LocationFix(flag: 'GPS_INACCURATE') => (
-        l10n.gpsWeak,
-        Icons.location_on_outlined,
-        const Color(0xFF8A5A00),
-      ),
-      _ => (l10n.gpsOff, Icons.location_off_outlined, const Color(0xFF8A5A00)),
-    };
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: color),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            text,
-            style: theme.textTheme.bodySmall?.copyWith(color: color),
-          ),
-        ),
-      ],
     );
   }
 }

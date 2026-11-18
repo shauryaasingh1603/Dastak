@@ -28,6 +28,9 @@ import 'package:material_ui/material_ui.dart';
 
 import '../test/support/harness.dart';
 
+import 'package:dastak/src/ui/location_gate.dart';
+import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
+
 class _NoBackend implements AuthBackend {
   @override
   bool get hasSession => false;
@@ -70,6 +73,7 @@ void main() {
     String role = 'bla2',
     double height = 1440,
     bool settle = true,
+    void Function()? before,
   }) async {
     await tester.runAsync(() async {
       h = await Harness.create(role: role);
@@ -96,6 +100,7 @@ void main() {
       );
     });
     addTearDown(() => tester.runAsync(h.dispose));
+    before?.call();
     // A small, cheap phone: 360 dp wide.
     tester.view.physicalSize = Size(720, height);
     tester.view.devicePixelRatio = 2;
@@ -212,6 +217,15 @@ void main() {
       'new_voter',
       const NewVoterScreen(familyId: 'f1'),
       height: 2000,
+    ),
+  );
+  testWidgets(
+    'location permission',
+    (tester) => shoot(
+      tester,
+      'location_permission',
+      const LocationGate(child: SizedBox()),
+      before: () => Harness.gps.permission = LocationPermission.deniedForever,
     ),
   );
 }

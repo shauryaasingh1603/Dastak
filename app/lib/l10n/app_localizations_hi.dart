@@ -461,18 +461,6 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get gpsSearching => 'स्थान ढूँढ रहे हैं…';
-
-  @override
-  String get gpsOk => 'स्थान दर्ज हुआ ✓';
-
-  @override
-  String get gpsWeak => 'स्थान सटीक नहीं – फिर भी सेव होगा';
-
-  @override
-  String get gpsOff => 'स्थान बंद है – फिर भी सेव होगा';
-
-  @override
   String get visitSaved => 'भेंट सेव हुई';
 
   @override
@@ -652,4 +640,59 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get visitRevisit => 'दोबारा कब जाना है';
+
+  @override
+  String get locTitle => 'स्थान की अनुमति ज़रूरी है';
+
+  @override
+  String get locExplain =>
+      'हर भेंट सेव करते समय उसी जगह का सटीक स्थान (GPS) दर्ज होता है। ऐप पीछे से (बैकग्राउंड में) आपका स्थान नहीं लेता – सिर्फ़ सेव दबाने पर।';
+
+  @override
+  String get locAllow => 'अनुमति दें';
+
+  @override
+  String get locOpenSettings => 'सेटिंग खोलें';
+
+  @override
+  String get locTurnOn => 'लोकेशन चालू करें';
+
+  @override
+  String get locCheckAgain => 'दोबारा जाँचें';
+
+  @override
+  String get locDenied =>
+      'स्थान की अनुमति नहीं मिली। “अनुमति दें” दबाएँ और “ऐप इस्तेमाल करते समय” व “सटीक” चुनें।';
+
+  @override
+  String get locBlocked =>
+      'स्थान की अनुमति बंद है। सेटिंग खोलें, “स्थान” चुनें, फिर “ऐप इस्तेमाल करते समय” और “सटीक स्थान” चालू करें।';
+
+  @override
+  String get locApproximate =>
+      'अभी सिर्फ़ अनुमानित स्थान की अनुमति है। सटीक स्थान चालू करें।';
+
+  @override
+  String get locServiceOff => 'फ़ोन की लोकेशन बंद है। लोकेशन चालू करें।';
+
+  @override
+  String get visitLocationNote =>
+      'सेव दबाने पर इसी जगह का सटीक स्थान दर्ज होगा';
+
+  @override
+  String get visitLocating => 'सटीक स्थान दर्ज हो रहा है…';
+
+  @override
+  String visitSavedWithGps(int meters) {
+    return 'भेंट सेव हुई · स्थान दर्ज (±$meters मीटर)';
+  }
+
+  @override
+  String visitSavedRoughGps(int meters) {
+    return 'भेंट सेव हुई · स्थान दर्ज, पर सटीक नहीं (±$meters मीटर)';
+  }
+
+  @override
+  String get visitSavedNoGps =>
+      'भेंट सेव हुई · स्थान नहीं मिल पाया (रिकॉर्ड में दर्ज)';
 }

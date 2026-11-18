@@ -4,6 +4,9 @@ import 'package:dastak/src/ui/booth_list_screen.dart';
 import 'package:dastak/src/ui/family_screen.dart';
 import 'package:dastak/src/ui/form_detail_screen.dart';
 import 'package:dastak/src/ui/home_screen.dart';
+import 'package:dastak/src/ui/main_shell.dart';
+import 'package:dastak/src/auth/models.dart';
+import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
 import 'package:dastak/src/ui/new_voter_screen.dart';
 import 'package:dastak/src/ui/sync_screen.dart';
 import 'package:dastak/src/ui/visit_form_screen.dart';
@@ -249,5 +252,108 @@ void main() {
     expect(voterItem.payload['mobile'], '9876543210');
     expect(voterItem.payload['mobile_consent'], isTrue);
     expect(voterItem.payload['name_hi'], 'नेहा यादव');
+  });
+
+  testWidgets(
+    'the location reading is taken when save is pressed, not before',
+    (tester) async {
+      await setUpHarness(tester);
+      await tester.pumpWidget(h.wrap(const VisitFormScreen(familyId: 'f2')));
+      await tester.pumpAndSettle();
+      expect(
+        Harness.gps.fixRequests,
+        isEmpty,
+        reason: 'opening the form takes no reading',
+      );
+
+      await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'नहीं मिले'));
+      await tapAndSettle(tester, find.text('सेव करें'));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 200)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(Harness.gps.fixRequests, hasLength(1));
+      final visit = h.store.data.outbox.single.payload;
+      expect(visit['gps_lat'], 25.7612);
+      expect(visit['gps_accuracy_m'], 8);
+      expect(visit['flags'], isEmpty);
+    },
+  );
+
+  testWidgets('saving with location refused asks again and does not save', (
+    tester,
+  ) async {
+    await setUpHarness(tester);
+    Harness.gps
+      ..permission = LocationPermission.denied
+      ..answer = LocationPermission.denied;
+    await tester.pumpWidget(h.wrap(const VisitFormScreen(familyId: 'f2')));
+    await tester.pumpAndSettle();
+    await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'नहीं मिले'));
+    await tapAndSettle(tester, find.text('सेव करें'));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 100)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(Harness.gps.prompts, 1);
+    expect(find.textContaining('स्थान की अनुमति नहीं मिली'), findsOneWidget);
+    expect(h.store.data.outbox, isEmpty);
+
+    // Allowed on the second try: the visit saves with a fresh reading.
+    Harness.gps.answer = LocationPermission.whileInUse;
+    await tapAndSettle(tester, find.text('अनुमति दें'));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 200)),
+    );
+    await tester.pumpAndSettle();
+    expect(h.store.data.outbox.single.payload['gps_lat'], 25.7612);
+  });
+
+  testWidgets('no fix in time: the visit still saves, flagged', (tester) async {
+    await setUpHarness(tester);
+    Harness.gps.timesOut = true;
+    await tester.pumpWidget(h.wrap(const VisitFormScreen(familyId: 'f2')));
+    await tester.pumpAndSettle();
+    await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'नहीं मिले'));
+    await tapAndSettle(tester, find.text('सेव करें'));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 200)),
+    );
+    await tester.pumpAndSettle();
+    final visit = h.store.data.outbox.single.payload;
+    expect(visit['gps_lat'], isNull);
+    expect(visit['flags'], ['GPS_TIMEOUT']);
+  });
+
+  testWidgets('after sign-in, the app asks for location before field work', (
+    tester,
+  ) async {
+    await setUpHarness(tester);
+    Harness.gps
+      ..permission = LocationPermission.denied
+      ..answer = LocationPermission.whileInUse;
+    const profile = Profile(
+      id: 'me',
+      name: 'सुनीता देवी',
+      role: 'volunteer',
+      mobile: '9000000001',
+    );
+    await tester.pumpWidget(h.wrap(const MainShell(profile: profile)));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 100)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('स्थान की अनुमति ज़रूरी है'), findsOneWidget);
+    expect(find.text('आपके बूथ'), findsNothing);
+
+    await tapAndSettle(tester, find.text('अनुमति दें'));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 100)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('आपके बूथ'), findsOneWidget);
   });
 }
