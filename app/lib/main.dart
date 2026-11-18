@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -11,31 +12,63 @@ import 'src/auth/auth_backend.dart';
 import 'src/auth/auth_controller.dart';
 import 'src/auth/key_value_store.dart';
 import 'src/auth/secure_session_storage.dart';
-import 'src/data/field_repository.dart';
+import 'src/data/field_store.dart';
+import 'src/data/local_db.dart';
+import 'src/data/sync_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  const store = SecureKeyValueStore();
+  const keys = SecureKeyValueStore();
   await Supabase.initialize(
     url: supabaseUrl,
     publishableKey: supabaseKey,
     authOptions: const FlutterAuthClientOptions(
-      localStorage: SecureSessionStorage(store),
+      localStorage: SecureSessionStorage(keys),
       detectSessionInUri: false,
     ),
   );
   final client = Supabase.instance.client;
 
-  final auth = AuthController(
-    backend: SupabaseAuthBackend(client),
+  final db = LocalDb(openLocalDb(key: await _databaseKey(keys)));
+  final store = FieldStore(db);
+  await store.reload();
+
+  late final AuthController auth;
+  final sync = SyncService(
+    api: SupabaseSyncApi(client),
     store: store,
+    // The server refused this phone: confirm, then sign out and wipe.
+    onAccessLost: () => auth.verifyAccess(),
+  );
+  auth = AuthController(
+    backend: SupabaseAuthBackend(client),
+    store: keys,
     deviceModel: await _deviceModel(),
     pollInterval: loginPollInterval,
+    onAccessLost: () async {
+      sync.stop();
+      await store.wipe();
+    },
   );
 
-  runApp(DastakApp(auth: auth, repository: FieldRepository(client)));
+  runApp(DastakApp(auth: auth, store: store, sync: sync));
   unawaited(auth.start());
+}
+
+/// The local database's encryption key: random, made once per install, kept
+/// in the Android Keystore.
+Future<String> _databaseKey(KeyValueStore keys) async {
+  const name = 'db_key';
+  final existing = await keys.read(name);
+  if (existing != null) return existing;
+  final random = Random.secure();
+  final key = List.generate(
+    32,
+    (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ).join();
+  await keys.write(name, key);
+  return key;
 }
 
 /// "Xiaomi Redmi 9A": shown to the admin next to the sign-in request.

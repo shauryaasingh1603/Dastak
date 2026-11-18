@@ -11,7 +11,7 @@ import 'package:dastak/src/auth/auth_backend.dart';
 import 'package:dastak/src/auth/auth_controller.dart';
 import 'package:dastak/src/auth/key_value_store.dart';
 import 'package:dastak/src/auth/models.dart';
-import 'package:dastak/src/data/field_repository.dart';
+import 'package:dastak/src/data/sync_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase/supabase.dart';
 
@@ -71,17 +71,20 @@ void main() {
       expect(profile.mobile, mobile);
       stdout.writeln('signed in as ${profile.name} (${profile.role})');
 
-      final repository = FieldRepository(client);
-      final booths = await repository.loadBooths(profile.id);
+      final snapshot = await SupabaseSyncApi(client).pull();
+      final parts = {
+        for (final b in snapshot['booths'] as List) (b as Map)['part_no'],
+      };
       stdout.writeln(
-        'booths: ${booths.map((b) => '${b.partNo}=${b.familyCount}').join(', ')}',
+        'booths: $parts; families: ${(snapshot['families'] as List).length}',
       );
-      expect(booths, isNotEmpty);
-      for (final booth in booths) {
-        final families = await repository.loadBoothFamilies(booth.partNo);
-        expect(families.length, booth.familyCount);
-        expect(families.every((f) => f.partNo == booth.partNo), isTrue);
-      }
+      expect(parts, isNotEmpty);
+      expect(
+        (snapshot['families'] as List).every(
+          (f) => parts.contains((f as Map)['part_no']),
+        ),
+        isTrue,
+      );
 
       await auth.verifyAccess();
       expect(auth.state, isA<AuthSignedIn>());
@@ -93,11 +96,9 @@ void main() {
           .eq('mobile', mobile);
       await auth.verifyAccess();
       expect((auth.state as AuthSignedOut).reason, LoginError.revoked);
-      expect(
-        await FieldRepository(client)
-            .loadBooths(profile.id)
-            .then((b) => b.length, onError: (_) => 0),
-        0,
+      await expectLater(
+        SupabaseSyncApi(client).pull(),
+        throwsA(isA<SyncAccessException>()),
       );
     },
     skip: ready ? null : 'set DASTAK_ADMIN_TOKEN and DASTAK_TEST_MOBILE',

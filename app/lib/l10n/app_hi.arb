@@ -59,7 +59,7 @@
     }
   },
   "sectionUnknown": "अनुभाग दर्ज नहीं",
-  "listSearchHint": "नाम या मकान नं. खोजें",
+  "listSearchHint": "नाम, EPIC या मकान नं. खोजें",
   "listEmpty": "इस बूथ में कोई परिवार नहीं है",
   "listNoMatch": "खोज से कोई परिवार नहीं मिला",
   "listShowing": "{shown} / {total} परिवार",
@@ -88,5 +88,279 @@
   "logoutConfirm": "क्या आप लॉगआउट करना चाहते हैं? दोबारा लॉगिन के लिए एडमिन की मंज़ूरी लगेगी।",
   "yes": "हाँ",
   "no": "नहीं",
-  "retry": "दोबारा कोशिश करें"
+  "retry": "दोबारा कोशिश करें",
+  "navHome": "सारांश",
+  "navList": "मेरी सूची",
+  "navForms": "फॉर्म",
+  "navSync": "सिंक",
+  "homeTarget": "आज का लक्ष्य",
+  "homeDoneToday": "आज पूरे",
+  "homeRemaining": "बाकी परिवार",
+  "homeRevisitToday": "आज दोबारा जाना है",
+  "homeFormsFilled": "भरे गए फॉर्म",
+  "homeSyncState": "सिंक स्थिति",
+  "homeDeadline": "अंतिम तिथि: 16 दिसंबर – {days} दिन बाकी",
+  "@homeDeadline": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "homeDeadlineToday": "अंतिम तिथि: आज (16 दिसंबर)",
+  "claimsClosed": "दावा अवधि समाप्त (16 दिसंबर)",
+  "outboxStale": "डेटा अभी सर्वर पर नहीं गया – नेट से जुड़ें",
+  "quotaLine": "आज जमा: {today}/{dailyLimit} · कुल: {total}/{totalLimit}",
+  "@quotaLine": {
+    "placeholders": {
+      "today": {
+        "type": "int"
+      },
+      "dailyLimit": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "totalLimit": {
+        "type": "int"
+      }
+    }
+  },
+  "firstSyncLoading": "आपकी सूची डाउनलोड हो रही है…",
+  "firstSyncFailed": "सूची डाउनलोड नहीं हुई – नेट से जुड़कर दोबारा कोशिश करें",
+  "logoutBlocked": "पहले सारा डेटा सिंक करें, फिर लॉगआउट करें।",
+  "boothProgress": "{done}/{total} परिवार पूरे",
+  "@boothProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "filterAll": "सभी",
+  "filterPending": "बाकी",
+  "filterDone": "पूरा",
+  "filterRevisit": "दोबारा",
+  "statusPending": "बाकी",
+  "statusDone": "पूरा",
+  "statusRevisit": "दोबारा",
+  "needsReview": "कार्यालय समीक्षा",
+  "newVoterTag": "नया",
+  "onRollTag": "सूची में नाम है",
+  "notSynced": "सिंक बाकी",
+  "outcomeEligible": "पात्र – फॉर्म भराना है",
+  "outcomeCorrection": "सुधार चाहिए",
+  "outcomeMovedIn": "यहाँ आए हैं",
+  "outcomeShifted": "स्थानांतरित",
+  "outcomeDead": "मृत्यु",
+  "outcomeNotMet": "नहीं मिले",
+  "outcomeOnRoll": "सूची में नाम है",
+  "formStatusFilled": "भरा गया",
+  "formStatusSubmitted": "जमा",
+  "formStatusInEro": "ईआरओ सूची में",
+  "formStatusAccepted": "स्वीकृत",
+  "formStatusRejected": "अस्वीकृत",
+  "formStatusHearing": "सुनवाई",
+  "routeBla2": "बीएलए-2 के माध्यम से",
+  "routeSelf": "स्वयं जमा",
+  "routeOnline": "ऑनलाइन",
+  "docAadhaar": "आधार",
+  "docBirthCert": "जन्म प्रमाणपत्र",
+  "docHighschool": "हाईस्कूल मार्कशीट",
+  "docRation": "राशन कार्ड",
+  "docElectricity": "बिजली बिल",
+  "docOther": "अन्य",
+  "formType": "फॉर्म {type}",
+  "@formType": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "formNone": "कोई नहीं",
+  "reasonShifted": "कारण: स्थानांतरित",
+  "reasonUntraceable": "कारण: पता नहीं चला",
+  "reasonPossDel": "कारण: संभवतः हटाया गया",
+  "relationF": "पिता",
+  "relationH": "पति",
+  "relationM": "माता",
+  "relationO": "अन्य",
+  "genderM": "पुरुष",
+  "genderF": "महिला",
+  "genderO": "अन्य",
+  "ageYears": "{age} वर्ष",
+  "@ageYears": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "epicLine": "EPIC: {epic}",
+  "@epicLine": {
+    "placeholders": {
+      "epic": {
+        "type": "String"
+      }
+    }
+  },
+  "epicMissing": "EPIC नहीं",
+  "familyTitle": "परिवार कार्ड",
+  "familyHead": "मुखिया: {name}",
+  "@familyHead": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "familyMembers": "सदस्य",
+  "familyPrevVisits": "पिछली भेंट",
+  "familyNoVisits": "अभी कोई भेंट नहीं",
+  "voterAdd": "नया सदस्य जोड़ें",
+  "visitByMe": "आप",
+  "visitByOther": "अन्य स्वयंसेवक",
+  "revisitOn": "दोबारा: {date}",
+  "@revisitOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "visitTitle": "भेंट फॉर्म",
+  "visitNobodyHome": "कोई नहीं मिला",
+  "visitNobodyHomeHint": "घर पर कोई नहीं था – दोबारा आने की तारीख़ चुनें",
+  "visitWhoMetOther": "अन्य व्यक्ति",
+  "visitMembers": "हर सदस्य का परिणाम",
+  "visitWhichForm": "कौन सा फॉर्म?",
+  "visitDocs": "देखे गए दस्तावेज़",
+  "visitMobile": "मोबाइल नंबर (अगर दें)",
+  "visitConsent": "आपका नंबर सिर्फ़ मतदाता सूची के काम के लिए लिया जा रहा है",
+  "visitConsentLabel": "मतदाता को पढ़कर सुनाया और सहमति ली",
+  "visitRemarks": "टिप्पणी",
+  "visitPickDate": "तारीख़ चुनें",
+  "errOutcomeRequired": "हर सदस्य का परिणाम चुनें",
+  "errFormRequired": "कौन सा फॉर्म भरना है, चुनें",
+  "errConsentRequired": "मोबाइल नंबर के लिए सहमति ज़रूरी है",
+  "errRevisitRequired": "दोबारा जाने की तारीख़ चुनें",
+  "formAlreadyOpen": "फॉर्म {type} पहले से दर्ज है",
+  "@formAlreadyOpen": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "gpsSearching": "स्थान ढूँढ रहे हैं…",
+  "gpsOk": "स्थान दर्ज हुआ ✓",
+  "gpsWeak": "स्थान सटीक नहीं – फिर भी सेव होगा",
+  "gpsOff": "स्थान बंद है – फिर भी सेव होगा",
+  "visitSaved": "भेंट सेव हुई",
+  "save": "सेव करें",
+  "cancel": "रद्द करें",
+  "formTitle": "फॉर्म विवरण",
+  "formOf": "{name} – फॉर्म {type}",
+  "@formOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "formRoute": "कैसे जमा हुआ",
+  "formReference": "रसीद / संदर्भ संख्या",
+  "formFiledOn": "जमा की तारीख़",
+  "formPhotoLater": "रसीद की फोटो – अगले संस्करण में",
+  "formTimeline": "स्थिति",
+  "formSaveDetails": "विवरण सेव करें",
+  "formMarkSubmitted": "जमा हुआ दर्ज करें",
+  "errReceiptRequired": "रसीद / संदर्भ संख्या ज़रूरी है",
+  "errRouteRequired": "फॉर्म कैसे जमा हुआ, यह चुनें",
+  "formBla2Only": "बीएलए-2 के माध्यम वाला फॉर्म बीएलए-2 ही जमा दर्ज करेंगे",
+  "formQuotaWarn": "ध्यान दें: आज {today}/{dailyLimit} और कुल {total}/{totalLimit} जमा हो चुके",
+  "@formQuotaWarn": {
+    "placeholders": {
+      "today": {
+        "type": "int"
+      },
+      "dailyLimit": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "totalLimit": {
+        "type": "int"
+      }
+    }
+  },
+  "formQuotaDailyFull": "आज की सीमा (10) पूरी – फॉर्म स्वयं या ऑनलाइन जमा करें",
+  "formQuotaTotalFull": "कुल सीमा (30) पूरी – फॉर्म स्वयं या ऑनलाइन जमा करें",
+  "formLocked": "यह फॉर्म जमा हो चुका है – आगे की स्थिति कार्यालय दर्ज करेगा",
+  "formSaved": "फॉर्म सेव हुआ",
+  "formSubmittedSaved": "फॉर्म जमा दर्ज हुआ",
+  "formsTitle": "फॉर्म स्थिति",
+  "formsEmpty": "इस स्थिति में कोई फॉर्म नहीं",
+  "syncTitle": "सिंक स्थिति",
+  "syncPendingCount": "भेजना बाकी: {count}",
+  "@syncPendingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "syncAllSent": "सारा डेटा सर्वर पर है ✓",
+  "syncLast": "आखिरी सिंक: {time}",
+  "@syncLast": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "syncNever": "अभी तक सिंक नहीं हुआ",
+  "syncRunning": "सिंक हो रहा है…",
+  "syncOffline": "नेट नहीं है – डेटा फ़ोन में सुरक्षित है",
+  "syncServerError": "सर्वर से जवाब नहीं मिला – थोड़ी देर बाद फिर कोशिश होगी",
+  "syncErrors": "त्रुटि",
+  "syncRetry": "दोबारा भेजें",
+  "syncDiscard": "हटाएँ",
+  "syncDiscardConfirm": "यह बदलाव फ़ोन से हट जाएगा और सर्वर पर नहीं जाएगा। हटाएँ?",
+  "appVersion": "ऐप संस्करण {version}",
+  "@appVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "entityVisit": "भेंट",
+  "entityForm": "फॉर्म",
+  "entityFormEvent": "फॉर्म की स्थिति",
+  "entityVoter": "नया मतदाता",
+  "newVoterTitle": "नया मतदाता जोड़ें",
+  "fieldName": "नाम",
+  "fieldRelation": "संबंध",
+  "fieldRelativeName": "संबंधी का नाम",
+  "fieldAge": "आयु",
+  "fieldGender": "लिंग",
+  "fieldEpic": "EPIC (अगर है)",
+  "errRequired": "ज़रूरी है",
+  "errAge": "सही आयु डालें",
+  "ageUnder18": "आयु 1 जनवरी 2027 को 18 से कम",
+  "newVoterSaved": "नया मतदाता जोड़ा गया",
+  "visitAdd": "भेंट दर्ज करें",
+  "syncNow": "अभी सिंक करें",
+  "visitWhoMet": "कौन मिला?",
+  "visitRevisit": "दोबारा कब जाना है"
 }

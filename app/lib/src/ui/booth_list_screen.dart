@@ -1,80 +1,103 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../data/field_repository.dart';
+import '../data/models.dart';
 import '../text.dart';
+import 'family_screen.dart';
+import 'field_scope.dart';
 import 'widgets.dart';
 
-/// "मेरी सूची": one tab per booth. Only the open booth's families are loaded
-/// and shown; the tabs switch between booths.
+/// "मेरी सूची": one tab per booth. Each tab shows only that booth's families.
 class BoothListScreen extends StatelessWidget {
   const BoothListScreen({
     super.key,
-    required this.booths,
-    required this.repository,
     this.initialIndex = 0,
+    this.embedded = false,
   });
 
-  final List<BoothSummary> booths;
-  final FieldRepository repository;
   final int initialIndex;
+
+  /// Shown as a bottom tab rather than pushed: no back button.
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final store = FieldScope.of(context).store;
 
-    if (booths.length == 1) {
-      return Scaffold(
-        appBar: AppBar(title: Text(l10n.boothNumber(booths.single.partNo))),
-        body: BoothFamilies(booth: booths.single, repository: repository),
-      );
-    }
-
-    return DefaultTabController(
-      length: booths.length,
-      initialIndex: initialIndex.clamp(0, booths.length - 1),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.listTitle),
-          bottom: TabBar(
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            labelColor: scheme.onPrimary,
-            unselectedLabelColor: scheme.onPrimary.withValues(alpha: 0.75),
-            indicatorColor: scheme.onPrimary,
-            indicatorWeight: 3,
-            tabs: [
-              for (final booth in booths)
-                Tab(text: l10n.boothNumber(booth.partNo)),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            for (final booth in booths)
-              BoothFamilies(
-                key: PageStorageKey(booth.partNo),
-                booth: booth,
-                repository: repository,
+    return ListenableBuilder(
+      listenable: store,
+      builder: (context, _) {
+        final booths = store.data.booths;
+        if (booths.isEmpty) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(l10n.listTitle),
+              automaticallyImplyLeading: !embedded,
+            ),
+            body: Padding(
+              padding: const EdgeInsets.all(16),
+              child: InfoBanner(
+                icon: Icons.info_outline,
+                text: l10n.homeNoBooths,
               ),
-          ],
-        ),
-      ),
+            ),
+          );
+        }
+        if (booths.length == 1) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(
+                '${l10n.listTitle} · ${l10n.boothNumber(booths.single.partNo)}',
+              ),
+              automaticallyImplyLeading: !embedded,
+            ),
+            body: BoothFamilies(booth: booths.single),
+          );
+        }
+        return DefaultTabController(
+          key: ValueKey(booths.map((b) => b.partNo).join(',')),
+          length: booths.length,
+          initialIndex: initialIndex.clamp(0, booths.length - 1),
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(l10n.listTitle),
+              automaticallyImplyLeading: !embedded,
+              bottom: TabBar(
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                labelColor: scheme.onPrimary,
+                unselectedLabelColor: scheme.onPrimary.withValues(alpha: 0.75),
+                indicatorColor: scheme.onPrimary,
+                indicatorWeight: 3,
+                tabs: [
+                  for (final booth in booths)
+                    Tab(text: l10n.boothNumber(booth.partNo)),
+                ],
+              ),
+            ),
+            body: TabBarView(
+              children: [
+                for (final booth in booths)
+                  BoothFamilies(
+                    key: PageStorageKey(booth.partNo),
+                    booth: booth,
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
-/// One booth's families, grouped by section and searchable.
+/// One booth's families, grouped by section, filterable and searchable.
 class BoothFamilies extends StatefulWidget {
-  const BoothFamilies({
-    super.key,
-    required this.booth,
-    required this.repository,
-  });
+  const BoothFamilies({super.key, required this.booth});
 
-  final BoothSummary booth;
-  final FieldRepository repository;
+  final Booth booth;
 
   @override
   State<BoothFamilies> createState() => _BoothFamiliesState();
@@ -82,41 +105,23 @@ class BoothFamilies extends StatefulWidget {
 
 class _BoothFamiliesState extends State<BoothFamilies>
     with AutomaticKeepAliveClientMixin {
-  List<FamilyRow>? _families;
-  bool _failed = false;
   String _query = '';
+  FamilyStatus? _filter;
 
   @override
   bool get wantKeepAlive => true;
 
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() => _failed = false);
-    try {
-      final families = await widget.repository.loadBoothFamilies(
-        widget.booth.partNo,
-      );
-      if (mounted) setState(() => _families = families);
-    } catch (_) {
-      if (mounted) setState(() => _failed = true);
+  bool _matches(FieldData data, Family family, String needle) {
+    if (needle.isEmpty) return true;
+    if ((family.houseNo ?? '').toLowerCase() == needle) return true;
+    if (normalizeForSearch(family.headNameHi ?? '').contains(needle)) {
+      return true;
     }
-  }
-
-  List<FamilyRow> _filtered(List<FamilyRow> families) {
-    final needle = normalizeForSearch(_query);
-    if (needle.isEmpty) return families;
-    return [
-      for (final f in families)
-        if (normalizeForSearch(f.headNameHi ?? '').contains(needle) ||
-            (f.houseNo ?? '').toLowerCase() == needle ||
-            f.code.toLowerCase().contains(needle))
-          f,
-    ];
+    for (final v in data.votersOf(family.id)) {
+      if (normalizeForSearch(v.nameHi).contains(needle)) return true;
+      if ((v.epic ?? '').toLowerCase().contains(needle)) return true;
+    }
+    return false;
   }
 
   @override
@@ -124,108 +129,127 @@ class _BoothFamiliesState extends State<BoothFamilies>
     super.build(context);
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final families = _families;
+    final store = FieldScope.of(context).store;
 
-    if (families == null) {
-      return _failed
-          ? Padding(
-              padding: const EdgeInsets.all(16),
-              child: InfoBanner(
-                icon: Icons.wifi_off,
-                text: l10n.errNetwork,
-                action: TextButton(onPressed: _load, child: Text(l10n.retry)),
+    return ListenableBuilder(
+      listenable: store,
+      builder: (context, _) {
+        final data = store.data;
+        final families = data.familiesInBooth(widget.booth.partNo)
+          ..sort((a, b) {
+            final bySection = (a.sectionNo ?? 1 << 30).compareTo(
+              b.sectionNo ?? 1 << 30,
+            );
+            if (bySection != 0) return bySection;
+            final byHouse = compareHouseNo(a.houseNo, b.houseNo);
+            return byHouse != 0 ? byHouse : a.code.compareTo(b.code);
+          });
+        final needle = normalizeForSearch(_query);
+        final shown = [
+          for (final f in families)
+            if ((_filter == null || data.statusOf(f.id) == _filter) &&
+                _matches(data, f, needle))
+              f,
+        ];
+
+        final rows = <Widget>[];
+        int? section = -1;
+        for (final family in shown) {
+          if (family.sectionNo != section) {
+            section = family.sectionNo;
+            rows.add(
+              SectionTitle(
+                section == null
+                    ? l10n.sectionUnknown
+                    : l10n.sectionHeader(section),
               ),
-            )
-          : const Center(child: CircularProgressIndicator());
-    }
-
-    final shown = _filtered(families);
-    final rows = <Widget>[];
-    int? section = -1;
-    for (final family in shown) {
-      if (family.sectionNo != section) {
-        section = family.sectionNo;
-        rows.add(
-          _SectionHeader(
-            text: section == null
-                ? l10n.sectionUnknown
-                : l10n.sectionHeader(section),
-          ),
-        );
-      }
-      rows.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: FamilyTile(family: family),
-        ),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _load,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        children: [
-          if (widget.booth.stationHi != null)
+            );
+          }
+          rows.add(
             Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Text(
-                widget.booth.stationHi!,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+              padding: const EdgeInsets.only(bottom: 8),
+              child: FamilyTile(
+                family: family,
+                status: data.statusOf(family.id),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => FamilyScreen(familyId: family.id),
+                  ),
                 ),
               ),
             ),
-          TextField(
-            onChanged: (value) => setState(() => _query = value),
-            textInputAction: TextInputAction.search,
-            decoration: InputDecoration(
-              hintText: l10n.listSearchHint,
-              prefixIcon: const Icon(Icons.search),
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l10n.listShowing(shown.length, families.length),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          if (families.isEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: InfoBanner(icon: Icons.info_outline, text: l10n.listEmpty),
-            )
-          else if (shown.isEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: InfoBanner(icon: Icons.search_off, text: l10n.listNoMatch),
-            ),
-          ...rows,
-        ],
-      ),
-    );
-  }
-}
+          );
+        }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.text});
+        final filters = <(String, FamilyStatus?)>[
+          (l10n.filterAll, null),
+          (l10n.filterPending, FamilyStatus.pending),
+          (l10n.filterDone, FamilyStatus.done),
+          (l10n.filterRevisit, FamilyStatus.revisit),
+        ];
 
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(top: 14, bottom: 8),
-      child: Text(
-        text,
-        style: theme.textTheme.titleMedium?.copyWith(
-          color: theme.colorScheme.primary,
-        ),
-      ),
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          children: [
+            if (widget.booth.stationHi != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(
+                  widget.booth.stationHi!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            TextField(
+              onChanged: (value) => setState(() => _query = value),
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: l10n.listSearchHint,
+                prefixIcon: const Icon(Icons.search),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final (label, status) in filters)
+                  ChoiceChip(
+                    label: Text(label),
+                    selected: _filter == status,
+                    onSelected: (_) => setState(() => _filter = status),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.listShowing(shown.length, families.length),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            if (families.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: InfoBanner(
+                  icon: Icons.info_outline,
+                  text: l10n.listEmpty,
+                ),
+              )
+            else if (shown.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: InfoBanner(
+                  icon: Icons.search_off,
+                  text: l10n.listNoMatch,
+                ),
+              ),
+            ...rows,
+          ],
+        );
+      },
     );
   }
 }

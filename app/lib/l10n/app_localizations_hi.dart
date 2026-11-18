@@ -117,7 +117,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sectionUnknown => 'अनुभाग दर्ज नहीं';
 
   @override
-  String get listSearchHint => 'नाम या मकान नं. खोजें';
+  String get listSearchHint => 'नाम, EPIC या मकान नं. खोजें';
 
   @override
   String get listEmpty => 'इस बूथ में कोई परिवार नहीं है';
@@ -159,4 +159,497 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get retry => 'दोबारा कोशिश करें';
+
+  @override
+  String get navHome => 'सारांश';
+
+  @override
+  String get navList => 'मेरी सूची';
+
+  @override
+  String get navForms => 'फॉर्म';
+
+  @override
+  String get navSync => 'सिंक';
+
+  @override
+  String get homeTarget => 'आज का लक्ष्य';
+
+  @override
+  String get homeDoneToday => 'आज पूरे';
+
+  @override
+  String get homeRemaining => 'बाकी परिवार';
+
+  @override
+  String get homeRevisitToday => 'आज दोबारा जाना है';
+
+  @override
+  String get homeFormsFilled => 'भरे गए फॉर्म';
+
+  @override
+  String get homeSyncState => 'सिंक स्थिति';
+
+  @override
+  String homeDeadline(int days) {
+    return 'अंतिम तिथि: 16 दिसंबर – $days दिन बाकी';
+  }
+
+  @override
+  String get homeDeadlineToday => 'अंतिम तिथि: आज (16 दिसंबर)';
+
+  @override
+  String get claimsClosed => 'दावा अवधि समाप्त (16 दिसंबर)';
+
+  @override
+  String get outboxStale => 'डेटा अभी सर्वर पर नहीं गया – नेट से जुड़ें';
+
+  @override
+  String quotaLine(int today, int dailyLimit, int total, int totalLimit) {
+    return 'आज जमा: $today/$dailyLimit · कुल: $total/$totalLimit';
+  }
+
+  @override
+  String get firstSyncLoading => 'आपकी सूची डाउनलोड हो रही है…';
+
+  @override
+  String get firstSyncFailed =>
+      'सूची डाउनलोड नहीं हुई – नेट से जुड़कर दोबारा कोशिश करें';
+
+  @override
+  String get logoutBlocked => 'पहले सारा डेटा सिंक करें, फिर लॉगआउट करें।';
+
+  @override
+  String boothProgress(int done, int total) {
+    return '$done/$total परिवार पूरे';
+  }
+
+  @override
+  String get filterAll => 'सभी';
+
+  @override
+  String get filterPending => 'बाकी';
+
+  @override
+  String get filterDone => 'पूरा';
+
+  @override
+  String get filterRevisit => 'दोबारा';
+
+  @override
+  String get statusPending => 'बाकी';
+
+  @override
+  String get statusDone => 'पूरा';
+
+  @override
+  String get statusRevisit => 'दोबारा';
+
+  @override
+  String get needsReview => 'कार्यालय समीक्षा';
+
+  @override
+  String get newVoterTag => 'नया';
+
+  @override
+  String get onRollTag => 'सूची में नाम है';
+
+  @override
+  String get notSynced => 'सिंक बाकी';
+
+  @override
+  String get outcomeEligible => 'पात्र – फॉर्म भराना है';
+
+  @override
+  String get outcomeCorrection => 'सुधार चाहिए';
+
+  @override
+  String get outcomeMovedIn => 'यहाँ आए हैं';
+
+  @override
+  String get outcomeShifted => 'स्थानांतरित';
+
+  @override
+  String get outcomeDead => 'मृत्यु';
+
+  @override
+  String get outcomeNotMet => 'नहीं मिले';
+
+  @override
+  String get outcomeOnRoll => 'सूची में नाम है';
+
+  @override
+  String get formStatusFilled => 'भरा गया';
+
+  @override
+  String get formStatusSubmitted => 'जमा';
+
+  @override
+  String get formStatusInEro => 'ईआरओ सूची में';
+
+  @override
+  String get formStatusAccepted => 'स्वीकृत';
+
+  @override
+  String get formStatusRejected => 'अस्वीकृत';
+
+  @override
+  String get formStatusHearing => 'सुनवाई';
+
+  @override
+  String get routeBla2 => 'बीएलए-2 के माध्यम से';
+
+  @override
+  String get routeSelf => 'स्वयं जमा';
+
+  @override
+  String get routeOnline => 'ऑनलाइन';
+
+  @override
+  String get docAadhaar => 'आधार';
+
+  @override
+  String get docBirthCert => 'जन्म प्रमाणपत्र';
+
+  @override
+  String get docHighschool => 'हाईस्कूल मार्कशीट';
+
+  @override
+  String get docRation => 'राशन कार्ड';
+
+  @override
+  String get docElectricity => 'बिजली बिल';
+
+  @override
+  String get docOther => 'अन्य';
+
+  @override
+  String formType(String type) {
+    return 'फॉर्म $type';
+  }
+
+  @override
+  String get formNone => 'कोई नहीं';
+
+  @override
+  String get reasonShifted => 'कारण: स्थानांतरित';
+
+  @override
+  String get reasonUntraceable => 'कारण: पता नहीं चला';
+
+  @override
+  String get reasonPossDel => 'कारण: संभवतः हटाया गया';
+
+  @override
+  String get relationF => 'पिता';
+
+  @override
+  String get relationH => 'पति';
+
+  @override
+  String get relationM => 'माता';
+
+  @override
+  String get relationO => 'अन्य';
+
+  @override
+  String get genderM => 'पुरुष';
+
+  @override
+  String get genderF => 'महिला';
+
+  @override
+  String get genderO => 'अन्य';
+
+  @override
+  String ageYears(int age) {
+    return '$age वर्ष';
+  }
+
+  @override
+  String epicLine(String epic) {
+    return 'EPIC: $epic';
+  }
+
+  @override
+  String get epicMissing => 'EPIC नहीं';
+
+  @override
+  String get familyTitle => 'परिवार कार्ड';
+
+  @override
+  String familyHead(String name) {
+    return 'मुखिया: $name';
+  }
+
+  @override
+  String get familyMembers => 'सदस्य';
+
+  @override
+  String get familyPrevVisits => 'पिछली भेंट';
+
+  @override
+  String get familyNoVisits => 'अभी कोई भेंट नहीं';
+
+  @override
+  String get voterAdd => 'नया सदस्य जोड़ें';
+
+  @override
+  String get visitByMe => 'आप';
+
+  @override
+  String get visitByOther => 'अन्य स्वयंसेवक';
+
+  @override
+  String revisitOn(String date) {
+    return 'दोबारा: $date';
+  }
+
+  @override
+  String get visitTitle => 'भेंट फॉर्म';
+
+  @override
+  String get visitNobodyHome => 'कोई नहीं मिला';
+
+  @override
+  String get visitNobodyHomeHint =>
+      'घर पर कोई नहीं था – दोबारा आने की तारीख़ चुनें';
+
+  @override
+  String get visitWhoMetOther => 'अन्य व्यक्ति';
+
+  @override
+  String get visitMembers => 'हर सदस्य का परिणाम';
+
+  @override
+  String get visitWhichForm => 'कौन सा फॉर्म?';
+
+  @override
+  String get visitDocs => 'देखे गए दस्तावेज़';
+
+  @override
+  String get visitMobile => 'मोबाइल नंबर (अगर दें)';
+
+  @override
+  String get visitConsent =>
+      'आपका नंबर सिर्फ़ मतदाता सूची के काम के लिए लिया जा रहा है';
+
+  @override
+  String get visitConsentLabel => 'मतदाता को पढ़कर सुनाया और सहमति ली';
+
+  @override
+  String get visitRemarks => 'टिप्पणी';
+
+  @override
+  String get visitPickDate => 'तारीख़ चुनें';
+
+  @override
+  String get errOutcomeRequired => 'हर सदस्य का परिणाम चुनें';
+
+  @override
+  String get errFormRequired => 'कौन सा फॉर्म भरना है, चुनें';
+
+  @override
+  String get errConsentRequired => 'मोबाइल नंबर के लिए सहमति ज़रूरी है';
+
+  @override
+  String get errRevisitRequired => 'दोबारा जाने की तारीख़ चुनें';
+
+  @override
+  String formAlreadyOpen(String type) {
+    return 'फॉर्म $type पहले से दर्ज है';
+  }
+
+  @override
+  String get gpsSearching => 'स्थान ढूँढ रहे हैं…';
+
+  @override
+  String get gpsOk => 'स्थान दर्ज हुआ ✓';
+
+  @override
+  String get gpsWeak => 'स्थान सटीक नहीं – फिर भी सेव होगा';
+
+  @override
+  String get gpsOff => 'स्थान बंद है – फिर भी सेव होगा';
+
+  @override
+  String get visitSaved => 'भेंट सेव हुई';
+
+  @override
+  String get save => 'सेव करें';
+
+  @override
+  String get cancel => 'रद्द करें';
+
+  @override
+  String get formTitle => 'फॉर्म विवरण';
+
+  @override
+  String formOf(String name, String type) {
+    return '$name – फॉर्म $type';
+  }
+
+  @override
+  String get formRoute => 'कैसे जमा हुआ';
+
+  @override
+  String get formReference => 'रसीद / संदर्भ संख्या';
+
+  @override
+  String get formFiledOn => 'जमा की तारीख़';
+
+  @override
+  String get formPhotoLater => 'रसीद की फोटो – अगले संस्करण में';
+
+  @override
+  String get formTimeline => 'स्थिति';
+
+  @override
+  String get formSaveDetails => 'विवरण सेव करें';
+
+  @override
+  String get formMarkSubmitted => 'जमा हुआ दर्ज करें';
+
+  @override
+  String get errReceiptRequired => 'रसीद / संदर्भ संख्या ज़रूरी है';
+
+  @override
+  String get errRouteRequired => 'फॉर्म कैसे जमा हुआ, यह चुनें';
+
+  @override
+  String get formBla2Only =>
+      'बीएलए-2 के माध्यम वाला फॉर्म बीएलए-2 ही जमा दर्ज करेंगे';
+
+  @override
+  String formQuotaWarn(int today, int dailyLimit, int total, int totalLimit) {
+    return 'ध्यान दें: आज $today/$dailyLimit और कुल $total/$totalLimit जमा हो चुके';
+  }
+
+  @override
+  String get formQuotaDailyFull =>
+      'आज की सीमा (10) पूरी – फॉर्म स्वयं या ऑनलाइन जमा करें';
+
+  @override
+  String get formQuotaTotalFull =>
+      'कुल सीमा (30) पूरी – फॉर्म स्वयं या ऑनलाइन जमा करें';
+
+  @override
+  String get formLocked =>
+      'यह फॉर्म जमा हो चुका है – आगे की स्थिति कार्यालय दर्ज करेगा';
+
+  @override
+  String get formSaved => 'फॉर्म सेव हुआ';
+
+  @override
+  String get formSubmittedSaved => 'फॉर्म जमा दर्ज हुआ';
+
+  @override
+  String get formsTitle => 'फॉर्म स्थिति';
+
+  @override
+  String get formsEmpty => 'इस स्थिति में कोई फॉर्म नहीं';
+
+  @override
+  String get syncTitle => 'सिंक स्थिति';
+
+  @override
+  String syncPendingCount(int count) {
+    return 'भेजना बाकी: $count';
+  }
+
+  @override
+  String get syncAllSent => 'सारा डेटा सर्वर पर है ✓';
+
+  @override
+  String syncLast(String time) {
+    return 'आखिरी सिंक: $time';
+  }
+
+  @override
+  String get syncNever => 'अभी तक सिंक नहीं हुआ';
+
+  @override
+  String get syncRunning => 'सिंक हो रहा है…';
+
+  @override
+  String get syncOffline => 'नेट नहीं है – डेटा फ़ोन में सुरक्षित है';
+
+  @override
+  String get syncServerError =>
+      'सर्वर से जवाब नहीं मिला – थोड़ी देर बाद फिर कोशिश होगी';
+
+  @override
+  String get syncErrors => 'त्रुटि';
+
+  @override
+  String get syncRetry => 'दोबारा भेजें';
+
+  @override
+  String get syncDiscard => 'हटाएँ';
+
+  @override
+  String get syncDiscardConfirm =>
+      'यह बदलाव फ़ोन से हट जाएगा और सर्वर पर नहीं जाएगा। हटाएँ?';
+
+  @override
+  String appVersion(String version) {
+    return 'ऐप संस्करण $version';
+  }
+
+  @override
+  String get entityVisit => 'भेंट';
+
+  @override
+  String get entityForm => 'फॉर्म';
+
+  @override
+  String get entityFormEvent => 'फॉर्म की स्थिति';
+
+  @override
+  String get entityVoter => 'नया मतदाता';
+
+  @override
+  String get newVoterTitle => 'नया मतदाता जोड़ें';
+
+  @override
+  String get fieldName => 'नाम';
+
+  @override
+  String get fieldRelation => 'संबंध';
+
+  @override
+  String get fieldRelativeName => 'संबंधी का नाम';
+
+  @override
+  String get fieldAge => 'आयु';
+
+  @override
+  String get fieldGender => 'लिंग';
+
+  @override
+  String get fieldEpic => 'EPIC (अगर है)';
+
+  @override
+  String get errRequired => 'ज़रूरी है';
+
+  @override
+  String get errAge => 'सही आयु डालें';
+
+  @override
+  String get ageUnder18 => 'आयु 1 जनवरी 2027 को 18 से कम';
+
+  @override
+  String get newVoterSaved => 'नया मतदाता जोड़ा गया';
+
+  @override
+  String get visitAdd => 'भेंट दर्ज करें';
+
+  @override
+  String get syncNow => 'अभी सिंक करें';
+
+  @override
+  String get visitWhoMet => 'कौन मिला?';
+
+  @override
+  String get visitRevisit => 'दोबारा कब जाना है';
 }
