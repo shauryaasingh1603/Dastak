@@ -52,6 +52,21 @@ abstract final class SubmitRoute {
   static const all = [bla2, self, online];
 }
 
+/// Who the household contact is, relative to the listed person.
+abstract final class ContactRelation {
+  static const all = [
+    'FATHER',
+    'MOTHER',
+    'HUSBAND',
+    'WIFE',
+    'SON',
+    'DAUGHTER',
+    'SIBLING',
+    'SELF',
+    'OTHER',
+  ];
+}
+
 abstract final class Doc {
   static const all = [
     'AADHAAR',
@@ -110,6 +125,8 @@ class Voter {
     required this.sourceList,
     this.asddReason,
     this.matchConfidence,
+    this.oldPartNo,
+    this.oldSerial,
     this.alreadyOnRoll = false,
     this.pending = false,
   });
@@ -125,6 +142,8 @@ class Voter {
   final String sourceList;
   final String? asddReason;
   final String? matchConfidence;
+  final int? oldPartNo;
+  final int? oldSerial;
   final bool alreadyOnRoll;
   final bool pending;
 
@@ -218,6 +237,7 @@ class CampaignSettings {
     required this.claimsCloseAt,
     required this.statusCloseAt,
     this.dailyFamilyTarget = 30,
+    this.dailyPeopleTarget = 45,
     this.bla2DailyLimit = 10,
     this.bla2TotalLimit = 30,
   });
@@ -233,6 +253,9 @@ class CampaignSettings {
   final DateTime claimsCloseAt;
   final DateTime statusCloseAt;
   final int dailyFamilyTarget;
+
+  /// People to cover a day; progress is counted in people.
+  final int dailyPeopleTarget;
   final int bla2DailyLimit;
   final int bla2TotalLimit;
 
@@ -242,6 +265,7 @@ class CampaignSettings {
         claimsCloseAt: DateTime.parse(json['claims_close_at'] as String),
         statusCloseAt: DateTime.parse(json['status_close_at'] as String),
         dailyFamilyTarget: json['daily_family_target'] as int? ?? 30,
+        dailyPeopleTarget: json['daily_people_target'] as int? ?? 45,
         bla2DailyLimit: json['bla2_daily_limit'] as int? ?? 10,
         bla2TotalLimit: json['bla2_total_limit'] as int? ?? 30,
       );
@@ -406,6 +430,93 @@ class FieldData {
     return visits.first.revisitOn != null
         ? FamilyStatus.revisit
         : FamilyStatus.done;
+  }
+
+  /// Visits that recorded this person, newest first. A visit covers the
+  /// people listed on it; an older visit with no people listed covers its
+  /// whole record.
+  List<Visit> visitsFor(String voterId) {
+    final voter = _voterById[voterId];
+    if (voter == null) return const [];
+    return [
+      for (final v in visitsOf(voter.familyId))
+        if (v.members.isEmpty) v,
+      for (final v in visits)
+        if (v.members.any((m) => m.voterId == voterId)) v,
+    ]..sort((a, b) => b.visitedAt.compareTo(a.visitedAt));
+  }
+
+  /// Not visited yet, done, or to be visited again (nobody met, this person
+  /// not met, or a revisit date set).
+  FamilyStatus personStatus(String voterId) {
+    final visits = visitsFor(voterId);
+    if (visits.isEmpty) return FamilyStatus.pending;
+    final last = visits.first;
+    final mine = last.members.where((m) => m.voterId == voterId);
+    final notMet =
+        last.outcome == Outcome.notMet ||
+        (mine.isNotEmpty && mine.first.outcome == Outcome.notMet);
+    return notMet || last.revisitOn != null
+        ? FamilyStatus.revisit
+        : FamilyStatus.done;
+  }
+
+  /// Everyone listed in a booth, in 2025 roll order (the order a booth was
+  /// walked when the roll was made).
+  List<Voter> peopleInBooth(int partNo) {
+    final people = [
+      for (final v in voters)
+        if (_familyById[v.familyId]?.partNo == partNo) v,
+    ];
+    people.sort(compareRollOrder);
+    return people;
+  }
+
+  int compareRollOrder(Voter a, Voter b) {
+    const last = 1 << 30;
+    final byPart = (a.oldPartNo ?? last).compareTo(b.oldPartNo ?? last);
+    if (byPart != 0) return byPart;
+    final bySerial = (a.oldSerial ?? last).compareTo(b.oldSerial ?? last);
+    if (bySerial != 0) return bySerial;
+    return a.nameHi.compareTo(b.nameHi);
+  }
+
+  /// People who may live in the same house as [voterId]: others on the same
+  /// record (e.g. added in the field), and listed people with the same house
+  /// number close by on the 2025 roll. Only suggestions: the volunteer
+  /// confirms at the door.
+  List<Voter> sameHouseCandidates(String voterId) {
+    final lead = _voterById[voterId];
+    if (lead == null) return const [];
+    final family = _familyById[lead.familyId];
+    final house = _normHouse(family?.houseNo);
+    final out = <Voter>[];
+    for (final v in voters) {
+      if (v.id == lead.id) continue;
+      if (v.familyId == lead.familyId) {
+        out.add(v);
+        continue;
+      }
+      if (house.isEmpty || family == null) continue;
+      final f = _familyById[v.familyId];
+      if (f == null || f.partNo != family.partNo) continue;
+      if (_normHouse(f.houseNo) != house) continue;
+      if (v.oldPartNo != lead.oldPartNo) continue;
+      final a = v.oldSerial, b = lead.oldSerial;
+      if (a == null || b == null || (a - b).abs() > 10) continue;
+      out.add(v);
+    }
+    out.sort(compareRollOrder);
+    return out;
+  }
+
+  static String _normHouse(String? house) {
+    var h = (house ?? '').replaceAll(RegExp(r'\s+'), '').toUpperCase();
+    const hindiDigits = '०१२३४५६७८९';
+    for (var i = 0; i < 10; i++) {
+      h = h.replaceAll(hindiDigits[i], '$i');
+    }
+    return RegExp(r'^0*$').hasMatch(h) ? '' : h;
   }
 
   /// The voter already has an open form of this type (R6).

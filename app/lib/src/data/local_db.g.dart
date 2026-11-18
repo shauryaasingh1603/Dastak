@@ -843,6 +843,28 @@ class $VotersTable extends Voters with TableInfo<$VotersTable, VoterRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _oldPartNoMeta = const VerificationMeta(
+    'oldPartNo',
+  );
+  @override
+  late final GeneratedColumn<int> oldPartNo = GeneratedColumn<int>(
+    'old_part_no',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _oldSerialMeta = const VerificationMeta(
+    'oldSerial',
+  );
+  @override
+  late final GeneratedColumn<int> oldSerial = GeneratedColumn<int>(
+    'old_serial',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _alreadyOnRollMeta = const VerificationMeta(
     'alreadyOnRoll',
   );
@@ -886,6 +908,8 @@ class $VotersTable extends Voters with TableInfo<$VotersTable, VoterRow> {
     sourceList,
     asddReason,
     matchConfidence,
+    oldPartNo,
+    oldSerial,
     alreadyOnRoll,
     pending,
   ];
@@ -981,6 +1005,18 @@ class $VotersTable extends Voters with TableInfo<$VotersTable, VoterRow> {
         ),
       );
     }
+    if (data.containsKey('old_part_no')) {
+      context.handle(
+        _oldPartNoMeta,
+        oldPartNo.isAcceptableOrUnknown(data['old_part_no']!, _oldPartNoMeta),
+      );
+    }
+    if (data.containsKey('old_serial')) {
+      context.handle(
+        _oldSerialMeta,
+        oldSerial.isAcceptableOrUnknown(data['old_serial']!, _oldSerialMeta),
+      );
+    }
     if (data.containsKey('already_on_roll')) {
       context.handle(
         _alreadyOnRollMeta,
@@ -1049,6 +1085,14 @@ class $VotersTable extends Voters with TableInfo<$VotersTable, VoterRow> {
         DriftSqlType.string,
         data['${effectivePrefix}match_confidence'],
       ),
+      oldPartNo: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}old_part_no'],
+      ),
+      oldSerial: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}old_serial'],
+      ),
       alreadyOnRoll: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}already_on_roll'],
@@ -1078,6 +1122,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
   final String sourceList;
   final String? asddReason;
   final String? matchConfidence;
+  final int? oldPartNo;
+  final int? oldSerial;
   final bool alreadyOnRoll;
   final bool pending;
   const VoterRow({
@@ -1092,6 +1138,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     required this.sourceList,
     this.asddReason,
     this.matchConfidence,
+    this.oldPartNo,
+    this.oldSerial,
     required this.alreadyOnRoll,
     required this.pending,
   });
@@ -1123,6 +1171,12 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     if (!nullToAbsent || matchConfidence != null) {
       map['match_confidence'] = Variable<String>(matchConfidence);
     }
+    if (!nullToAbsent || oldPartNo != null) {
+      map['old_part_no'] = Variable<int>(oldPartNo);
+    }
+    if (!nullToAbsent || oldSerial != null) {
+      map['old_serial'] = Variable<int>(oldSerial);
+    }
     map['already_on_roll'] = Variable<bool>(alreadyOnRoll);
     map['pending'] = Variable<bool>(pending);
     return map;
@@ -1151,6 +1205,12 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
       matchConfidence: matchConfidence == null && nullToAbsent
           ? const Value.absent()
           : Value(matchConfidence),
+      oldPartNo: oldPartNo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(oldPartNo),
+      oldSerial: oldSerial == null && nullToAbsent
+          ? const Value.absent()
+          : Value(oldSerial),
       alreadyOnRoll: Value(alreadyOnRoll),
       pending: Value(pending),
     );
@@ -1173,6 +1233,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
       sourceList: serializer.fromJson<String>(json['sourceList']),
       asddReason: serializer.fromJson<String?>(json['asddReason']),
       matchConfidence: serializer.fromJson<String?>(json['matchConfidence']),
+      oldPartNo: serializer.fromJson<int?>(json['oldPartNo']),
+      oldSerial: serializer.fromJson<int?>(json['oldSerial']),
       alreadyOnRoll: serializer.fromJson<bool>(json['alreadyOnRoll']),
       pending: serializer.fromJson<bool>(json['pending']),
     );
@@ -1192,6 +1254,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
       'sourceList': serializer.toJson<String>(sourceList),
       'asddReason': serializer.toJson<String?>(asddReason),
       'matchConfidence': serializer.toJson<String?>(matchConfidence),
+      'oldPartNo': serializer.toJson<int?>(oldPartNo),
+      'oldSerial': serializer.toJson<int?>(oldSerial),
       'alreadyOnRoll': serializer.toJson<bool>(alreadyOnRoll),
       'pending': serializer.toJson<bool>(pending),
     };
@@ -1209,6 +1273,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     String? sourceList,
     Value<String?> asddReason = const Value.absent(),
     Value<String?> matchConfidence = const Value.absent(),
+    Value<int?> oldPartNo = const Value.absent(),
+    Value<int?> oldSerial = const Value.absent(),
     bool? alreadyOnRoll,
     bool? pending,
   }) => VoterRow(
@@ -1227,6 +1293,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     matchConfidence: matchConfidence.present
         ? matchConfidence.value
         : this.matchConfidence,
+    oldPartNo: oldPartNo.present ? oldPartNo.value : this.oldPartNo,
+    oldSerial: oldSerial.present ? oldSerial.value : this.oldSerial,
     alreadyOnRoll: alreadyOnRoll ?? this.alreadyOnRoll,
     pending: pending ?? this.pending,
   );
@@ -1253,6 +1321,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
       matchConfidence: data.matchConfidence.present
           ? data.matchConfidence.value
           : this.matchConfidence,
+      oldPartNo: data.oldPartNo.present ? data.oldPartNo.value : this.oldPartNo,
+      oldSerial: data.oldSerial.present ? data.oldSerial.value : this.oldSerial,
       alreadyOnRoll: data.alreadyOnRoll.present
           ? data.alreadyOnRoll.value
           : this.alreadyOnRoll,
@@ -1274,6 +1344,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
           ..write('sourceList: $sourceList, ')
           ..write('asddReason: $asddReason, ')
           ..write('matchConfidence: $matchConfidence, ')
+          ..write('oldPartNo: $oldPartNo, ')
+          ..write('oldSerial: $oldSerial, ')
           ..write('alreadyOnRoll: $alreadyOnRoll, ')
           ..write('pending: $pending')
           ..write(')'))
@@ -1293,6 +1365,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     sourceList,
     asddReason,
     matchConfidence,
+    oldPartNo,
+    oldSerial,
     alreadyOnRoll,
     pending,
   );
@@ -1311,6 +1385,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
           other.sourceList == this.sourceList &&
           other.asddReason == this.asddReason &&
           other.matchConfidence == this.matchConfidence &&
+          other.oldPartNo == this.oldPartNo &&
+          other.oldSerial == this.oldSerial &&
           other.alreadyOnRoll == this.alreadyOnRoll &&
           other.pending == this.pending);
 }
@@ -1327,6 +1403,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
   final Value<String> sourceList;
   final Value<String?> asddReason;
   final Value<String?> matchConfidence;
+  final Value<int?> oldPartNo;
+  final Value<int?> oldSerial;
   final Value<bool> alreadyOnRoll;
   final Value<bool> pending;
   final Value<int> rowid;
@@ -1342,6 +1420,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     this.sourceList = const Value.absent(),
     this.asddReason = const Value.absent(),
     this.matchConfidence = const Value.absent(),
+    this.oldPartNo = const Value.absent(),
+    this.oldSerial = const Value.absent(),
     this.alreadyOnRoll = const Value.absent(),
     this.pending = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1358,6 +1438,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     required String sourceList,
     this.asddReason = const Value.absent(),
     this.matchConfidence = const Value.absent(),
+    this.oldPartNo = const Value.absent(),
+    this.oldSerial = const Value.absent(),
     this.alreadyOnRoll = const Value.absent(),
     this.pending = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1377,6 +1459,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     Expression<String>? sourceList,
     Expression<String>? asddReason,
     Expression<String>? matchConfidence,
+    Expression<int>? oldPartNo,
+    Expression<int>? oldSerial,
     Expression<bool>? alreadyOnRoll,
     Expression<bool>? pending,
     Expression<int>? rowid,
@@ -1393,6 +1477,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
       if (sourceList != null) 'source_list': sourceList,
       if (asddReason != null) 'asdd_reason': asddReason,
       if (matchConfidence != null) 'match_confidence': matchConfidence,
+      if (oldPartNo != null) 'old_part_no': oldPartNo,
+      if (oldSerial != null) 'old_serial': oldSerial,
       if (alreadyOnRoll != null) 'already_on_roll': alreadyOnRoll,
       if (pending != null) 'pending': pending,
       if (rowid != null) 'rowid': rowid,
@@ -1411,6 +1497,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     Value<String>? sourceList,
     Value<String?>? asddReason,
     Value<String?>? matchConfidence,
+    Value<int?>? oldPartNo,
+    Value<int?>? oldSerial,
     Value<bool>? alreadyOnRoll,
     Value<bool>? pending,
     Value<int>? rowid,
@@ -1427,6 +1515,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
       sourceList: sourceList ?? this.sourceList,
       asddReason: asddReason ?? this.asddReason,
       matchConfidence: matchConfidence ?? this.matchConfidence,
+      oldPartNo: oldPartNo ?? this.oldPartNo,
+      oldSerial: oldSerial ?? this.oldSerial,
       alreadyOnRoll: alreadyOnRoll ?? this.alreadyOnRoll,
       pending: pending ?? this.pending,
       rowid: rowid ?? this.rowid,
@@ -1469,6 +1559,12 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     if (matchConfidence.present) {
       map['match_confidence'] = Variable<String>(matchConfidence.value);
     }
+    if (oldPartNo.present) {
+      map['old_part_no'] = Variable<int>(oldPartNo.value);
+    }
+    if (oldSerial.present) {
+      map['old_serial'] = Variable<int>(oldSerial.value);
+    }
     if (alreadyOnRoll.present) {
       map['already_on_roll'] = Variable<bool>(alreadyOnRoll.value);
     }
@@ -1495,6 +1591,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
           ..write('sourceList: $sourceList, ')
           ..write('asddReason: $asddReason, ')
           ..write('matchConfidence: $matchConfidence, ')
+          ..write('oldPartNo: $oldPartNo, ')
+          ..write('oldSerial: $oldSerial, ')
           ..write('alreadyOnRoll: $alreadyOnRoll, ')
           ..write('pending: $pending, ')
           ..write('rowid: $rowid')
@@ -4546,6 +4644,8 @@ typedef $$VotersTableCreateCompanionBuilder = VotersCompanion Function({
   required String sourceList,
   Value<String?> asddReason,
   Value<String?> matchConfidence,
+  Value<int?> oldPartNo,
+  Value<int?> oldSerial,
   Value<bool> alreadyOnRoll,
   Value<bool> pending,
   Value<int> rowid,
@@ -4562,6 +4662,8 @@ typedef $$VotersTableUpdateCompanionBuilder = VotersCompanion Function({
   Value<String> sourceList,
   Value<String?> asddReason,
   Value<String?> matchConfidence,
+  Value<int?> oldPartNo,
+  Value<int?> oldSerial,
   Value<bool> alreadyOnRoll,
   Value<bool> pending,
   Value<int> rowid,
@@ -4627,6 +4729,16 @@ class $$VotersTableFilterComposer extends Composer<_$LocalDb, $VotersTable> {
 
   ColumnFilters<String> get matchConfidence => $composableBuilder(
     column: $table.matchConfidence,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get oldPartNo => $composableBuilder(
+    column: $table.oldPartNo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get oldSerial => $composableBuilder(
+    column: $table.oldSerial,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4704,6 +4816,16 @@ class $$VotersTableOrderingComposer extends Composer<_$LocalDb, $VotersTable> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get oldPartNo => $composableBuilder(
+    column: $table.oldPartNo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get oldSerial => $composableBuilder(
+    column: $table.oldSerial,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get alreadyOnRoll => $composableBuilder(
     column: $table.alreadyOnRoll,
     builder: (column) => ColumnOrderings(column),
@@ -4767,6 +4889,12 @@ class $$VotersTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get oldPartNo =>
+      $composableBuilder(column: $table.oldPartNo, builder: (column) => column);
+
+  GeneratedColumn<int> get oldSerial =>
+      $composableBuilder(column: $table.oldSerial, builder: (column) => column);
+
   GeneratedColumn<bool> get alreadyOnRoll => $composableBuilder(
     column: $table.alreadyOnRoll,
     builder: (column) => column,
@@ -4815,6 +4943,8 @@ class $$VotersTableTableManager
                 Value<String> sourceList = const Value.absent(),
                 Value<String?> asddReason = const Value.absent(),
                 Value<String?> matchConfidence = const Value.absent(),
+                Value<int?> oldPartNo = const Value.absent(),
+                Value<int?> oldSerial = const Value.absent(),
                 Value<bool> alreadyOnRoll = const Value.absent(),
                 Value<bool> pending = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -4830,6 +4960,8 @@ class $$VotersTableTableManager
                 sourceList: sourceList,
                 asddReason: asddReason,
                 matchConfidence: matchConfidence,
+                oldPartNo: oldPartNo,
+                oldSerial: oldSerial,
                 alreadyOnRoll: alreadyOnRoll,
                 pending: pending,
                 rowid: rowid,
@@ -4847,6 +4979,8 @@ class $$VotersTableTableManager
                 required String sourceList,
                 Value<String?> asddReason = const Value.absent(),
                 Value<String?> matchConfidence = const Value.absent(),
+                Value<int?> oldPartNo = const Value.absent(),
+                Value<int?> oldSerial = const Value.absent(),
                 Value<bool> alreadyOnRoll = const Value.absent(),
                 Value<bool> pending = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -4862,6 +4996,8 @@ class $$VotersTableTableManager
                 sourceList: sourceList,
                 asddReason: asddReason,
                 matchConfidence: matchConfidence,
+                oldPartNo: oldPartNo,
+                oldSerial: oldSerial,
                 alreadyOnRoll: alreadyOnRoll,
                 pending: pending,
                 rowid: rowid,

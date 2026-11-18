@@ -87,6 +87,10 @@ void main() {
           familyId: a.id,
           nobodyHome: false,
           metPerson: aVoters.first.nameHi,
+          contactName: 'परीक्षण संपर्क',
+          contactRelation: 'MOTHER',
+          contactMobile: '9876522222',
+          contactConsent: true,
           members: [
             MemberEntry(
               voterId: aVoters[0].id,
@@ -176,6 +180,8 @@ void main() {
         VisitDraft(
           familyId: a.id,
           nobodyHome: false,
+          contactName: 'परीक्षण संपर्क',
+          contactRefused: true,
           members: [
             MemberEntry(
               voterId: aVoters[1].id,

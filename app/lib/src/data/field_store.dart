@@ -40,8 +40,14 @@ class VisitDraft {
     this.gpsLng,
     this.gpsAccuracy,
     this.gpsFlag,
+    this.contactName,
+    this.contactRelation,
+    this.contactMobile,
+    this.contactConsent = false,
+    this.contactRefused = false,
   });
 
+  /// The record of the person the visit was opened from.
   final String familyId;
   final bool nobodyHome;
   final String? metPerson;
@@ -52,8 +58,17 @@ class VisitDraft {
   final double? gpsLng;
   final double? gpsAccuracy;
 
-  /// GPS_OFF, GPS_DENIED or GPS_INACCURATE (R5).
+  /// GPS_OFF, GPS_TIMEOUT or GPS_INACCURATE (R5).
   final String? gpsFlag;
+
+  /// The person who answered the door, when someone was met: often a parent
+  /// of someone who moved away. Their number is kept only with consent;
+  /// [contactRefused] records that they declined to give one.
+  final String? contactName;
+  final String? contactRelation;
+  final String? contactMobile;
+  final bool contactConsent;
+  final bool contactRefused;
 }
 
 class NewVoterDraft {
@@ -171,6 +186,8 @@ class FieldStore extends ChangeNotifier {
             sourceList: v.sourceList,
             asddReason: v.asddReason,
             matchConfidence: v.matchConfidence,
+            oldPartNo: v.oldPartNo,
+            oldSerial: v.oldSerial,
             alreadyOnRoll: v.alreadyOnRoll,
             pending: v.pending,
           ),
@@ -288,8 +305,7 @@ class FieldStore extends ChangeNotifier {
               pending: const Value(true),
             ),
           );
-      for (final m
-          in draft.nobodyHome ? const <MemberEntry>[] : draft.members) {
+      for (final m in draft.members) {
         await db
             .into(db.visitVoters)
             .insert(
@@ -312,9 +328,17 @@ class FieldStore extends ChangeNotifier {
         'gps_lng': draft.gpsLng,
         'gps_accuracy_m': draft.gpsAccuracy,
         'flags': [?draft.gpsFlag],
+        'contact_name': draft.nobodyHome
+            ? null
+            : _blankToNull(draft.contactName),
+        'contact_relation': draft.nobodyHome ? null : draft.contactRelation,
+        'contact_mobile': draft.nobodyHome
+            ? null
+            : _blankToNull(draft.contactMobile),
+        'contact_consent': !draft.nobodyHome && draft.contactConsent,
+        'contact_refused': !draft.nobodyHome && draft.contactRefused,
         'voters': [
-          for (final m
-              in draft.nobodyHome ? const <MemberEntry>[] : draft.members)
+          for (final m in draft.members)
             {
               'voter_id': m.voterId,
               'voter_outcome': m.outcome,
@@ -325,8 +349,7 @@ class FieldStore extends ChangeNotifier {
         ],
       });
 
-      for (final m
-          in draft.nobodyHome ? const <MemberEntry>[] : draft.members) {
+      for (final m in draft.members) {
         final type = m.formType;
         if (type == null || _data.hasOpenForm(m.voterId, type)) continue;
         createdForms.add(await _startForm(m.voterId, type, now));
@@ -703,6 +726,8 @@ class FieldStore extends ChangeNotifier {
               sourceList: r['source_list'] as String,
               asddReason: Value(r['asdd_reason'] as String?),
               matchConfidence: Value(r['match_confidence'] as String?),
+              oldPartNo: Value(r['old_part_no'] as int?),
+              oldSerial: Value(r['old_serial'] as int?),
               alreadyOnRoll: Value(r['already_on_roll'] as bool? ?? false),
             ),
         ]);

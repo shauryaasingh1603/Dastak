@@ -142,6 +142,19 @@ CodeLabel familyStatusLabel(AppLocalizations l10n, FamilyStatus status) =>
       ),
     };
 
+String contactRelationLabel(AppLocalizations l10n, String code) =>
+    switch (code) {
+      'FATHER' => l10n.relFather,
+      'MOTHER' => l10n.relMother,
+      'HUSBAND' => l10n.relHusband,
+      'WIFE' => l10n.relWife,
+      'SON' => l10n.relSon,
+      'DAUGHTER' => l10n.relDaughter,
+      'SIBLING' => l10n.relSibling,
+      'SELF' => l10n.relSelf,
+      _ => l10n.relOther,
+    };
+
 String entityLabel(AppLocalizations l10n, String entity) => switch (entity) {
   'visit' => l10n.entityVisit,
   'form' => l10n.entityForm,

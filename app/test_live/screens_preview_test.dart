@@ -13,7 +13,7 @@ import 'package:dastak/src/auth/models.dart';
 import 'package:dastak/src/data/field_store.dart';
 import 'package:dastak/src/data/models.dart';
 import 'package:dastak/src/ui/booth_list_screen.dart';
-import 'package:dastak/src/ui/family_screen.dart';
+import 'package:dastak/src/ui/person_screen.dart';
 import 'package:dastak/src/ui/form_detail_screen.dart';
 import 'package:dastak/src/ui/forms_screen.dart';
 import 'package:dastak/src/ui/login_screen.dart';
@@ -185,8 +185,8 @@ void main() {
     'family',
     (tester) => shoot(
       tester,
-      'family',
-      const FamilyScreen(familyId: 'f1'),
+      'person',
+      const PersonScreen(voterId: 'v1'),
       height: 2600,
     ),
   );
@@ -195,7 +195,7 @@ void main() {
     (tester) => shoot(
       tester,
       'visit_form',
-      const VisitFormScreen(familyId: 'f1'),
+      const VisitFormScreen(voterId: 'v1'),
       height: 3000,
     ),
   );

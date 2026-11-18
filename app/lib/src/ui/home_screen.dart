@@ -78,17 +78,19 @@ class HomeScreen extends StatelessWidget {
           final firstSync = data.lastSyncAt == null;
           final today = Ist.today();
 
+          // Progress is counted in people (each listed person is a record).
           final doneToday = {
             for (final v in data.visits)
-              if (v.byMe && Ist.day(v.visitedAt) == today) v.familyId,
+              if (v.byMe && Ist.day(v.visitedAt) == today)
+                for (final m in v.members) m.voterId,
           }.length;
-          final remaining = data.families
-              .where((f) => data.statusOf(f.id) == FamilyStatus.pending)
+          final remaining = data.voters
+              .where((v) => data.personStatus(v.id) == FamilyStatus.pending)
               .length;
-          final revisitToday = data.families.where((f) {
-            final visits = data.visitsOf(f.id);
-            final due = visits.isEmpty ? null : visits.first.revisitOn;
-            return due != null && due.compareTo(today) <= 0;
+          final revisitToday = data.voters.where((v) {
+            if (data.personStatus(v.id) != FamilyStatus.revisit) return false;
+            final due = data.visitsFor(v.id).first.revisitOn;
+            return due == null || due.compareTo(today) <= 0;
           }).length;
           final formsFilled = data.forms.where((f) => f.byMe).length;
           final daysLeft = daysUntil(data.settings.claimsCloseAt);
@@ -155,7 +157,7 @@ class HomeScreen extends StatelessWidget {
                     items: [
                       (
                         l10n.homeTarget,
-                        l10n.homeFamilyCount(data.settings.dailyFamilyTarget),
+                        l10n.homePeopleCount(data.settings.dailyPeopleTarget),
                         Icons.flag_outlined,
                       ),
                       (
@@ -207,12 +209,13 @@ class HomeScreen extends StatelessWidget {
                       if (index > 0) const SizedBox(height: 8),
                       _BoothCard(
                         booth: booth,
-                        total: data.familiesInBooth(booth.partNo).length,
+                        total: data.peopleInBooth(booth.partNo).length,
                         done: data
-                            .familiesInBooth(booth.partNo)
+                            .peopleInBooth(booth.partNo)
                             .where(
-                              (f) =>
-                                  data.statusOf(f.id) != FamilyStatus.pending,
+                              (v) =>
+                                  data.personStatus(v.id) !=
+                                  FamilyStatus.pending,
                             )
                             .length,
                         onTap: () => Navigator.of(context).push(
@@ -431,7 +434,7 @@ class _BoothCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      l10n.boothProgress(done, total),
+                      l10n.boothPeopleProgress(done, total),
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),

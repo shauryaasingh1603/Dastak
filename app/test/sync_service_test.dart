@@ -78,7 +78,7 @@ void main() {
     sync.start('me');
     await settle();
     expect(api.pulls, 1);
-    expect(store.data.families.length, 3);
+    expect(store.data.families.length, 4);
     expect(sync.problem, SyncProblem.none);
   });
 

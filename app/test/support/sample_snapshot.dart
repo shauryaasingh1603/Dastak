@@ -47,6 +47,16 @@ Map<String, dynamic> sampleSnapshot({
       'needs_review': false,
     },
     {
+      'id': 'f4',
+      'code': '371-022-F0003',
+      'part_no': 22,
+      'section_no': null,
+      'house_no': '12',
+      'head_name_hi': 'पूजा यादव',
+      'priority': 2,
+      'needs_review': false,
+    },
+    {
       'id': 'f3',
       'code': '371-039-F0001',
       'part_no': 39,
@@ -60,6 +70,8 @@ Map<String, dynamic> sampleSnapshot({
   'voters': [
     {
       'id': 'v1',
+      'old_part_no': 220,
+      'old_serial': 101,
       'family_id': 'f1',
       'epic': 'MOCK0000001',
       'name_hi': 'रामलाल यादव',
@@ -73,6 +85,8 @@ Map<String, dynamic> sampleSnapshot({
     },
     {
       'id': 'v2',
+      'old_part_no': 220,
+      'old_serial': 102,
       'family_id': 'f1',
       'epic': null,
       'name_hi': 'सीता यादव',
@@ -86,6 +100,8 @@ Map<String, dynamic> sampleSnapshot({
     },
     {
       'id': 'v3',
+      'old_part_no': 220,
+      'old_serial': 104,
       'family_id': 'f1',
       'epic': 'MOCK0000003',
       'name_hi': 'अजय यादव',
@@ -99,6 +115,8 @@ Map<String, dynamic> sampleSnapshot({
     },
     {
       'id': 'v4',
+      'old_part_no': 220,
+      'old_serial': 300,
       'family_id': 'f2',
       'epic': 'MOCK0000004',
       'name_hi': 'सलीम सिद्दीक़ी',
@@ -112,6 +130,8 @@ Map<String, dynamic> sampleSnapshot({
     },
     {
       'id': 'v5',
+      'old_part_no': 390,
+      'old_serial': 55,
       'family_id': 'f3',
       'epic': 'MOCK0000005',
       'name_hi': 'मोहन पाल',
@@ -122,6 +142,21 @@ Map<String, dynamic> sampleSnapshot({
       'source_list': 'ASDD',
       'asdd_reason': 'SHIFTED',
       'already_on_roll': true,
+    },
+    {
+      'id': 'v6',
+      'old_part_no': 220,
+      'old_serial': 103,
+      'family_id': 'f4',
+      'epic': 'UP/22/103/000006',
+      'name_hi': 'पूजा यादव',
+      'relation_type': 'H',
+      'relative_name_hi': 'अजय यादव',
+      'age': 24,
+      'gender': 'F',
+      'source_list': 'ASDD',
+      'asdd_reason': 'SHIFTED',
+      'already_on_roll': false,
     },
     ...extraVoters,
   ],

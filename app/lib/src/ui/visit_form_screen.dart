@@ -25,12 +25,14 @@ class _MemberState {
   bool consent = false;
 }
 
-/// "भेंट फॉर्म": records one door visit. Saves on the phone at once; the
-/// sync sends it when there is network.
+/// "भेंट फॉर्म": one door visit, opened from one listed person. The
+/// volunteer confirms who else on the list lives at this house, records who
+/// answered the door with their number (or that they refused), and an
+/// outcome for each listed person. Saves on the phone at once.
 class VisitFormScreen extends StatefulWidget {
-  const VisitFormScreen({super.key, required this.familyId});
+  const VisitFormScreen({super.key, required this.voterId});
 
-  final String familyId;
+  final String voterId;
 
   @override
   State<VisitFormScreen> createState() => _VisitFormScreenState();
@@ -38,10 +40,18 @@ class VisitFormScreen extends StatefulWidget {
 
 class _VisitFormScreenState extends State<VisitFormScreen> {
   final _remarks = TextEditingController();
-  final _scroll = ScrollController();
-  List<_MemberState>? _members;
+  final _contactName = TextEditingController();
+  final _contactMobile = TextEditingController();
+  final _states = <String, _MemberState>{};
+  final _alsoHere = <String>{};
+  late Voter _lead;
+  List<Voter> _candidates = const [];
+  bool _initialised = false;
+
   bool _nobodyHome = false;
-  String? _metPerson; // a voter id, or 'OTHER'
+  String? _contactRelation;
+  bool _contactConsent = false;
+  bool _contactRefused = false;
   String? _revisitOn;
   String? _error;
   bool _saving = false;
@@ -51,38 +61,64 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _members ??= [
-      for (final v in FieldScope.of(
-        context,
-      ).store.data.votersOf(widget.familyId))
-        _MemberState(v),
-    ];
+    if (_initialised) return;
+    final data = FieldScope.of(context).store.data;
+    _lead = data.voter(widget.voterId)!;
+    _candidates = data.sameHouseCandidates(widget.voterId);
+    _initialised = true;
   }
 
   @override
   void dispose() {
     _remarks.dispose();
-    _scroll.dispose();
-    for (final m in _members ?? const <_MemberState>[]) {
+    _contactName.dispose();
+    _contactMobile.dispose();
+    for (final m in _states.values) {
       m.mobile.dispose();
     }
     super.dispose();
   }
 
+  _MemberState _state(Voter voter) =>
+      _states.putIfAbsent(voter.id, () => _MemberState(voter));
+
+  /// The person the visit was opened from, then those confirmed at the door.
+  List<_MemberState> get _covered => [
+    _state(_lead),
+    for (final v in _candidates)
+      if (_alsoHere.contains(v.id)) _state(v),
+  ];
+
   String? _validate(AppLocalizations l10n) {
     if (_nobodyHome) {
       return _revisitOn == null ? l10n.errRevisitRequired : null; // R3
     }
-    for (final m in _members!) {
+    if (_contactName.text.trim().isEmpty) return l10n.errContactName;
+    final contactMobile = _contactMobile.text.trim();
+    if (contactMobile.isEmpty && !_contactRefused) {
+      return l10n.errContactRequired;
+    }
+    if (contactMobile.isNotEmpty) {
+      if (normalizeMobile(contactMobile) == null) {
+        return l10n.errMobileInvalid; // R7
+      }
+      if (!_contactConsent) return l10n.errConsentRequired;
+    }
+    for (final m in _covered) {
       if (m.outcome == null) return l10n.errOutcomeRequired;
       if (Outcome.needsForm(m.outcome!) && m.formType == null) {
         return l10n.errFormRequired;
       }
       final mobile = m.mobile.text.trim();
       if (mobile.isNotEmpty) {
-        if (normalizeMobile(mobile) == null) return l10n.errMobileInvalid; // R7
+        if (normalizeMobile(mobile) == null) return l10n.errMobileInvalid;
         if (!m.consent) return l10n.errConsentRequired;
       }
+    }
+    // Nobody on the list was met: the visit needs a revisit date (R3).
+    if (_covered.every((m) => m.outcome == Outcome.notMet) &&
+        _revisitOn == null) {
+      return l10n.errRevisitRequired;
     }
     return null;
   }
@@ -117,32 +153,32 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
     if (!mounted) return;
     setState(() => _locating = false);
 
-    final scope = FieldScope.of(context);
-    final metPerson = _metPerson == null
-        ? null
-        : _metPerson == 'OTHER'
-        ? l10n.visitWhoMetOther
-        : _members!.firstWhere((m) => m.voter.id == _metPerson).voter.nameHi;
-
-    final formIds = await scope.store.saveVisit(
+    final store = FieldScope.of(context).store;
+    final contactMobile = normalizeMobile(_contactMobile.text);
+    final formIds = await store.saveVisit(
       VisitDraft(
-        familyId: widget.familyId,
+        familyId: _lead.familyId,
         nobodyHome: _nobodyHome,
-        metPerson: metPerson,
+        metPerson: _nobodyHome ? null : _contactName.text,
         members: [
-          for (final m in _members!)
-            MemberEntry(
-              voterId: m.voter.id,
-              outcome: m.outcome!,
-              formType: Outcome.needsForm(m.outcome!) && m.formType != 'none'
-                  ? m.formType
-                  : null,
-              docs: m.outcome == Outcome.notMet ? const [] : m.docs.toList(),
-              mobile: m.outcome == Outcome.notMet
-                  ? null
-                  : normalizeMobile(m.mobile.text),
-              mobileConsent: m.consent,
-            ),
+          for (final m in _covered)
+            _nobodyHome
+                ? MemberEntry(voterId: m.voter.id, outcome: Outcome.notMet)
+                : MemberEntry(
+                    voterId: m.voter.id,
+                    outcome: m.outcome!,
+                    formType:
+                        Outcome.needsForm(m.outcome!) && m.formType != 'none'
+                        ? m.formType
+                        : null,
+                    docs: m.outcome == Outcome.notMet
+                        ? const []
+                        : m.docs.toList(),
+                    mobile: m.outcome == Outcome.notMet
+                        ? null
+                        : normalizeMobile(m.mobile.text),
+                    mobileConsent: m.consent,
+                  ),
         ],
         remarks: _remarks.text,
         revisitOn: _revisitOn,
@@ -150,6 +186,11 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
         gpsLng: fix.lng,
         gpsAccuracy: fix.accuracy,
         gpsFlag: fix.flag,
+        contactName: _contactName.text,
+        contactRelation: _contactRelation,
+        contactMobile: contactMobile,
+        contactConsent: contactMobile != null && _contactConsent,
+        contactRefused: contactMobile == null && _contactRefused,
       ),
     );
     if (!mounted) return;
@@ -179,15 +220,14 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
     final last = _nobodyHome
         ? today.add(const Duration(days: 3))
         : DateTime.parse(Ist.day(settings.claimsCloseAt));
+    final first = today.add(const Duration(days: 1));
     final picked = await showDatePicker(
       context: context,
       firstDate: today,
       lastDate: last.isBefore(today) ? today : last,
       initialDate: _revisitOn != null
           ? DateTime.parse(_revisitOn!)
-          : today.add(const Duration(days: 1)).isAfter(last)
-          ? today
-          : today.add(const Duration(days: 1)),
+          : (first.isAfter(last) ? today : first),
     );
     if (picked != null) setState(() => _revisitOn = dayOf(picked));
   }
@@ -197,23 +237,19 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final data = FieldScope.of(context).store.data;
-    final family = data.family(widget.familyId);
-    final members = _members!;
+    final family = data.family(_lead.familyId);
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.visitTitle)),
       body: ListView(
-        controller: _scroll,
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
-          if (family != null)
-            Text(
-              [
-                if (family.houseNo != null) l10n.houseNo(family.houseNo!),
-                if (family.headNameHi != null) family.headNameHi!,
-              ].join(' · '),
-              style: theme.textTheme.titleMedium,
-            ),
+          Text(_lead.nameHi, style: theme.textTheme.titleMedium),
+          if (family?.houseNo != null && family!.houseNo!.isNotEmpty)
+            Text(l10n.houseNo(family.houseNo!), style: muted),
           const SizedBox(height: 6),
           Row(
             children: [
@@ -251,29 +287,102 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
               subtitle: _nobodyHome ? Text(l10n.visitNobodyHomeHint) : null,
             ),
           ),
-          if (!_nobodyHome) ...[
-            SectionTitle(l10n.visitWhoMet),
-            Wrap(
-              spacing: 8,
-              runSpacing: 6,
-              children: [
-                for (final m in members)
-                  ChoiceChip(
-                    label: Text(m.voter.nameHi),
-                    selected: _metPerson == m.voter.id,
-                    onSelected: (s) =>
-                        setState(() => _metPerson = s ? m.voter.id : null),
-                  ),
-                ChoiceChip(
-                  label: Text(l10n.visitWhoMetOther),
-                  selected: _metPerson == 'OTHER',
-                  onSelected: (s) =>
-                      setState(() => _metPerson = s ? 'OTHER' : null),
+          SectionTitle(l10n.visitSameHouse),
+          if (_candidates.isEmpty)
+            Text(l10n.visitNoSuggestions, style: muted)
+          else ...[
+            Text(l10n.visitSameHouseHint, style: muted),
+            const SizedBox(height: 4),
+            for (final v in _candidates)
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                value: _alsoHere.contains(v.id),
+                onChanged: (on) => setState(() {
+                  on == true ? _alsoHere.add(v.id) : _alsoHere.remove(v.id);
+                  _error = null;
+                }),
+                title: Text(v.nameHi),
+                subtitle: Text(
+                  [
+                    if (v.relativeNameHi != null)
+                      '${relationLabel(l10n, v.relationType)}: ${v.relativeNameHi}',
+                    if (v.age != null) l10n.ageYears(v.age!),
+                  ].join(' · '),
                 ),
+              ),
+          ],
+          if (!_nobodyHome) ...[
+            SectionTitle(l10n.contactTitle),
+            TextField(
+              controller: _contactName,
+              decoration: InputDecoration(labelText: l10n.contactName),
+              onChanged: (_) => setState(() => _error = null),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              l10n.contactRelation,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                for (final code in ContactRelation.all)
+                  ChoiceChip(
+                    label: Text(contactRelationLabel(l10n, code)),
+                    selected: _contactRelation == code,
+                    onSelected: (s) =>
+                        setState(() => _contactRelation = s ? code : null),
+                  ),
               ],
             ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _contactMobile,
+              enabled: !_contactRefused,
+              keyboardType: TextInputType.phone,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
+              ],
+              decoration: InputDecoration(
+                labelText: l10n.contactMobile,
+                prefixText: '+91 ',
+              ),
+              onChanged: (_) => setState(() => _error = null),
+            ),
+            if (_contactMobile.text.isNotEmpty && !_contactRefused)
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                value: _contactConsent,
+                onChanged: (v) => setState(() {
+                  _contactConsent = v ?? false;
+                  _error = null;
+                }),
+                title: Text(l10n.visitConsentLabel),
+                subtitle: Text('“${l10n.visitConsent}”'),
+              ),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: _contactRefused,
+              onChanged: (v) => setState(() {
+                _contactRefused = v ?? false;
+                if (_contactRefused) {
+                  _contactMobile.clear();
+                  _contactConsent = false;
+                }
+                _error = null;
+              }),
+              title: Text(l10n.contactRefused),
+            ),
             SectionTitle(l10n.visitMembers),
-            for (final m in members) ...[
+            for (final m in _covered) ...[
               _MemberEditor(
                 state: m,
                 data: data,
@@ -481,7 +590,7 @@ class _MemberEditorState extends State<_MemberEditor> {
                   LengthLimitingTextInputFormatter(10),
                 ],
                 decoration: InputDecoration(
-                  labelText: l10n.visitMobile,
+                  labelText: l10n.memberMobile,
                   prefixText: '+91 ',
                 ),
                 onChanged: (_) => _update(() {}),

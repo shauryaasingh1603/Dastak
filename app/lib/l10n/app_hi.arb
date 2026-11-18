@@ -95,7 +95,7 @@
   "navSync": "सिंक",
   "homeTarget": "आज का लक्ष्य",
   "homeDoneToday": "आज पूरे",
-  "homeRemaining": "बाकी परिवार",
+  "homeRemaining": "बाकी लोग",
   "homeRevisitToday": "आज दोबारा जाना है",
   "homeFormsFilled": "भरे गए फॉर्म",
   "homeSyncState": "सिंक स्थिति",
@@ -387,5 +387,70 @@
       }
     }
   },
-  "visitSavedNoGps": "भेंट सेव हुई · स्थान नहीं मिल पाया (रिकॉर्ड में दर्ज)"
+  "visitSavedNoGps": "भेंट सेव हुई · स्थान नहीं मिल पाया (रिकॉर्ड में दर्ज)",
+  "homePeopleCount": "{count} लोग",
+  "@homePeopleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boothPeopleProgress": "{done}/{total} लोग पूरे",
+  "@boothPeopleProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "listShowingPeople": "{shown} / {total} लोग",
+  "@listShowingPeople": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "listEmptyPeople": "इस बूथ में कोई व्यक्ति नहीं है",
+  "listNoMatchPeople": "खोज से कोई व्यक्ति नहीं मिला",
+  "personTitle": "व्यक्ति विवरण",
+  "personSameRecord": "इसी घर में दर्ज लोग",
+  "visitSameHouse": "इसी घर के और लोग?",
+  "visitSameHouseHint": "सूची में पास-पास दर्ज, इसी मकान नंबर वाले लोग। घर वालों से पूछकर जो यहीं के हैं, उन्हें चुनें।",
+  "visitNoSuggestions": "इसी मकान नंबर वाला और कोई सूची में पास में नहीं है",
+  "contactTitle": "घर पर कौन मिला",
+  "contactName": "नाम",
+  "contactRelation": "सूची वाले व्यक्ति से संबंध",
+  "contactMobile": "मोबाइल नंबर",
+  "contactRefused": "नंबर देने से मना किया",
+  "errContactName": "घर पर मिले व्यक्ति का नाम डालें",
+  "errContactRequired": "घर पर मिले व्यक्ति का मोबाइल नंबर डालें या “नंबर देने से मना किया” चुनें",
+  "memberMobile": "इस व्यक्ति का अपना मोबाइल नंबर (अगर दें)",
+  "relFather": "पिता",
+  "relMother": "माता",
+  "relHusband": "पति",
+  "relWife": "पत्नी",
+  "relSon": "बेटा",
+  "relDaughter": "बेटी",
+  "relSibling": "भाई/बहन",
+  "relSelf": "स्वयं",
+  "relOther": "अन्य",
+  "houseAndBooth": "मकान नं. {house} · बूथ {partNo}",
+  "@houseAndBooth": {
+    "placeholders": {
+      "house": {
+        "type": "String"
+      },
+      "partNo": {
+        "type": "int"
+      }
+    }
+  }
 }

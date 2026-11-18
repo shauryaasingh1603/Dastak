@@ -44,6 +44,10 @@ class Voters extends Table {
   TextColumn get sourceList => text()();
   TextColumn get asddReason => text().nullable()();
   TextColumn get matchConfidence => text().nullable()();
+  // Position on the 2025 roll: people listed close together usually live
+  // together, so the app suggests them as possibly the same house.
+  IntColumn get oldPartNo => integer().nullable()();
+  IntColumn get oldSerial => integer().nullable()();
   BoolColumn get alreadyOnRoll =>
       boolean().withDefault(const Constant(false))();
   BoolColumn get pending => boolean().withDefault(const Constant(false))();
@@ -150,7 +154,17 @@ class LocalDb extends _$LocalDb {
   LocalDb(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(voters, voters.oldPartNo);
+        await m.addColumn(voters, voters.oldSerial);
+      }
+    },
+  );
 
   /// Removes every row. Used on sign-out and when this phone loses access.
   Future<void> wipe() => transaction(() async {

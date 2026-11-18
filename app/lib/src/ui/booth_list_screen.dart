@@ -3,7 +3,8 @@ import 'package:material_ui/material_ui.dart';
 import '../../l10n/app_localizations.dart';
 import '../data/models.dart';
 import '../text.dart';
-import 'family_screen.dart';
+import 'person_screen.dart';
+import 'person_tile.dart';
 import 'field_scope.dart';
 import 'widgets.dart';
 
@@ -93,7 +94,7 @@ class BoothListScreen extends StatelessWidget {
   }
 }
 
-/// One booth's families, grouped by section, filterable and searchable.
+/// One booth's listed people, in 2025 roll order, filterable and searchable.
 class BoothFamilies extends StatefulWidget {
   const BoothFamilies({super.key, required this.booth});
 
@@ -111,17 +112,16 @@ class _BoothFamiliesState extends State<BoothFamilies>
   @override
   bool get wantKeepAlive => true;
 
-  bool _matches(FieldData data, Family family, String needle) {
+  bool _matches(FieldData data, Voter voter, String needle) {
     if (needle.isEmpty) return true;
-    if ((family.houseNo ?? '').toLowerCase() == needle) return true;
-    if (normalizeForSearch(family.headNameHi ?? '').contains(needle)) {
+    final house = data.family(voter.familyId)?.houseNo ?? '';
+    if (house.toLowerCase() == needle) return true;
+    if (normalizeForSearch(voter.nameHi).contains(needle)) return true;
+    if (normalizeForSearch(voter.relativeNameHi ?? '').contains(needle)) {
       return true;
     }
-    for (final v in data.votersOf(family.id)) {
-      if (normalizeForSearch(v.nameHi).contains(needle)) return true;
-      if ((v.epic ?? '').toLowerCase().contains(needle)) return true;
-    }
-    return false;
+    final epic = (voter.epic ?? '').toLowerCase().replaceAll(' ', '');
+    return epic.contains(needle.replaceAll(' ', ''));
   }
 
   @override
@@ -135,52 +135,14 @@ class _BoothFamiliesState extends State<BoothFamilies>
       listenable: store,
       builder: (context, _) {
         final data = store.data;
-        final families = data.familiesInBooth(widget.booth.partNo)
-          ..sort((a, b) {
-            final bySection = (a.sectionNo ?? 1 << 30).compareTo(
-              b.sectionNo ?? 1 << 30,
-            );
-            if (bySection != 0) return bySection;
-            final byHouse = compareHouseNo(a.houseNo, b.houseNo);
-            return byHouse != 0 ? byHouse : a.code.compareTo(b.code);
-          });
+        final people = data.peopleInBooth(widget.booth.partNo);
         final needle = normalizeForSearch(_query);
         final shown = [
-          for (final f in families)
-            if ((_filter == null || data.statusOf(f.id) == _filter) &&
-                _matches(data, f, needle))
-              f,
+          for (final v in people)
+            if ((_filter == null || data.personStatus(v.id) == _filter) &&
+                _matches(data, v, needle))
+              v,
         ];
-
-        final rows = <Widget>[];
-        int? section = -1;
-        for (final family in shown) {
-          if (family.sectionNo != section) {
-            section = family.sectionNo;
-            rows.add(
-              SectionTitle(
-                section == null
-                    ? l10n.sectionUnknown
-                    : l10n.sectionHeader(section),
-              ),
-            );
-          }
-          rows.add(
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: FamilyTile(
-                family: family,
-                status: data.statusOf(family.id),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => FamilyScreen(familyId: family.id),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-
         final filters = <(String, FamilyStatus?)>[
           (l10n.filterAll, null),
           (l10n.filterPending, FamilyStatus.pending),
@@ -188,66 +150,88 @@ class _BoothFamiliesState extends State<BoothFamilies>
           (l10n.filterRevisit, FamilyStatus.revisit),
         ];
 
-        return ListView(
+        return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-          children: [
-            if (widget.booth.stationHi != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Text(
-                  widget.booth.stationHi!,
-                  style: theme.textTheme.bodyMedium?.copyWith(
+          itemCount: shown.length + 1,
+          itemBuilder: (context, index) {
+            if (index > 0) {
+              final voter = shown[index - 1];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: PersonTile(
+                  voter: voter,
+                  family: data.family(voter.familyId),
+                  status: data.personStatus(voter.id),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => PersonScreen(voterId: voter.id),
+                    ),
+                  ),
+                ),
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (widget.booth.stationHi != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      widget.booth.stationHi!,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                TextField(
+                  onChanged: (value) => setState(() => _query = value),
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: l10n.listSearchHint,
+                    prefixIcon: const Icon(Icons.search),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    for (final (label, status) in filters)
+                      ChoiceChip(
+                        label: Text(label),
+                        selected: _filter == status,
+                        onSelected: (_) => setState(() => _filter = status),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.listShowingPeople(shown.length, people.length),
+                  style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-              ),
-            TextField(
-              onChanged: (value) => setState(() => _query = value),
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                hintText: l10n.listSearchHint,
-                prefixIcon: const Icon(Icons.search),
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: [
-                for (final (label, status) in filters)
-                  ChoiceChip(
-                    label: Text(label),
-                    selected: _filter == status,
-                    onSelected: (_) => setState(() => _filter = status),
+                if (people.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: InfoBanner(
+                      icon: Icons.info_outline,
+                      text: l10n.listEmptyPeople,
+                    ),
+                  )
+                else if (shown.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: InfoBanner(
+                      icon: Icons.search_off,
+                      text: l10n.listNoMatchPeople,
+                    ),
                   ),
+                const SizedBox(height: 10),
               ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.listShowing(shown.length, families.length),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            if (families.isEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: InfoBanner(
-                  icon: Icons.info_outline,
-                  text: l10n.listEmpty,
-                ),
-              )
-            else if (shown.isEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: InfoBanner(
-                  icon: Icons.search_off,
-                  text: l10n.listNoMatch,
-                ),
-              ),
-            ...rows,
-          ],
+            );
+          },
         );
       },
     );

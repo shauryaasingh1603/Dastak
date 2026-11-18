@@ -397,7 +397,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeRemaining.
   ///
   /// In hi, this message translates to:
-  /// **'बाकी परिवार'**
+  /// **'बाकी लोग'**
   String get homeRemaining;
 
   /// No description provided for @homeRevisitToday.
@@ -1335,6 +1335,174 @@ abstract class AppLocalizations {
   /// In hi, this message translates to:
   /// **'भेंट सेव हुई · स्थान नहीं मिल पाया (रिकॉर्ड में दर्ज)'**
   String get visitSavedNoGps;
+
+  /// No description provided for @homePeopleCount.
+  ///
+  /// In hi, this message translates to:
+  /// **'{count} लोग'**
+  String homePeopleCount(int count);
+
+  /// No description provided for @boothPeopleProgress.
+  ///
+  /// In hi, this message translates to:
+  /// **'{done}/{total} लोग पूरे'**
+  String boothPeopleProgress(int done, int total);
+
+  /// No description provided for @listShowingPeople.
+  ///
+  /// In hi, this message translates to:
+  /// **'{shown} / {total} लोग'**
+  String listShowingPeople(int shown, int total);
+
+  /// No description provided for @listEmptyPeople.
+  ///
+  /// In hi, this message translates to:
+  /// **'इस बूथ में कोई व्यक्ति नहीं है'**
+  String get listEmptyPeople;
+
+  /// No description provided for @listNoMatchPeople.
+  ///
+  /// In hi, this message translates to:
+  /// **'खोज से कोई व्यक्ति नहीं मिला'**
+  String get listNoMatchPeople;
+
+  /// No description provided for @personTitle.
+  ///
+  /// In hi, this message translates to:
+  /// **'व्यक्ति विवरण'**
+  String get personTitle;
+
+  /// No description provided for @personSameRecord.
+  ///
+  /// In hi, this message translates to:
+  /// **'इसी घर में दर्ज लोग'**
+  String get personSameRecord;
+
+  /// No description provided for @visitSameHouse.
+  ///
+  /// In hi, this message translates to:
+  /// **'इसी घर के और लोग?'**
+  String get visitSameHouse;
+
+  /// No description provided for @visitSameHouseHint.
+  ///
+  /// In hi, this message translates to:
+  /// **'सूची में पास-पास दर्ज, इसी मकान नंबर वाले लोग। घर वालों से पूछकर जो यहीं के हैं, उन्हें चुनें।'**
+  String get visitSameHouseHint;
+
+  /// No description provided for @visitNoSuggestions.
+  ///
+  /// In hi, this message translates to:
+  /// **'इसी मकान नंबर वाला और कोई सूची में पास में नहीं है'**
+  String get visitNoSuggestions;
+
+  /// No description provided for @contactTitle.
+  ///
+  /// In hi, this message translates to:
+  /// **'घर पर कौन मिला'**
+  String get contactTitle;
+
+  /// No description provided for @contactName.
+  ///
+  /// In hi, this message translates to:
+  /// **'नाम'**
+  String get contactName;
+
+  /// No description provided for @contactRelation.
+  ///
+  /// In hi, this message translates to:
+  /// **'सूची वाले व्यक्ति से संबंध'**
+  String get contactRelation;
+
+  /// No description provided for @contactMobile.
+  ///
+  /// In hi, this message translates to:
+  /// **'मोबाइल नंबर'**
+  String get contactMobile;
+
+  /// No description provided for @contactRefused.
+  ///
+  /// In hi, this message translates to:
+  /// **'नंबर देने से मना किया'**
+  String get contactRefused;
+
+  /// No description provided for @errContactName.
+  ///
+  /// In hi, this message translates to:
+  /// **'घर पर मिले व्यक्ति का नाम डालें'**
+  String get errContactName;
+
+  /// No description provided for @errContactRequired.
+  ///
+  /// In hi, this message translates to:
+  /// **'घर पर मिले व्यक्ति का मोबाइल नंबर डालें या “नंबर देने से मना किया” चुनें'**
+  String get errContactRequired;
+
+  /// No description provided for @memberMobile.
+  ///
+  /// In hi, this message translates to:
+  /// **'इस व्यक्ति का अपना मोबाइल नंबर (अगर दें)'**
+  String get memberMobile;
+
+  /// No description provided for @relFather.
+  ///
+  /// In hi, this message translates to:
+  /// **'पिता'**
+  String get relFather;
+
+  /// No description provided for @relMother.
+  ///
+  /// In hi, this message translates to:
+  /// **'माता'**
+  String get relMother;
+
+  /// No description provided for @relHusband.
+  ///
+  /// In hi, this message translates to:
+  /// **'पति'**
+  String get relHusband;
+
+  /// No description provided for @relWife.
+  ///
+  /// In hi, this message translates to:
+  /// **'पत्नी'**
+  String get relWife;
+
+  /// No description provided for @relSon.
+  ///
+  /// In hi, this message translates to:
+  /// **'बेटा'**
+  String get relSon;
+
+  /// No description provided for @relDaughter.
+  ///
+  /// In hi, this message translates to:
+  /// **'बेटी'**
+  String get relDaughter;
+
+  /// No description provided for @relSibling.
+  ///
+  /// In hi, this message translates to:
+  /// **'भाई/बहन'**
+  String get relSibling;
+
+  /// No description provided for @relSelf.
+  ///
+  /// In hi, this message translates to:
+  /// **'स्वयं'**
+  String get relSelf;
+
+  /// No description provided for @relOther.
+  ///
+  /// In hi, this message translates to:
+  /// **'अन्य'**
+  String get relOther;
+
+  /// No description provided for @houseAndBooth.
+  ///
+  /// In hi, this message translates to:
+  /// **'मकान नं. {house} · बूथ {partNo}'**
+  String houseAndBooth(String house, int partNo);
 }
 
 class _AppLocalizationsDelegate

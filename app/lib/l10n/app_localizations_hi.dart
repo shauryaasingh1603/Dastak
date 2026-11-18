@@ -179,7 +179,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get homeDoneToday => 'आज पूरे';
 
   @override
-  String get homeRemaining => 'बाकी परिवार';
+  String get homeRemaining => 'बाकी लोग';
 
   @override
   String get homeRevisitToday => 'आज दोबारा जाना है';
@@ -695,4 +695,99 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get visitSavedNoGps =>
       'भेंट सेव हुई · स्थान नहीं मिल पाया (रिकॉर्ड में दर्ज)';
+
+  @override
+  String homePeopleCount(int count) {
+    return '$count लोग';
+  }
+
+  @override
+  String boothPeopleProgress(int done, int total) {
+    return '$done/$total लोग पूरे';
+  }
+
+  @override
+  String listShowingPeople(int shown, int total) {
+    return '$shown / $total लोग';
+  }
+
+  @override
+  String get listEmptyPeople => 'इस बूथ में कोई व्यक्ति नहीं है';
+
+  @override
+  String get listNoMatchPeople => 'खोज से कोई व्यक्ति नहीं मिला';
+
+  @override
+  String get personTitle => 'व्यक्ति विवरण';
+
+  @override
+  String get personSameRecord => 'इसी घर में दर्ज लोग';
+
+  @override
+  String get visitSameHouse => 'इसी घर के और लोग?';
+
+  @override
+  String get visitSameHouseHint =>
+      'सूची में पास-पास दर्ज, इसी मकान नंबर वाले लोग। घर वालों से पूछकर जो यहीं के हैं, उन्हें चुनें।';
+
+  @override
+  String get visitNoSuggestions =>
+      'इसी मकान नंबर वाला और कोई सूची में पास में नहीं है';
+
+  @override
+  String get contactTitle => 'घर पर कौन मिला';
+
+  @override
+  String get contactName => 'नाम';
+
+  @override
+  String get contactRelation => 'सूची वाले व्यक्ति से संबंध';
+
+  @override
+  String get contactMobile => 'मोबाइल नंबर';
+
+  @override
+  String get contactRefused => 'नंबर देने से मना किया';
+
+  @override
+  String get errContactName => 'घर पर मिले व्यक्ति का नाम डालें';
+
+  @override
+  String get errContactRequired =>
+      'घर पर मिले व्यक्ति का मोबाइल नंबर डालें या “नंबर देने से मना किया” चुनें';
+
+  @override
+  String get memberMobile => 'इस व्यक्ति का अपना मोबाइल नंबर (अगर दें)';
+
+  @override
+  String get relFather => 'पिता';
+
+  @override
+  String get relMother => 'माता';
+
+  @override
+  String get relHusband => 'पति';
+
+  @override
+  String get relWife => 'पत्नी';
+
+  @override
+  String get relSon => 'बेटा';
+
+  @override
+  String get relDaughter => 'बेटी';
+
+  @override
+  String get relSibling => 'भाई/बहन';
+
+  @override
+  String get relSelf => 'स्वयं';
+
+  @override
+  String get relOther => 'अन्य';
+
+  @override
+  String houseAndBooth(String house, int partNo) {
+    return 'मकान नं. $house · बूथ $partNo';
+  }
 }

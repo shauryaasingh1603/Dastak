@@ -25,7 +25,15 @@ void main() {
     final data = store.data;
     expect(data.booths.map((b) => b.partNo), [22, 39]);
     expect(data.booths.first.stationHi, 'प्राथमिक विद्यालय जफ़राबाद');
-    expect(data.familiesInBooth(22).length, 2);
+    expect(data.familiesInBooth(22).length, 3);
+    expect(data.peopleInBooth(22).map((v) => v.id), [
+      'v1',
+      'v2',
+      'v6',
+      'v3',
+      'v4',
+    ]);
+    expect(data.sameHouseCandidates('v1').map((v) => v.id), ['v2', 'v6', 'v3']);
     expect(data.votersOf('f1').length, 3);
     expect(data.statusOf('f1'), FamilyStatus.pending);
     expect(data.settings.visitsOpenFrom, '2026-11-17');
