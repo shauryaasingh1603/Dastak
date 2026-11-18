@@ -134,6 +134,8 @@ void main() {
           age: 19,
           gender: 'F',
           formType: '6',
+          mobile: '9876511111',
+          mobileConsent: true,
         ),
       );
       await store.updateForm(

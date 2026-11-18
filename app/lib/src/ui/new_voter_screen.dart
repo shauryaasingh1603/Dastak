@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../auth/auth_controller.dart' show normalizeMobile;
 import '../data/field_store.dart';
 import 'field_scope.dart';
 import 'form_detail_screen.dart';
@@ -23,6 +24,8 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
   final _relative = TextEditingController();
   final _age = TextEditingController();
   final _epic = TextEditingController();
+  final _mobile = TextEditingController();
+  bool _consent = false;
   String _relation = 'F';
   String? _gender;
   String _formType = '6';
@@ -31,7 +34,7 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
 
   @override
   void dispose() {
-    for (final c in [_name, _relative, _age, _epic]) {
+    for (final c in [_name, _relative, _age, _epic, _mobile]) {
       c.dispose();
     }
     super.dispose();
@@ -50,6 +53,11 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
         ? l10n.errAge
         : _gender == null
         ? '${l10n.fieldGender}: ${l10n.errRequired}'
+        : _mobile.text.isNotEmpty && normalizeMobile(_mobile.text) == null
+        ? l10n
+              .errMobileInvalid // R7
+        : _mobile.text.isNotEmpty && !_consent
+        ? l10n.errConsentRequired
         : null;
     if (error != null) {
       setState(() => _error = error);
@@ -69,6 +77,8 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
         gender: _gender!,
         epic: _epic.text,
         formType: _formType == 'none' ? null : _formType,
+        mobile: normalizeMobile(_mobile.text),
+        mobileConsent: _consent,
       ),
     );
     if (!mounted) return;
@@ -140,6 +150,29 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
             controller: _epic,
             textCapitalization: TextCapitalization.characters,
           ),
+          SectionTitle(l10n.visitMobile),
+          TextField(
+            controller: _mobile,
+            keyboardType: TextInputType.phone,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(10),
+            ],
+            decoration: const InputDecoration(prefixText: '+91 '),
+            onChanged: (_) => setState(() => _error = null),
+          ),
+          if (_mobile.text.isNotEmpty)
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: _consent,
+              onChanged: (v) => setState(() {
+                _consent = v ?? false;
+                _error = null;
+              }),
+              title: Text(l10n.visitConsentLabel),
+              subtitle: Text('“${l10n.visitConsent}”'),
+            ),
           SectionTitle(l10n.visitWhichForm),
           Wrap(
             spacing: 8,

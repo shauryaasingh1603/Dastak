@@ -4,6 +4,7 @@ import 'package:dastak/src/ui/booth_list_screen.dart';
 import 'package:dastak/src/ui/family_screen.dart';
 import 'package:dastak/src/ui/form_detail_screen.dart';
 import 'package:dastak/src/ui/home_screen.dart';
+import 'package:dastak/src/ui/new_voter_screen.dart';
 import 'package:dastak/src/ui/sync_screen.dart';
 import 'package:dastak/src/ui/visit_form_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -209,5 +210,44 @@ void main() {
     );
     expect(find.text('दोबारा भेजें'), findsOneWidget);
     expect(find.textContaining('सलीम सिद्दीक़ी'), findsOneWidget);
+  });
+
+  testWidgets('new voter: mobile number is checked and needs consent', (
+    tester,
+  ) async {
+    await setUpHarness(tester);
+    await tester.pumpWidget(h.wrap(const NewVoterScreen(familyId: 'f1')));
+    await tester.pumpAndSettle();
+
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'नेहा यादव'); // name
+    await tester.enterText(fields.at(1), 'रामलाल यादव'); // relative
+    await tester.enterText(fields.at(2), '19'); // age
+    await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'महिला'));
+
+    await tester.enterText(fields.at(4), '12345'); // mobile, too short
+    await tester.pump();
+    await tapAndSettle(tester, find.text('सेव करें'));
+    expect(find.text('सही मोबाइल नंबर डालें'), findsOneWidget);
+
+    await tester.enterText(fields.at(4), '9876543210');
+    await tester.pump();
+    await tapAndSettle(tester, find.text('सेव करें'));
+    expect(find.text('मोबाइल नंबर के लिए सहमति ज़रूरी है'), findsOneWidget);
+    expect(h.store.data.outbox, isEmpty);
+
+    await tapAndSettle(tester, find.byType(Checkbox));
+    await tapAndSettle(tester, find.text('सेव करें'));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 200)),
+    );
+    await tester.pumpAndSettle();
+
+    final voterItem = h.store.data.outbox.firstWhere(
+      (e) => e.entity == 'voter',
+    );
+    expect(voterItem.payload['mobile'], '9876543210');
+    expect(voterItem.payload['mobile_consent'], isTrue);
+    expect(voterItem.payload['name_hi'], 'नेहा यादव');
   });
 }

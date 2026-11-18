@@ -66,6 +66,8 @@ class NewVoterDraft {
     required this.gender,
     this.epic,
     this.formType,
+    this.mobile,
+    this.mobileConsent = false,
   });
 
   final String familyId;
@@ -76,6 +78,10 @@ class NewVoterDraft {
   final String gender;
   final String? epic;
   final String? formType;
+
+  /// Kept only with consent, and never stored on the phone after sending.
+  final String? mobile;
+  final bool mobileConsent;
 }
 
 /// The phone's working copy: reads the local database into [data] and
@@ -362,6 +368,8 @@ class FieldStore extends ChangeNotifier {
         'age': draft.age,
         'gender': draft.gender,
         'epic': _blankToNull(draft.epic)?.toUpperCase(),
+        'mobile': _blankToNull(draft.mobile),
+        'mobile_consent': draft.mobileConsent,
       });
       if (draft.formType != null) {
         formId = await _startForm(voterId, draft.formType!, now);
