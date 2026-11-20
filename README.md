@@ -1,30 +1,47 @@
 # दस्तक (Dastak)
 
 Field tracking for the AC 371 Zafrabad claims campaign. Volunteers record every
-door visit and every claim form (Form 6/8) on an Android app; the campaign
-office manages the team from a website. Both share one Supabase backend.
+door visit and every claim form (Form 6/8) on a website that works on their
+phones, also without network; the campaign office manages the team from a
+separate admin website. Both share one Supabase backend.
 
 | Folder      | What it is                                               |
 | ----------- | -------------------------------------------------------- |
-| `app/`      | Flutter Android app for volunteers and BLA-2s (Hindi UI) |
+| `app/`      | Flutter app for volunteers and BLA-2s (Hindi UI), served as a website |
 | `admin/`    | Next.js website for the campaign office, hosted on Vercel |
 | `supabase/` | Database migrations, Edge Functions and seed data        |
 
 ## Status
 
-Built so far: the data model, booth-scoped access rules, sign-in by admin
-approval, the admin website (sign-in requests, field team, admins), and the
-app's sign-in and home screens.
+Built: the data model, booth-scoped access rules, sign-in by admin approval,
+the admin website (sign-in requests, field team, admins), the volunteers' app
+(booths, people, visit form with precise location, new voters, form
+tracking, offline storage and sync), offline opening of the website, and the
+real visit list.
 
-Not built yet: the offline database and sync, the visit form, form tracking,
-the real data import, and ERO list matching.
+Not built yet: admin progress pages, bulk volunteer registration, receipt
+photos, and ERO list matching.
+
+## Working without network
+
+The volunteers' website keeps itself on the phone after the first visit
+(`app/tool/sw_template.js`, turned into `sw.js` by `app/tool/make_sw.dart` on
+every build), so the link opens with no network. Visits and forms are saved in
+the browser's own database and sent when the phone is back online. A new
+version installs in the background; the volunteer sees
+"नया संस्करण उपलब्ध है · खोलें" and it switches when they tap it.
+
+Unsent work lives only in that browser on that phone. Volunteers should keep
+using the same browser, not clear its data, and not use private/incognito
+tabs. The home screen warns while anything is unsent, and signing out is
+blocked until it has been sent.
 
 ## How sign-in works
 
 There are no passwords or OTPs for field users.
 
-1. An admin registers the volunteer on the website: name, mobile, role, booths.
-2. The volunteer enters their mobile number in the app. The app shows a 4-digit
+1. An admin registers the volunteer on the admin website: name, mobile, role, booths.
+2. The volunteer enters their mobile number on the volunteers' website. The app shows a 4-digit
    code and waits.
 3. The admin sees the request with the same code, confirms it with the
    volunteer, and approves.
@@ -50,10 +67,10 @@ Admins page.
 ## Where things run
 
 - Admin website: https://dastak-admin-green.vercel.app (Vercel project
-  `dastak-admin`). It was deployed by uploading the `admin/` files directly,
-  because Vercel's GitHub app has no access to this repository yet. Until the
-  repository is connected in the Vercel project's Git settings (root directory
-  `admin`), a push here does not redeploy the site.
+  `dastak-admin`, root directory `admin`).
+- Volunteers' website: https://dastak-app-preview.vercel.app (Vercel project
+  `dastak-app-preview`, root directory `app`, built by `app/tool/vercel_build.sh`).
+- Both redeploy on every push to this branch.
 - Backend: Supabase project `dastak`, Mumbai.
 
 ## Running things
@@ -64,10 +81,16 @@ Admin website:
 cd admin && npm install && npm run dev
 ```
 
-App (needs Flutter 3.50 and the Android SDK):
+Volunteers' app in a browser (needs Flutter 3.50):
 
 ```bash
-cd app && flutter pub get && flutter run
+cd app && flutter pub get && flutter run -d chrome
+```
+
+The same build Vercel makes, with the offline helper:
+
+```bash
+cd app && flutter build web --release --no-web-resources-cdn --web-content-hash && dart run tool/make_sw.dart build/web
 ```
 
 App unit tests:
@@ -81,12 +104,6 @@ check the Hindi layout without a phone:
 
 ```bash
 cd app && flutter test --update-goldens test_live/screens_preview_test.dart
-```
-
-Release APKs for testing (signed with the debug key until an upload key exists):
-
-```bash
-cd app && flutter build apk --release --split-per-abi --target-platform android-arm,android-arm64
 ```
 
 Sign-in end to end against the real backend (needs a registered test volunteer
