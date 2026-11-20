@@ -18,7 +18,12 @@ void main(List<String> args) {
   // one this browser uses is cached) and the licence text (rarely opened).
   final core = [
     for (final u in urls)
-      if (!u.startsWith('canvaskit/') && !u.startsWith('assets/NOTICES') && !u.endsWith('.map')) u,
+      if (!u.startsWith('canvaskit/') &&
+          !u.startsWith('assets/NOTICES') &&
+          !u.endsWith('.map') &&
+          u != 'sw.js' &&
+          u != 'flutter_service_worker.js')
+        u,
   ];
   List<String> engine(String dir) => [
     for (final u in urls)
