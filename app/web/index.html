@@ -18,7 +18,9 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="Dastak field app (test preview).">
+  <meta name="description" content="दस्तक – ज़फ़राबाद दावा अभियान">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#b4441f">
 
   <!--
     Uncomment the tag below to lay the app out underneath the parts of the
@@ -43,8 +45,40 @@
 
   <title>दस्तक</title>
   <link rel="manifest" href="manifest.json">
+  <!-- tool/make_sw.dart replaces this line with preloads of the fonts, so
+       they download alongside the app instead of after it. -->
+  <meta name="dastak-preload">
+
+  <style>
+    html, body { margin: 0; height: 100%; background: #f6f3ee; }
+    #dastak-splash {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 18px;
+      font-family: "Noto Sans Devanagari", sans-serif; color: #3a3632;
+      text-align: center; padding: 24px; box-sizing: border-box;
+      transition: opacity .25s;
+    }
+    #dastak-splash h1 { margin: 0; font-size: 44px; color: #b4441f; }
+    #dastak-splash .bar {
+      width: 180px; height: 6px; border-radius: 3px; background: #e6ded3; overflow: hidden;
+    }
+    #dastak-splash .bar::after {
+      content: ""; display: block; width: 40%; height: 100%; border-radius: 3px;
+      background: #b4441f; animation: dastak-slide 1.2s ease-in-out infinite;
+    }
+    @keyframes dastak-slide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+    #dastak-splash p { margin: 0; font-size: 16px; line-height: 1.5; max-width: 300px; }
+    #dastak-slow { visibility: hidden; color: #6b645c; }
+  </style>
 </head>
 <body>
+  <!-- Shown until the app draws its first screen. -->
+  <div id="dastak-splash" role="status">
+    <h1>दस्तक</h1>
+    <div class="bar"></div>
+    <p>खुल रहा है…</p>
+    <p id="dastak-slow">पहली बार खुलने में थोड़ा समय लगता है। इसके बाद यह जल्दी और बिना नेटवर्क के भी खुलेगा।</p>
+  </div>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -63,13 +97,23 @@
     <button id="dastak-update-go" style="background:#b4441f;color:#fff;border:0;border-radius:8px;padding:10px 16px;font:600 16px sans-serif">खोलें</button>
   </div>
   <script>
-    // Keep the app on the phone for offline use (sw.js), and ask the browser
-    // not to clear its stored data, where unsent visits wait.
-    if (navigator.storage && navigator.storage.persist) {
-      navigator.storage.persist().catch(function () {});
-    }
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
+    (function () {
+      var splash = document.getElementById('dastak-splash');
+      var slow = setTimeout(function () {
+        document.getElementById('dastak-slow').style.visibility = 'visible';
+      }, 6000);
+
+      // The offline helper (sw.js) keeps the app on the phone. It starts only
+      // once the app is on screen, so the first visit does not download
+      // everything twice at the same time.
+      var registered = false;
+      function registerOffline() {
+        if (registered || !('serviceWorker' in navigator)) return;
+        registered = true;
+        // Ask the browser not to clear stored data, where unsent visits wait.
+        if (navigator.storage && navigator.storage.persist) {
+          navigator.storage.persist().catch(function () {});
+        }
         navigator.serviceWorker.register('sw.js').then(function (reg) {
           var banner = document.getElementById('dastak-update');
           var updating = false;
@@ -93,8 +137,17 @@
           // Look for a new version every 30 minutes while the app is open.
           setInterval(function () { reg.update().catch(function () {}); }, 30 * 60 * 1000);
         }).catch(function () {});
+      }
+
+      window.addEventListener('flutter-first-frame', function () {
+        clearTimeout(slow);
+        splash.style.opacity = '0';
+        setTimeout(function () { splash.remove(); }, 300);
+        registerOffline();
       });
-    }
+      // If the app never draws (an error), still keep it for next time.
+      setTimeout(registerOffline, 60000);
+    })();
   </script>
 </body>
 </html>

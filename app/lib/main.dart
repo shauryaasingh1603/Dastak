@@ -20,6 +20,16 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   const keys = SecureKeyValueStore();
+  // Opening the local database (which in a browser downloads its engine)
+  // runs alongside the backend set-up, so the first screen comes sooner.
+  final storeReady = () async {
+    final store = FieldStore(
+      LocalDb(openLocalDb(key: await _databaseKey(keys))),
+    );
+    await store.reload();
+    return store;
+  }();
+  final deviceModel = _deviceModel();
   await Supabase.initialize(
     url: supabaseUrl,
     publishableKey: supabaseKey,
@@ -29,10 +39,7 @@ Future<void> main() async {
     ),
   );
   final client = Supabase.instance.client;
-
-  final db = LocalDb(openLocalDb(key: await _databaseKey(keys)));
-  final store = FieldStore(db);
-  await store.reload();
+  final store = await storeReady;
 
   late final AuthController auth;
   final sync = SyncService(
@@ -44,7 +51,7 @@ Future<void> main() async {
   auth = AuthController(
     backend: SupabaseAuthBackend(client),
     store: keys,
-    deviceModel: await _deviceModel(),
+    deviceModel: await deviceModel,
     pollInterval: loginPollInterval,
     onAccessLost: () async {
       sync.stop();

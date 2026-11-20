@@ -11,8 +11,11 @@ void main(List<String> args) {
   final out = Directory(args.isEmpty ? 'build/web' : args.first);
   final manifestFile = File('${out.path}/precache_manifest.json');
   final manifestBytes = manifestFile.readAsBytesSync();
-  final manifest = jsonDecode(utf8.decode(manifestBytes)) as Map<String, dynamic>;
-  final urls = [for (final e in manifest['entries'] as List) (e as Map)['url'] as String];
+  final manifest =
+      jsonDecode(utf8.decode(manifestBytes)) as Map<String, dynamic>;
+  final urls = [
+    for (final e in manifest['entries'] as List) (e as Map)['url'] as String,
+  ];
 
   // Everything the app needs to start, minus the drawing engines (only the
   // one this browser uses is cached) and the licence text (rarely opened).
@@ -35,9 +38,34 @@ void main(List<String> args) {
   final sw = template
       .replaceAll('__VERSION__', version)
       .replaceAll('__CORE__', jsonEncode(core))
-      .replaceAll('__ENGINE_CHROMIUM__', jsonEncode(engine('canvaskit/chromium/')))
+      .replaceAll(
+        '__ENGINE_CHROMIUM__',
+        jsonEncode(engine('canvaskit/chromium/')),
+      )
       .replaceAll('__ENGINE_FULL__', jsonEncode(engine('canvaskit/')));
   File('${out.path}/sw.js').writeAsStringSync(sw);
-  stdout.writeln('sw.js $version: ${core.length} core files, engines '
-      '${engine('canvaskit/chromium/').length}+${engine('canvaskit/').length}');
+
+  // Start the fonts downloading as soon as the page arrives. Flutter asks
+  // for them with fetch(), so they are preloaded as fetches.
+  final indexFile = File('${out.path}/index.html');
+  final preloads = [
+    for (final u in core)
+      if (u.endsWith('.ttf') &&
+          (u.contains('NotoSansDevanagari') || u.contains('Roboto')))
+        '<link rel="preload" href="$u" as="fetch" crossorigin="anonymous">',
+  ].join('\n  ');
+  final index = indexFile.readAsStringSync();
+  if (!index.contains('<meta name="dastak-preload">')) {
+    stderr.writeln(
+      'index.html has no <meta name="dastak-preload"> placeholder',
+    );
+    exit(1);
+  }
+  indexFile.writeAsStringSync(
+    index.replaceFirst('<meta name="dastak-preload">', preloads),
+  );
+  stdout.writeln(
+    'sw.js $version: ${core.length} core files, engines '
+    '${engine('canvaskit/chromium/').length}+${engine('canvaskit/').length}',
+  );
 }
