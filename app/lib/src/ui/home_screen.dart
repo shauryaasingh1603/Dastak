@@ -180,7 +180,7 @@ class HomeScreen extends StatelessWidget {
                         l10n.homeSyncState,
                         data.hasUnsent
                             ? l10n.syncPendingCount(data.outbox.length)
-                            : '✓',
+                            : l10n.homeAllSent,
                         Icons.sync,
                       ),
                     ],

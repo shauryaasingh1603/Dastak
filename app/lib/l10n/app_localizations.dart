@@ -1069,7 +1069,7 @@ abstract class AppLocalizations {
   /// No description provided for @syncAllSent.
   ///
   /// In hi, this message translates to:
-  /// **'सारा डेटा सर्वर पर है ✓'**
+  /// **'सारा डेटा सर्वर पर पहुँच गया'**
   String get syncAllSent;
 
   /// No description provided for @syncLast.
@@ -1294,6 +1294,18 @@ abstract class AppLocalizations {
   /// **'स्थान की अनुमति बंद है। सेटिंग खोलें, “स्थान” चुनें, फिर “ऐप इस्तेमाल करते समय” और “सटीक स्थान” चालू करें।'**
   String get locBlocked;
 
+  /// No description provided for @locDeniedWeb.
+  ///
+  /// In hi, this message translates to:
+  /// **'स्थान की अनुमति नहीं मिली। “अनुमति दें” दबाएँ और ब्राउज़र के सवाल पर “Allow” (अनुमति दें) चुनें।'**
+  String get locDeniedWeb;
+
+  /// No description provided for @locBlockedWeb.
+  ///
+  /// In hi, this message translates to:
+  /// **'इस वेबसाइट के लिए स्थान बंद (Block) है। ऊपर जहाँ वेबसाइट का पता लिखा है, उसके बाईं ओर के निशान को दबाएँ, फिर “Permissions” या “Site settings” में “Location” को “Allow” करें। उसके बाद “दोबारा जाँचें” दबाएँ।'**
+  String get locBlockedWeb;
+
   /// No description provided for @locApproximate.
   ///
   /// In hi, this message translates to:
@@ -1321,13 +1333,13 @@ abstract class AppLocalizations {
   /// No description provided for @visitSavedWithGps.
   ///
   /// In hi, this message translates to:
-  /// **'भेंट सेव हुई · स्थान दर्ज (±{meters} मीटर)'**
+  /// **'भेंट सेव हुई · स्थान दर्ज (लगभग {meters} मीटर तक सटीक)'**
   String visitSavedWithGps(int meters);
 
   /// No description provided for @visitSavedRoughGps.
   ///
   /// In hi, this message translates to:
-  /// **'भेंट सेव हुई · स्थान दर्ज, पर सटीक नहीं (±{meters} मीटर)'**
+  /// **'भेंट सेव हुई · स्थान दर्ज, पर सटीक नहीं (लगभग {meters} मीटर)'**
   String visitSavedRoughGps(int meters);
 
   /// No description provided for @visitSavedNoGps.
@@ -1503,6 +1515,12 @@ abstract class AppLocalizations {
   /// In hi, this message translates to:
   /// **'मकान नं. {house} · बूथ {partNo}'**
   String houseAndBooth(String house, int partNo);
+
+  /// No description provided for @homeAllSent.
+  ///
+  /// In hi, this message translates to:
+  /// **'सब भेजा गया'**
+  String get homeAllSent;
 }
 
 class _AppLocalizationsDelegate

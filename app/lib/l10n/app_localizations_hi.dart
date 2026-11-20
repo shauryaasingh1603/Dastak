@@ -546,7 +546,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get syncAllSent => 'सारा डेटा सर्वर पर है ✓';
+  String get syncAllSent => 'सारा डेटा सर्वर पर पहुँच गया';
 
   @override
   String syncLast(String time) {
@@ -669,6 +669,14 @@ class AppLocalizationsHi extends AppLocalizations {
       'स्थान की अनुमति बंद है। सेटिंग खोलें, “स्थान” चुनें, फिर “ऐप इस्तेमाल करते समय” और “सटीक स्थान” चालू करें।';
 
   @override
+  String get locDeniedWeb =>
+      'स्थान की अनुमति नहीं मिली। “अनुमति दें” दबाएँ और ब्राउज़र के सवाल पर “Allow” (अनुमति दें) चुनें।';
+
+  @override
+  String get locBlockedWeb =>
+      'इस वेबसाइट के लिए स्थान बंद (Block) है। ऊपर जहाँ वेबसाइट का पता लिखा है, उसके बाईं ओर के निशान को दबाएँ, फिर “Permissions” या “Site settings” में “Location” को “Allow” करें। उसके बाद “दोबारा जाँचें” दबाएँ।';
+
+  @override
   String get locApproximate =>
       'अभी सिर्फ़ अनुमानित स्थान की अनुमति है। सटीक स्थान चालू करें।';
 
@@ -684,12 +692,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String visitSavedWithGps(int meters) {
-    return 'भेंट सेव हुई · स्थान दर्ज (±$meters मीटर)';
+    return 'भेंट सेव हुई · स्थान दर्ज (लगभग $meters मीटर तक सटीक)';
   }
 
   @override
   String visitSavedRoughGps(int meters) {
-    return 'भेंट सेव हुई · स्थान दर्ज, पर सटीक नहीं (±$meters मीटर)';
+    return 'भेंट सेव हुई · स्थान दर्ज, पर सटीक नहीं (लगभग $meters मीटर)';
   }
 
   @override
@@ -790,4 +798,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String houseAndBooth(String house, int partNo) {
     return 'मकान नं. $house · बूथ $partNo';
   }
+
+  @override
+  String get homeAllSent => 'सब भेजा गया';
 }

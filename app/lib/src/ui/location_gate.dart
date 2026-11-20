@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -85,9 +86,14 @@ class LocationProblem extends StatelessWidget {
     required this.access,
     required this.onAsk,
     required this.onRecheck,
+    this.web = kIsWeb,
   });
 
   final LocationAccess access;
+
+  /// In a browser the website cannot open the phone's settings; the steps
+  /// go through the browser's own site settings instead.
+  final bool web;
   final VoidCallback onAsk;
   final VoidCallback onRecheck;
 
@@ -96,8 +102,8 @@ class LocationProblem extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final message = switch (access) {
-      LocationAccess.denied => l10n.locDenied,
-      LocationAccess.blocked => l10n.locBlocked,
+      LocationAccess.denied => web ? l10n.locDeniedWeb : l10n.locDenied,
+      LocationAccess.blocked => web ? l10n.locBlockedWeb : l10n.locBlocked,
       LocationAccess.approximate => l10n.locApproximate,
       LocationAccess.serviceOff => l10n.locServiceOff,
       LocationAccess.granted => '',
@@ -143,10 +149,9 @@ class LocationProblem extends StatelessWidget {
             label: Text(l10n.locAllow),
           ),
           const SizedBox(height: 8),
-          if (access == LocationAccess.approximate) settings,
+          if (access == LocationAccess.approximate && !web) settings,
         ] else ...[
-          settings,
-          const SizedBox(height: 8),
+          if (!web) ...[settings, const SizedBox(height: 8)],
           TextButton(onPressed: onRecheck, child: Text(l10n.locCheckAgain)),
         ],
       ],

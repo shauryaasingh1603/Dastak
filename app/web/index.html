@@ -35,7 +35,7 @@
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="dastak">
+  <meta name="apple-mobile-web-app-title" content="दस्तक">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
@@ -54,5 +54,47 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+
+  <!-- Update notice, shown over the app when a new version is ready. -->
+  <div id="dastak-update" role="status" style="display:none;position:fixed;left:12px;right:12px;bottom:88px;z-index:9999;
+       background:#1d1c1a;color:#fff;border-radius:12px;padding:12px 14px;font:16px/1.4 sans-serif;
+       box-shadow:0 4px 16px rgba(0,0,0,.3);align-items:center;gap:12px">
+    <span style="flex:1">नया संस्करण उपलब्ध है</span>
+    <button id="dastak-update-go" style="background:#b4441f;color:#fff;border:0;border-radius:8px;padding:10px 16px;font:600 16px sans-serif">खोलें</button>
+  </div>
+  <script>
+    // Keep the app on the phone for offline use (sw.js), and ask the browser
+    // not to clear its stored data, where unsent visits wait.
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().catch(function () {});
+    }
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').then(function (reg) {
+          var banner = document.getElementById('dastak-update');
+          var updating = false;
+          function offer(worker) {
+            banner.style.display = 'flex';
+            document.getElementById('dastak-update-go').onclick = function () {
+              updating = true;
+              worker.postMessage('SKIP_WAITING');
+            };
+          }
+          if (reg.waiting && navigator.serviceWorker.controller) offer(reg.waiting);
+          reg.addEventListener('updatefound', function () {
+            var w = reg.installing;
+            w.addEventListener('statechange', function () {
+              if (w.state === 'installed' && navigator.serviceWorker.controller) offer(w);
+            });
+          });
+          navigator.serviceWorker.addEventListener('controllerchange', function () {
+            if (updating) location.reload();
+          });
+          // Look for a new version every 30 minutes while the app is open.
+          setInterval(function () { reg.update().catch(function () {}); }, 30 * 60 * 1000);
+        }).catch(function () {});
+      });
+    }
+  </script>
 </body>
 </html>

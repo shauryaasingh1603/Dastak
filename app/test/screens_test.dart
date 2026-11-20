@@ -3,7 +3,9 @@ import 'package:dastak/src/data/field_store.dart';
 import 'package:dastak/src/data/models.dart';
 import 'package:dastak/src/ui/booth_list_screen.dart';
 import 'package:dastak/src/ui/form_detail_screen.dart';
+import 'package:dastak/src/location.dart';
 import 'package:dastak/src/ui/home_screen.dart';
+import 'package:dastak/src/ui/location_gate.dart';
 import 'package:dastak/src/ui/main_shell.dart';
 import 'package:dastak/src/ui/new_voter_screen.dart';
 import 'package:dastak/src/ui/person_screen.dart';
@@ -428,5 +430,34 @@ void main() {
     await tapAndSettle(tester, find.text('अनुमति दें'));
     await settle(tester);
     expect(find.text('आपके बूथ'), findsOneWidget);
+  });
+
+  testWidgets('in a browser, blocked location explains the site settings', (
+    tester,
+  ) async {
+    await setUpHarness(tester);
+    var rechecked = 0;
+    Widget problem({required bool web}) => h.wrap(
+      Scaffold(
+        body: LocationProblem(
+          access: LocationAccess.blocked,
+          onAsk: () {},
+          onRecheck: () => rechecked++,
+          web: web,
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(problem(web: true));
+    await settle(tester);
+    expect(find.textContaining('Site settings'), findsOneWidget);
+    // A website cannot open the phone's settings, so no such button.
+    expect(find.text('सेटिंग खोलें'), findsNothing);
+    await tapAndSettle(tester, find.text('दोबारा जाँचें'));
+    expect(rechecked, 1);
+
+    await tester.pumpWidget(problem(web: false));
+    await settle(tester);
+    expect(find.text('सेटिंग खोलें'), findsOneWidget);
   });
 }

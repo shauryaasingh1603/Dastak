@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Builds the web test preview of the app on Vercel, which has no Flutter
-# installed. Used only by app/vercel.json. The Android APK is the real product.
+# Builds the volunteers' website (the app, compiled for the browser) on
+# Vercel, which has no Flutter installed. Used by app/vercel.json.
 set -euo pipefail
 
 FLUTTER_VERSION=3.50.0
@@ -19,4 +19,7 @@ export PATH="$FLUTTER_HOME/bin:$PATH"
 
 flutter config --no-analytics > /dev/null
 flutter pub get
-flutter build web --release
+# Everything is served from this site (no Google CDN) with hashed file names,
+# so the offline helper sw.js can keep the whole app on the phone.
+flutter build web --release --no-web-resources-cdn --web-content-hash
+dart run tool/make_sw.dart build/web
