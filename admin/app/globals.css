@@ -820,3 +820,13 @@ th.num {
 td .pill + .pill {
   margin-left: 4px;
 }
+
+table.mini tr.muted-row td {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+table.mini tr.muted-row:first-of-type td,
+table.mini tr:not(.muted-row) + tr.muted-row td {
+  border-top: 2px solid var(--line);
+}

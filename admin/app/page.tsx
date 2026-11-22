@@ -20,6 +20,7 @@ type Dashboard = {
   };
   totals: {
     people: number;
+    already_back: number;
     attempted: number;
     reached: number;
     visits: number;
@@ -49,7 +50,7 @@ type Dashboard = {
   }[];
   outcomes: Counts;
   by_priority: (Share & { priority: number })[];
-  by_source: (Share & { source: string })[];
+  by_category: (Share & { category: string })[];
   flags: Counts;
   booths: Booth[];
   volunteers: Volunteer[];
@@ -127,6 +128,18 @@ const FLAG: Record<string, string> = {
   GPS_INACCURATE: "Location rough (over 100 m)",
   GPS_APPROXIMATE: "Only approximate location",
   CLOCK_SKEW: "Phone clock was wrong",
+};
+
+const CATEGORY: Record<string, string> = {
+  UNTRACEABLE: "Untraceable / absent",
+  SHIFTED: "Permanently shifted",
+  DECEASED: "Deceased (verify with family)",
+  DUPLICATE: "Duplicate (check enrolment elsewhere)",
+  ALREADY_BACK: "Already back on the roll (no visit)",
+  POSS_HIGH: "Possibly deleted: high",
+  POSS_MEDIUM: "Possibly deleted: medium",
+  POSS_LOW: "Possibly deleted: low (check first)",
+  NEW: "Added in the field",
 };
 
 const ROUTE: Record<string, string> = { BLA2: "Through BLA-2", SELF: "By the voter", ONLINE: "Online", NONE: "Route not set" };
@@ -260,7 +273,7 @@ function DashboardView() {
         <Tile
           label="People reached"
           value={`${n(t.reached)} / ${n(t.people)}`}
-          sub={`${pct(t.reached, t.people)} reached · ${n(t.attempted)} visited at least once`}
+          sub={`${pct(t.reached, t.people)} reached · ${n(t.attempted)} visited at least once · ${n(t.already_back)} already back on the roll, not counted`}
         >
           <Meter value={t.reached} total={t.people} />
         </Tile>
@@ -362,28 +375,28 @@ function DashboardView() {
           )}
         </div>
         <div className="card">
-          <h2>Progress by priority</h2>
+          <h2>Progress by category</h2>
           <table className="mini">
             <tbody>
+              {data.by_category.map((c) => (
+                <tr key={c.category}>
+                  <td>{CATEGORY[c.category] ?? c.category}</td>
+                  <td className="grow">
+                    <Meter value={c.reached} total={c.people} />
+                  </td>
+                  <td className="num">
+                    {n(c.reached)} / {n(c.people)}
+                  </td>
+                </tr>
+              ))}
               {data.by_priority.map((p) => (
-                <tr key={p.priority}>
+                <tr key={p.priority} className="muted-row">
                   <td>Priority {p.priority}</td>
                   <td className="grow">
                     <Meter value={p.reached} total={p.people} />
                   </td>
                   <td className="num">
                     {n(p.reached)} / {n(p.people)}
-                  </td>
-                </tr>
-              ))}
-              {data.by_source.map((s) => (
-                <tr key={s.source}>
-                  <td>{s.source === "ASDD" ? "ASDD list" : s.source === "POSS_DEL" ? "Possibly deleted" : "Added in field"}</td>
-                  <td className="grow">
-                    <Meter value={s.reached} total={s.people} />
-                  </td>
-                  <td className="num">
-                    {n(s.reached)} / {n(s.people)}
                   </td>
                 </tr>
               ))}
