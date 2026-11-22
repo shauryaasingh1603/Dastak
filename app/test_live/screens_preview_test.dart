@@ -14,6 +14,7 @@ import 'package:dastak/src/data/field_store.dart';
 import 'package:dastak/src/data/models.dart';
 import 'package:dastak/src/ui/booth_list_screen.dart';
 import 'package:dastak/src/ui/person_screen.dart';
+import 'package:dastak/src/ui/search_screen.dart';
 import 'package:dastak/src/ui/form_detail_screen.dart';
 import 'package:dastak/src/ui/forms_screen.dart';
 import 'package:dastak/src/ui/login_screen.dart';
@@ -208,6 +209,10 @@ void main() {
       height: 1800,
     );
   });
+  testWidgets(
+    'search',
+    (tester) => shoot(tester, 'search', const PersonSearchScreen()),
+  );
   testWidgets('forms', (tester) => shoot(tester, 'forms', const FormsScreen()));
   testWidgets('sync', (tester) => shoot(tester, 'sync', const SyncScreen()));
   testWidgets(
