@@ -132,7 +132,12 @@ const FLAG: Record<string, string> = {
 const ROUTE: Record<string, string> = { BLA2: "Through BLA-2", SELF: "By the voter", ONLINE: "Online", NONE: "Route not set" };
 
 const n = (v: number) => v.toLocaleString("en-IN");
-const pct = (a: number, b: number) => (b > 0 ? `${Math.round((a / b) * 100)}%` : "—");
+const pct = (a: number, b: number) => {
+  if (b <= 0) return "—";
+  const p = (a / b) * 100;
+  // Early on, shares are tiny: show 0.4%, not 0%.
+  return `${p > 0 && p < 10 ? p.toFixed(1) : Math.round(p)}%`;
+};
 
 function dayLabel(iso: string) {
   return new Date(`${iso}T00:00:00+05:30`).toLocaleDateString("en-IN", {

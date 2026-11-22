@@ -19,13 +19,15 @@ function useWidth<T extends HTMLElement>() {
 export type Series = { key: string; label: string; color: string };
 export type TooltipRow = { label: string; value: string; color?: string };
 
+/** Axis top: twice a round step, so the midline tick is a whole number. */
 function niceMax(value: number): number {
-  if (value <= 5) return 5;
-  const pow = 10 ** Math.floor(Math.log10(value));
-  for (const step of [1, 2, 2.5, 5, 10]) {
-    if (step * pow >= value) return step * pow;
+  const half = Math.max(1, value / 2);
+  const pow = 10 ** Math.floor(Math.log10(half));
+  for (const m of [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) {
+    const step = m * pow;
+    if (step >= half && Number.isInteger(step)) return step * 2;
   }
-  return 10 * pow;
+  return 20 * pow;
 }
 
 /** A bar with a 4px rounded top, anchored square to the baseline. */

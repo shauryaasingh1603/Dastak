@@ -543,6 +543,8 @@ tr.inactive td {
 }
 
 .today-cell > span:last-child {
+  min-width: 78px;
+  text-align: right;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   font-size: 13px;
@@ -698,6 +700,10 @@ table.mini td {
   padding: 7px 6px;
   font-size: 13.5px;
   border-bottom: 1px solid #f0ede6;
+}
+
+table.mini td:first-child {
+  white-space: nowrap;
 }
 
 table.mini td.grow {
