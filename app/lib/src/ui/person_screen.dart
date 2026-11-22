@@ -33,7 +33,8 @@ class PersonScreen extends StatelessWidget {
           return Scaffold(appBar: AppBar(title: Text(l10n.personTitle)));
         }
         final family = data.family(voter.familyId);
-        final reason = reasonLabel(l10n, voter);
+        final category = voter.categoryCode;
+        final household = data.householdOf(voterId);
         final sameRecord = [
           for (final v in data.votersOf(voter.familyId))
             if (v.id != voterId) v,
@@ -81,7 +82,19 @@ class PersonScreen extends StatelessWidget {
                                 ),
                           style: muted,
                         ),
-                      if (reason != null) Text(reason, style: muted),
+                      const SizedBox(height: 10),
+                      Pill(label: categoryLabel(l10n, category)),
+                      const SizedBox(height: 4),
+                      Text(categoryHint(l10n, category), style: muted),
+                      if (voter.closest2026 != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.closestEntry(voter.closest2026!),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 8),
                       Wrap(
                         spacing: 8,
@@ -155,6 +168,24 @@ class PersonScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+              ],
+              if (household.isNotEmpty) ...[
+                SectionTitle(l10n.personHousehold),
+                for (final other in household) ...[
+                  PersonTile(
+                    voter: other,
+                    family: data.family(other.familyId),
+                    status: data.personStatus(other.id),
+                    showBooth:
+                        data.family(other.familyId)?.partNo != family?.partNo,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => PersonScreen(voterId: other.id),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ],
               if (sameRecord.isNotEmpty) ...[
                 SectionTitle(l10n.personSameRecord),

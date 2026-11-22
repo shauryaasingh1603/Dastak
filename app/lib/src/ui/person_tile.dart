@@ -13,12 +13,20 @@ class PersonTile extends StatelessWidget {
     required this.family,
     required this.status,
     this.onTap,
+    this.showBooth = false,
+    this.trailing,
   });
 
   final Voter voter;
   final Family? family;
   final FamilyStatus status;
   final VoidCallback? onTap;
+
+  /// In results from several booths, say which booth.
+  final bool showBooth;
+
+  /// Replaces the visit-status pill (e.g. an "add" button when picking).
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +38,7 @@ class PersonTile extends StatelessWidget {
         '${relationLabel(l10n, voter.relationType)}: ${voter.relativeNameHi}',
       if (house != null && house.isNotEmpty) l10n.houseNo(house),
       if (voter.age != null) l10n.ageYears(voter.age!),
+      if (showBooth && family != null) l10n.boothNumber(family!.partNo),
     ].join(' · ');
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -51,15 +60,24 @@ class PersonTile extends StatelessWidget {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                    if (family?.isHighPriority ?? false) ...[
-                      const SizedBox(height: 4),
-                      const PriorityTag(),
-                    ],
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        Pill(
+                          dense: true,
+                          label: categoryLabel(l10n, voter.categoryCode),
+                        ),
+                        if (family?.isHighPriority ?? false)
+                          const PriorityTag(),
+                      ],
+                    ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              Pill(label: familyStatusLabel(l10n, status)),
+              trailing ?? Pill(label: familyStatusLabel(l10n, status)),
             ],
           ),
         ),

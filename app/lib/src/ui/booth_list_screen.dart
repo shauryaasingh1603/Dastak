@@ -2,9 +2,11 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../data/models.dart';
-import '../text.dart';
+import '../search.dart';
+import 'category_filter.dart';
 import 'person_screen.dart';
 import 'person_tile.dart';
+import 'search_screen.dart';
 import 'field_scope.dart';
 import 'widgets.dart';
 
@@ -36,6 +38,7 @@ class BoothListScreen extends StatelessWidget {
             appBar: AppBar(
               title: Text(l10n.listTitle),
               automaticallyImplyLeading: !embedded,
+              actions: const [_SearchAction()],
             ),
             body: Padding(
               padding: const EdgeInsets.all(16),
@@ -53,6 +56,7 @@ class BoothListScreen extends StatelessWidget {
                 '${l10n.listTitle} · ${l10n.boothNumber(booths.single.partNo)}',
               ),
               automaticallyImplyLeading: !embedded,
+              actions: const [_SearchAction()],
             ),
             body: BoothFamilies(booth: booths.single),
           );
@@ -65,6 +69,7 @@ class BoothListScreen extends StatelessWidget {
             appBar: AppBar(
               title: Text(l10n.listTitle),
               automaticallyImplyLeading: !embedded,
+              actions: const [_SearchAction()],
               bottom: TabBar(
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
@@ -108,21 +113,10 @@ class _BoothFamiliesState extends State<BoothFamilies>
     with AutomaticKeepAliveClientMixin {
   String _query = '';
   FamilyStatus? _filter;
+  String? _category;
 
   @override
   bool get wantKeepAlive => true;
-
-  bool _matches(FieldData data, Voter voter, String needle) {
-    if (needle.isEmpty) return true;
-    final house = data.family(voter.familyId)?.houseNo ?? '';
-    if (house.toLowerCase() == needle) return true;
-    if (normalizeForSearch(voter.nameHi).contains(needle)) return true;
-    if (normalizeForSearch(voter.relativeNameHi ?? '').contains(needle)) {
-      return true;
-    }
-    final epic = (voter.epic ?? '').toLowerCase().replaceAll(' ', '');
-    return epic.contains(needle.replaceAll(' ', ''));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,11 +130,12 @@ class _BoothFamiliesState extends State<BoothFamilies>
       builder: (context, _) {
         final data = store.data;
         final people = data.peopleInBooth(widget.booth.partNo);
-        final needle = normalizeForSearch(_query);
+        final query = PersonQuery(_query);
         final shown = [
           for (final v in people)
             if ((_filter == null || data.personStatus(v.id) == _filter) &&
-                _matches(data, v, needle))
+                (_category == null || v.categoryCode == _category) &&
+                query.matches(data, v))
               v,
         ];
         final filters = <(String, FamilyStatus?)>[
@@ -205,6 +200,12 @@ class _BoothFamiliesState extends State<BoothFamilies>
                       ),
                   ],
                 ),
+                const SizedBox(height: 6),
+                CategoryFilter(
+                  people: people,
+                  selected: _category,
+                  onChanged: (c) => setState(() => _category = c),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   l10n.listShowingPeople(shown.length, people.length),
@@ -236,4 +237,17 @@ class _BoothFamiliesState extends State<BoothFamilies>
       },
     );
   }
+}
+
+class _SearchAction extends StatelessWidget {
+  const _SearchAction();
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: AppLocalizations.of(context).searchTitle,
+    icon: const Icon(Icons.search),
+    onPressed: () => Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const PersonSearchScreen())),
+  );
 }

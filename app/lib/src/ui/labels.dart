@@ -114,14 +114,67 @@ String genderLabel(AppLocalizations l10n, String? code) => switch (code) {
   _ => l10n.genderO,
 };
 
-String? reasonLabel(AppLocalizations l10n, Voter voter) {
-  if (voter.sourceList == 'POSS_DEL') return l10n.reasonPossDel;
-  return switch (voter.asddReason) {
-    'SHIFTED' => l10n.reasonShifted,
-    'UNTRACEABLE' => l10n.reasonUntraceable,
-    _ => null,
-  };
-}
+/// Why the person is on the list (the workbook's category).
+CodeLabel categoryLabel(AppLocalizations l10n, String code) => switch (code) {
+  VoterCategory.untraceable => CodeLabel(
+    l10n.catUntraceable,
+    Icons.person_search_outlined,
+    const Color(0xFF1C5CAB),
+  ),
+  VoterCategory.shifted => CodeLabel(
+    l10n.catShifted,
+    Icons.home_work_outlined,
+    const Color(0xFF8A5A00),
+  ),
+  VoterCategory.deceased => CodeLabel(
+    l10n.catDeceased,
+    Icons.do_not_disturb_on_outlined,
+    const Color(0xFF52514E),
+  ),
+  VoterCategory.duplicate => CodeLabel(
+    l10n.catDuplicate,
+    Icons.content_copy_outlined,
+    const Color(0xFF6B4FA0),
+  ),
+  VoterCategory.alreadyBack => CodeLabel(
+    l10n.catAlreadyBack,
+    Icons.verified_outlined,
+    const Color(0xFF1F7A4D),
+  ),
+  VoterCategory.possHigh => CodeLabel(
+    l10n.catPossHigh,
+    Icons.report_outlined,
+    const Color(0xFFA3262A),
+  ),
+  VoterCategory.possMedium => CodeLabel(
+    l10n.catPossMedium,
+    Icons.help_outline,
+    const Color(0xFFB4441F),
+  ),
+  VoterCategory.possLow => CodeLabel(
+    l10n.catPossLow,
+    Icons.fact_check_outlined,
+    const Color(0xFF0F6E77),
+  ),
+  _ => CodeLabel(
+    l10n.catAdded,
+    Icons.fiber_new_outlined,
+    const Color(0xFF0F6E77),
+  ),
+};
+
+/// What the category means for the volunteer at the door.
+String categoryHint(AppLocalizations l10n, String code) => switch (code) {
+  VoterCategory.untraceable => l10n.catHintUntraceable,
+  VoterCategory.shifted => l10n.catHintShifted,
+  VoterCategory.deceased => l10n.catHintDeceased,
+  VoterCategory.duplicate => l10n.catHintDuplicate,
+  VoterCategory.alreadyBack => l10n.catHintAlreadyBack,
+  VoterCategory.possHigh => l10n.catHintPossHigh,
+  VoterCategory.possMedium => l10n.catHintPossMedium,
+  VoterCategory.possLow => l10n.catHintPossLow,
+  _ => l10n.catHintAdded,
+};
 
 CodeLabel familyStatusLabel(AppLocalizations l10n, FamilyStatus status) =>
     switch (status) {

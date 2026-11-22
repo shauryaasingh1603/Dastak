@@ -9,6 +9,7 @@ import 'package:dastak/src/ui/location_gate.dart';
 import 'package:dastak/src/ui/main_shell.dart';
 import 'package:dastak/src/ui/new_voter_screen.dart';
 import 'package:dastak/src/ui/person_screen.dart';
+import 'package:dastak/src/ui/search_screen.dart';
 import 'package:dastak/src/ui/sync_screen.dart';
 import 'package:dastak/src/ui/visit_form_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -459,5 +460,86 @@ void main() {
     await tester.pumpWidget(problem(web: false));
     await settle(tester);
     expect(find.text('सेटिंग खोलें'), findsOneWidget);
+  });
+
+  testWidgets('a booth tab filters people by category', (tester) async {
+    await setUpHarness(tester);
+    await tester.pumpWidget(h.wrap(const BoothListScreen()));
+    await tester.pumpAndSettle();
+    expect(find.text('5 / 5 लोग'), findsOneWidget);
+
+    await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'दोहरा नाम 1'));
+    expect(find.text('1 / 5 लोग'), findsOneWidget);
+    expect(find.text('पूजा यादव'), findsOneWidget);
+    expect(find.text('सीता यादव'), findsNothing);
+
+    await tapAndSettle(
+      tester,
+      find.widgetWithText(ChoiceChip, 'सभी श्रेणियाँ'),
+    );
+    expect(find.text('5 / 5 लोग'), findsOneWidget);
+  });
+
+  testWidgets('person card shows the category and the 2026 entry to check', (
+    tester,
+  ) async {
+    await setUpHarness(tester);
+    await tester.pumpWidget(h.wrap(const PersonScreen(voterId: 'v1')));
+    await tester.pumpAndSettle();
+    expect(find.text('शायद सूची में है'), findsOneWidget);
+    expect(
+      find.textContaining('2026 सूची में मिलती-जुलती प्रविष्टि'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('search finds people in every booth, in English letters too', (
+    tester,
+  ) async {
+    await setUpHarness(tester);
+    await tester.pumpWidget(h.wrap(const PersonSearchScreen()));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'mohan');
+    await settle(tester);
+    expect(find.text('मोहन पाल'), findsOneWidget);
+    expect(find.text('1 लोग मिले'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'yadav');
+    await settle(tester);
+    expect(find.text('4 लोग मिले'), findsOneWidget);
+  });
+
+  testWidgets('family members named at the door are added by search', (
+    tester,
+  ) async {
+    await setUpHarness(tester);
+    await tester.pumpWidget(h.wrap(const VisitFormScreen(voterId: 'v4')));
+    await tester.pumpAndSettle();
+
+    await tapAndSettle(tester, find.text('परिवार के और सदस्य खोजकर जोड़ें'));
+    await tester.enterText(find.byType(TextField), 'sita');
+    await settle(tester);
+    await tapAndSettle(tester, find.text('सीता यादव'));
+
+    // Back on the visit form, she is counted in this household.
+    final added = tester.widget<CheckboxListTile>(
+      find.widgetWithText(CheckboxListTile, 'सीता यादव'),
+    );
+    expect(added.value, isTrue);
+
+    await contactRefused(tester);
+    final shifted = find.widgetWithText(ChoiceChip, 'स्थानांतरित');
+    expect(shifted, findsNWidgets(2));
+    await tapAndSettle(tester, shifted.first);
+    await tapAndSettle(tester, shifted.last);
+    await save(tester);
+    await settle(tester);
+
+    final visit = h.store.data.outbox.single.payload;
+    expect(
+      {for (final m in visit['voters'] as List) (m as Map)['voter_id']},
+      {'v4', 'v2'},
+    );
+    expect(h.store.data.householdOf('v4').map((v) => v.id), ['v2']);
   });
 }

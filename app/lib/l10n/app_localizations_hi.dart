@@ -801,4 +801,120 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get homeAllSent => 'सब भेजा गया';
+
+  @override
+  String get catUntraceable => 'अनुपस्थित बताया गया';
+
+  @override
+  String get catShifted => 'स्थानांतरित बताया गया';
+
+  @override
+  String get catDeceased => 'मृत बताया गया';
+
+  @override
+  String get catDuplicate => 'दोहरा नाम';
+
+  @override
+  String get catAlreadyBack => 'सूची में वापस';
+
+  @override
+  String get catPossHigh => 'हटाया गया (पक्का)';
+
+  @override
+  String get catPossMedium => 'हटाया गया (शायद)';
+
+  @override
+  String get catPossLow => 'शायद सूची में है';
+
+  @override
+  String get catAdded => 'नया जोड़ा';
+
+  @override
+  String get catHintUntraceable =>
+      'अनुपस्थित या पता न चलने के कारण नाम हटा। मिलें तो फ़ॉर्म 6 भरवाएँ।';
+
+  @override
+  String get catHintShifted =>
+      'स्थायी रूप से स्थानांतरित बताकर नाम हटा। देखें कि अब भी यहीं रहते हैं या नहीं।';
+
+  @override
+  String get catHintDeceased =>
+      'मृत बताकर नाम हटा। परिवार से पुष्टि करें; जीवित हों तो फ़ॉर्म 6 भरवाएँ।';
+
+  @override
+  String get catHintDuplicate =>
+      'दोहरी प्रविष्टि बताकर नाम हटा। पता करें कि कहीं और नाम दर्ज है या नहीं।';
+
+  @override
+  String get catHintAlreadyBack =>
+      'अप्रैल 2026 की सूची में नाम वापस आ गया है। भेंट ज़रूरी नहीं।';
+
+  @override
+  String get catHintPossHigh =>
+      '2026 की सूची में कोई मिलता-जुलता नाम नहीं मिला। नाम हटने की सबसे ज़्यादा संभावना।';
+
+  @override
+  String get catHintPossMedium =>
+      '2026 की सूची में सिर्फ़ कमज़ोर मिलान मिला। नाम हटा हो सकता है।';
+
+  @override
+  String get catHintPossLow =>
+      '2026 की सूची में मिलता-जुलता नाम है, शायद नाम अभी भी दर्ज है। भेंट से पहले नीचे की प्रविष्टि जाँचें।';
+
+  @override
+  String get catHintAdded => 'मैदान में जोड़ा गया नया मतदाता।';
+
+  @override
+  String get catFilterAll => 'सभी श्रेणियाँ';
+
+  @override
+  String get categoryTitle => 'श्रेणी';
+
+  @override
+  String closestEntry(String entry) {
+    return '2026 सूची में मिलती-जुलती प्रविष्टि: $entry';
+  }
+
+  @override
+  String get searchTitle => 'लोग खोजें';
+
+  @override
+  String get searchHint => 'नाम, पिता/पति का नाम, EPIC या मकान नंबर';
+
+  @override
+  String get searchStart =>
+      'नाम हिंदी या अंग्रेज़ी में लिखें, जैसे “ramesh” या “रमेश”। आपके सभी बूथों में खोजा जाएगा।';
+
+  @override
+  String get searchNoResult =>
+      'कोई नहीं मिला। नाम का कुछ हिस्सा या पिता/पति का नाम लिखकर देखें।';
+
+  @override
+  String searchResults(int count) {
+    return '$count लोग मिले';
+  }
+
+  @override
+  String searchMore(int shown) {
+    return 'पहले $shown दिखाए गए। और लिखें ताकि खोज छोटी हो।';
+  }
+
+  @override
+  String get searchOpen => 'लोग खोजें: नाम, EPIC या मकान नंबर';
+
+  @override
+  String get visitAddBySearch => 'परिवार के और सदस्य खोजकर जोड़ें';
+
+  @override
+  String get visitAddBySearchHint =>
+      'दरवाज़े पर पूछें कि घर में और कौन-कौन है, फिर उनके नाम खोजकर जोड़ें। सब एक ही परिवार में गिने जाएँगे।';
+
+  @override
+  String get visitPickTitle => 'इस घर का सदस्य चुनें';
+
+  @override
+  String get visitAlreadyAdded => 'पहले से जोड़ा गया';
+
+  @override
+  String get personHousehold => 'भेंट में इसी घर के बताए गए लोग';
 }

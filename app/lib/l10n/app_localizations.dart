@@ -1521,6 +1521,204 @@ abstract class AppLocalizations {
   /// In hi, this message translates to:
   /// **'सब भेजा गया'**
   String get homeAllSent;
+
+  /// No description provided for @catUntraceable.
+  ///
+  /// In hi, this message translates to:
+  /// **'अनुपस्थित बताया गया'**
+  String get catUntraceable;
+
+  /// No description provided for @catShifted.
+  ///
+  /// In hi, this message translates to:
+  /// **'स्थानांतरित बताया गया'**
+  String get catShifted;
+
+  /// No description provided for @catDeceased.
+  ///
+  /// In hi, this message translates to:
+  /// **'मृत बताया गया'**
+  String get catDeceased;
+
+  /// No description provided for @catDuplicate.
+  ///
+  /// In hi, this message translates to:
+  /// **'दोहरा नाम'**
+  String get catDuplicate;
+
+  /// No description provided for @catAlreadyBack.
+  ///
+  /// In hi, this message translates to:
+  /// **'सूची में वापस'**
+  String get catAlreadyBack;
+
+  /// No description provided for @catPossHigh.
+  ///
+  /// In hi, this message translates to:
+  /// **'हटाया गया (पक्का)'**
+  String get catPossHigh;
+
+  /// No description provided for @catPossMedium.
+  ///
+  /// In hi, this message translates to:
+  /// **'हटाया गया (शायद)'**
+  String get catPossMedium;
+
+  /// No description provided for @catPossLow.
+  ///
+  /// In hi, this message translates to:
+  /// **'शायद सूची में है'**
+  String get catPossLow;
+
+  /// No description provided for @catAdded.
+  ///
+  /// In hi, this message translates to:
+  /// **'नया जोड़ा'**
+  String get catAdded;
+
+  /// No description provided for @catHintUntraceable.
+  ///
+  /// In hi, this message translates to:
+  /// **'अनुपस्थित या पता न चलने के कारण नाम हटा। मिलें तो फ़ॉर्म 6 भरवाएँ।'**
+  String get catHintUntraceable;
+
+  /// No description provided for @catHintShifted.
+  ///
+  /// In hi, this message translates to:
+  /// **'स्थायी रूप से स्थानांतरित बताकर नाम हटा। देखें कि अब भी यहीं रहते हैं या नहीं।'**
+  String get catHintShifted;
+
+  /// No description provided for @catHintDeceased.
+  ///
+  /// In hi, this message translates to:
+  /// **'मृत बताकर नाम हटा। परिवार से पुष्टि करें; जीवित हों तो फ़ॉर्म 6 भरवाएँ।'**
+  String get catHintDeceased;
+
+  /// No description provided for @catHintDuplicate.
+  ///
+  /// In hi, this message translates to:
+  /// **'दोहरी प्रविष्टि बताकर नाम हटा। पता करें कि कहीं और नाम दर्ज है या नहीं।'**
+  String get catHintDuplicate;
+
+  /// No description provided for @catHintAlreadyBack.
+  ///
+  /// In hi, this message translates to:
+  /// **'अप्रैल 2026 की सूची में नाम वापस आ गया है। भेंट ज़रूरी नहीं।'**
+  String get catHintAlreadyBack;
+
+  /// No description provided for @catHintPossHigh.
+  ///
+  /// In hi, this message translates to:
+  /// **'2026 की सूची में कोई मिलता-जुलता नाम नहीं मिला। नाम हटने की सबसे ज़्यादा संभावना।'**
+  String get catHintPossHigh;
+
+  /// No description provided for @catHintPossMedium.
+  ///
+  /// In hi, this message translates to:
+  /// **'2026 की सूची में सिर्फ़ कमज़ोर मिलान मिला। नाम हटा हो सकता है।'**
+  String get catHintPossMedium;
+
+  /// No description provided for @catHintPossLow.
+  ///
+  /// In hi, this message translates to:
+  /// **'2026 की सूची में मिलता-जुलता नाम है, शायद नाम अभी भी दर्ज है। भेंट से पहले नीचे की प्रविष्टि जाँचें।'**
+  String get catHintPossLow;
+
+  /// No description provided for @catHintAdded.
+  ///
+  /// In hi, this message translates to:
+  /// **'मैदान में जोड़ा गया नया मतदाता।'**
+  String get catHintAdded;
+
+  /// No description provided for @catFilterAll.
+  ///
+  /// In hi, this message translates to:
+  /// **'सभी श्रेणियाँ'**
+  String get catFilterAll;
+
+  /// No description provided for @categoryTitle.
+  ///
+  /// In hi, this message translates to:
+  /// **'श्रेणी'**
+  String get categoryTitle;
+
+  /// No description provided for @closestEntry.
+  ///
+  /// In hi, this message translates to:
+  /// **'2026 सूची में मिलती-जुलती प्रविष्टि: {entry}'**
+  String closestEntry(String entry);
+
+  /// No description provided for @searchTitle.
+  ///
+  /// In hi, this message translates to:
+  /// **'लोग खोजें'**
+  String get searchTitle;
+
+  /// No description provided for @searchHint.
+  ///
+  /// In hi, this message translates to:
+  /// **'नाम, पिता/पति का नाम, EPIC या मकान नंबर'**
+  String get searchHint;
+
+  /// No description provided for @searchStart.
+  ///
+  /// In hi, this message translates to:
+  /// **'नाम हिंदी या अंग्रेज़ी में लिखें, जैसे “ramesh” या “रमेश”। आपके सभी बूथों में खोजा जाएगा।'**
+  String get searchStart;
+
+  /// No description provided for @searchNoResult.
+  ///
+  /// In hi, this message translates to:
+  /// **'कोई नहीं मिला। नाम का कुछ हिस्सा या पिता/पति का नाम लिखकर देखें।'**
+  String get searchNoResult;
+
+  /// No description provided for @searchResults.
+  ///
+  /// In hi, this message translates to:
+  /// **'{count} लोग मिले'**
+  String searchResults(int count);
+
+  /// No description provided for @searchMore.
+  ///
+  /// In hi, this message translates to:
+  /// **'पहले {shown} दिखाए गए। और लिखें ताकि खोज छोटी हो।'**
+  String searchMore(int shown);
+
+  /// No description provided for @searchOpen.
+  ///
+  /// In hi, this message translates to:
+  /// **'लोग खोजें: नाम, EPIC या मकान नंबर'**
+  String get searchOpen;
+
+  /// No description provided for @visitAddBySearch.
+  ///
+  /// In hi, this message translates to:
+  /// **'परिवार के और सदस्य खोजकर जोड़ें'**
+  String get visitAddBySearch;
+
+  /// No description provided for @visitAddBySearchHint.
+  ///
+  /// In hi, this message translates to:
+  /// **'दरवाज़े पर पूछें कि घर में और कौन-कौन है, फिर उनके नाम खोजकर जोड़ें। सब एक ही परिवार में गिने जाएँगे।'**
+  String get visitAddBySearchHint;
+
+  /// No description provided for @visitPickTitle.
+  ///
+  /// In hi, this message translates to:
+  /// **'इस घर का सदस्य चुनें'**
+  String get visitPickTitle;
+
+  /// No description provided for @visitAlreadyAdded.
+  ///
+  /// In hi, this message translates to:
+  /// **'पहले से जोड़ा गया'**
+  String get visitAlreadyAdded;
+
+  /// No description provided for @personHousehold.
+  ///
+  /// In hi, this message translates to:
+  /// **'भेंट में इसी घर के बताए गए लोग'**
+  String get personHousehold;
 }
 
 class _AppLocalizationsDelegate

@@ -880,6 +880,28 @@ class $VotersTable extends Voters with TableInfo<$VotersTable, VoterRow> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _closest2026Meta = const VerificationMeta(
+    'closest2026',
+  );
+  @override
+  late final GeneratedColumn<String> closest2026 = GeneratedColumn<String>(
+    'closest2026',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _pendingMeta = const VerificationMeta(
     'pending',
   );
@@ -911,6 +933,8 @@ class $VotersTable extends Voters with TableInfo<$VotersTable, VoterRow> {
     oldPartNo,
     oldSerial,
     alreadyOnRoll,
+    category,
+    closest2026,
     pending,
   ];
   @override
@@ -1026,6 +1050,21 @@ class $VotersTable extends Voters with TableInfo<$VotersTable, VoterRow> {
         ),
       );
     }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    }
+    if (data.containsKey('closest2026')) {
+      context.handle(
+        _closest2026Meta,
+        closest2026.isAcceptableOrUnknown(
+          data['closest2026']!,
+          _closest2026Meta,
+        ),
+      );
+    }
     if (data.containsKey('pending')) {
       context.handle(
         _pendingMeta,
@@ -1097,6 +1136,14 @@ class $VotersTable extends Voters with TableInfo<$VotersTable, VoterRow> {
         DriftSqlType.bool,
         data['${effectivePrefix}already_on_roll'],
       )!,
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      ),
+      closest2026: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}closest2026'],
+      ),
       pending: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}pending'],
@@ -1125,6 +1172,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
   final int? oldPartNo;
   final int? oldSerial;
   final bool alreadyOnRoll;
+  final String? category;
+  final String? closest2026;
   final bool pending;
   const VoterRow({
     required this.id,
@@ -1141,6 +1190,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     this.oldPartNo,
     this.oldSerial,
     required this.alreadyOnRoll,
+    this.category,
+    this.closest2026,
     required this.pending,
   });
   @override
@@ -1178,6 +1229,12 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
       map['old_serial'] = Variable<int>(oldSerial);
     }
     map['already_on_roll'] = Variable<bool>(alreadyOnRoll);
+    if (!nullToAbsent || category != null) {
+      map['category'] = Variable<String>(category);
+    }
+    if (!nullToAbsent || closest2026 != null) {
+      map['closest2026'] = Variable<String>(closest2026);
+    }
     map['pending'] = Variable<bool>(pending);
     return map;
   }
@@ -1212,6 +1269,12 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
           ? const Value.absent()
           : Value(oldSerial),
       alreadyOnRoll: Value(alreadyOnRoll),
+      category: category == null && nullToAbsent
+          ? const Value.absent()
+          : Value(category),
+      closest2026: closest2026 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(closest2026),
       pending: Value(pending),
     );
   }
@@ -1236,6 +1299,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
       oldPartNo: serializer.fromJson<int?>(json['oldPartNo']),
       oldSerial: serializer.fromJson<int?>(json['oldSerial']),
       alreadyOnRoll: serializer.fromJson<bool>(json['alreadyOnRoll']),
+      category: serializer.fromJson<String?>(json['category']),
+      closest2026: serializer.fromJson<String?>(json['closest2026']),
       pending: serializer.fromJson<bool>(json['pending']),
     );
   }
@@ -1257,6 +1322,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
       'oldPartNo': serializer.toJson<int?>(oldPartNo),
       'oldSerial': serializer.toJson<int?>(oldSerial),
       'alreadyOnRoll': serializer.toJson<bool>(alreadyOnRoll),
+      'category': serializer.toJson<String?>(category),
+      'closest2026': serializer.toJson<String?>(closest2026),
       'pending': serializer.toJson<bool>(pending),
     };
   }
@@ -1276,6 +1343,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     Value<int?> oldPartNo = const Value.absent(),
     Value<int?> oldSerial = const Value.absent(),
     bool? alreadyOnRoll,
+    Value<String?> category = const Value.absent(),
+    Value<String?> closest2026 = const Value.absent(),
     bool? pending,
   }) => VoterRow(
     id: id ?? this.id,
@@ -1296,6 +1365,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     oldPartNo: oldPartNo.present ? oldPartNo.value : this.oldPartNo,
     oldSerial: oldSerial.present ? oldSerial.value : this.oldSerial,
     alreadyOnRoll: alreadyOnRoll ?? this.alreadyOnRoll,
+    category: category.present ? category.value : this.category,
+    closest2026: closest2026.present ? closest2026.value : this.closest2026,
     pending: pending ?? this.pending,
   );
   VoterRow copyWithCompanion(VotersCompanion data) {
@@ -1326,6 +1397,10 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
       alreadyOnRoll: data.alreadyOnRoll.present
           ? data.alreadyOnRoll.value
           : this.alreadyOnRoll,
+      category: data.category.present ? data.category.value : this.category,
+      closest2026: data.closest2026.present
+          ? data.closest2026.value
+          : this.closest2026,
       pending: data.pending.present ? data.pending.value : this.pending,
     );
   }
@@ -1347,6 +1422,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
           ..write('oldPartNo: $oldPartNo, ')
           ..write('oldSerial: $oldSerial, ')
           ..write('alreadyOnRoll: $alreadyOnRoll, ')
+          ..write('category: $category, ')
+          ..write('closest2026: $closest2026, ')
           ..write('pending: $pending')
           ..write(')'))
         .toString();
@@ -1368,6 +1445,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     oldPartNo,
     oldSerial,
     alreadyOnRoll,
+    category,
+    closest2026,
     pending,
   );
   @override
@@ -1388,6 +1467,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
           other.oldPartNo == this.oldPartNo &&
           other.oldSerial == this.oldSerial &&
           other.alreadyOnRoll == this.alreadyOnRoll &&
+          other.category == this.category &&
+          other.closest2026 == this.closest2026 &&
           other.pending == this.pending);
 }
 
@@ -1406,6 +1487,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
   final Value<int?> oldPartNo;
   final Value<int?> oldSerial;
   final Value<bool> alreadyOnRoll;
+  final Value<String?> category;
+  final Value<String?> closest2026;
   final Value<bool> pending;
   final Value<int> rowid;
   const VotersCompanion({
@@ -1423,6 +1506,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     this.oldPartNo = const Value.absent(),
     this.oldSerial = const Value.absent(),
     this.alreadyOnRoll = const Value.absent(),
+    this.category = const Value.absent(),
+    this.closest2026 = const Value.absent(),
     this.pending = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -1441,6 +1526,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     this.oldPartNo = const Value.absent(),
     this.oldSerial = const Value.absent(),
     this.alreadyOnRoll = const Value.absent(),
+    this.category = const Value.absent(),
+    this.closest2026 = const Value.absent(),
     this.pending = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -1462,6 +1549,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     Expression<int>? oldPartNo,
     Expression<int>? oldSerial,
     Expression<bool>? alreadyOnRoll,
+    Expression<String>? category,
+    Expression<String>? closest2026,
     Expression<bool>? pending,
     Expression<int>? rowid,
   }) {
@@ -1480,6 +1569,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
       if (oldPartNo != null) 'old_part_no': oldPartNo,
       if (oldSerial != null) 'old_serial': oldSerial,
       if (alreadyOnRoll != null) 'already_on_roll': alreadyOnRoll,
+      if (category != null) 'category': category,
+      if (closest2026 != null) 'closest2026': closest2026,
       if (pending != null) 'pending': pending,
       if (rowid != null) 'rowid': rowid,
     });
@@ -1500,6 +1591,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     Value<int?>? oldPartNo,
     Value<int?>? oldSerial,
     Value<bool>? alreadyOnRoll,
+    Value<String?>? category,
+    Value<String?>? closest2026,
     Value<bool>? pending,
     Value<int>? rowid,
   }) {
@@ -1518,6 +1611,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
       oldPartNo: oldPartNo ?? this.oldPartNo,
       oldSerial: oldSerial ?? this.oldSerial,
       alreadyOnRoll: alreadyOnRoll ?? this.alreadyOnRoll,
+      category: category ?? this.category,
+      closest2026: closest2026 ?? this.closest2026,
       pending: pending ?? this.pending,
       rowid: rowid ?? this.rowid,
     );
@@ -1568,6 +1663,12 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     if (alreadyOnRoll.present) {
       map['already_on_roll'] = Variable<bool>(alreadyOnRoll.value);
     }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (closest2026.present) {
+      map['closest2026'] = Variable<String>(closest2026.value);
+    }
     if (pending.present) {
       map['pending'] = Variable<bool>(pending.value);
     }
@@ -1594,6 +1695,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
           ..write('oldPartNo: $oldPartNo, ')
           ..write('oldSerial: $oldSerial, ')
           ..write('alreadyOnRoll: $alreadyOnRoll, ')
+          ..write('category: $category, ')
+          ..write('closest2026: $closest2026, ')
           ..write('pending: $pending, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -4647,6 +4750,8 @@ typedef $$VotersTableCreateCompanionBuilder = VotersCompanion Function({
   Value<int?> oldPartNo,
   Value<int?> oldSerial,
   Value<bool> alreadyOnRoll,
+  Value<String?> category,
+  Value<String?> closest2026,
   Value<bool> pending,
   Value<int> rowid,
 });
@@ -4665,6 +4770,8 @@ typedef $$VotersTableUpdateCompanionBuilder = VotersCompanion Function({
   Value<int?> oldPartNo,
   Value<int?> oldSerial,
   Value<bool> alreadyOnRoll,
+  Value<String?> category,
+  Value<String?> closest2026,
   Value<bool> pending,
   Value<int> rowid,
 });
@@ -4744,6 +4851,16 @@ class $$VotersTableFilterComposer extends Composer<_$LocalDb, $VotersTable> {
 
   ColumnFilters<bool> get alreadyOnRoll => $composableBuilder(
     column: $table.alreadyOnRoll,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get closest2026 => $composableBuilder(
+    column: $table.closest2026,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4831,6 +4948,16 @@ class $$VotersTableOrderingComposer extends Composer<_$LocalDb, $VotersTable> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get closest2026 => $composableBuilder(
+    column: $table.closest2026,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get pending => $composableBuilder(
     column: $table.pending,
     builder: (column) => ColumnOrderings(column),
@@ -4900,6 +5027,14 @@ class $$VotersTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get closest2026 => $composableBuilder(
+    column: $table.closest2026,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get pending =>
       $composableBuilder(column: $table.pending, builder: (column) => column);
 }
@@ -4946,6 +5081,8 @@ class $$VotersTableTableManager
                 Value<int?> oldPartNo = const Value.absent(),
                 Value<int?> oldSerial = const Value.absent(),
                 Value<bool> alreadyOnRoll = const Value.absent(),
+                Value<String?> category = const Value.absent(),
+                Value<String?> closest2026 = const Value.absent(),
                 Value<bool> pending = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VotersCompanion(
@@ -4963,6 +5100,8 @@ class $$VotersTableTableManager
                 oldPartNo: oldPartNo,
                 oldSerial: oldSerial,
                 alreadyOnRoll: alreadyOnRoll,
+                category: category,
+                closest2026: closest2026,
                 pending: pending,
                 rowid: rowid,
               ),
@@ -4982,6 +5121,8 @@ class $$VotersTableTableManager
                 Value<int?> oldPartNo = const Value.absent(),
                 Value<int?> oldSerial = const Value.absent(),
                 Value<bool> alreadyOnRoll = const Value.absent(),
+                Value<String?> category = const Value.absent(),
+                Value<String?> closest2026 = const Value.absent(),
                 Value<bool> pending = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VotersCompanion.insert(
@@ -4999,6 +5140,8 @@ class $$VotersTableTableManager
                 oldPartNo: oldPartNo,
                 oldSerial: oldSerial,
                 alreadyOnRoll: alreadyOnRoll,
+                category: category,
+                closest2026: closest2026,
                 pending: pending,
                 rowid: rowid,
               ),

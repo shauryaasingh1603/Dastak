@@ -128,6 +128,8 @@ class Voter {
     this.oldPartNo,
     this.oldSerial,
     this.alreadyOnRoll = false,
+    this.category,
+    this.closest2026,
     this.pending = false,
   });
 
@@ -145,9 +147,47 @@ class Voter {
   final int? oldPartNo;
   final int? oldSerial;
   final bool alreadyOnRoll;
+  final String? category;
+  final String? closest2026;
   final bool pending;
 
   bool get isNew => sourceList == 'NEW';
+
+  /// The workbook's category; worked out from the list and reason for rows
+  /// saved before the server sent categories.
+  String get categoryCode =>
+      category ??
+      (isNew
+          ? VoterCategory.added
+          : sourceList == 'POSS_DEL'
+          ? 'POSS_${matchConfidence ?? 'MEDIUM'}'
+          : asddReason ?? VoterCategory.shifted);
+}
+
+/// Why a person is on the list, as the campaign workbook groups them.
+abstract final class VoterCategory {
+  static const untraceable = 'UNTRACEABLE';
+  static const shifted = 'SHIFTED';
+  static const deceased = 'DECEASED';
+  static const duplicate = 'DUPLICATE';
+  static const alreadyBack = 'ALREADY_BACK';
+  static const possHigh = 'POSS_HIGH';
+  static const possMedium = 'POSS_MEDIUM';
+  static const possLow = 'POSS_LOW';
+  static const added = 'NEW';
+
+  /// In the order the filter shows them.
+  static const all = [
+    untraceable,
+    shifted,
+    possHigh,
+    possMedium,
+    possLow,
+    deceased,
+    duplicate,
+    alreadyBack,
+    added,
+  ];
 }
 
 class VisitMember {
@@ -444,6 +484,19 @@ class FieldData {
       for (final v in visits)
         if (v.members.any((m) => m.voterId == voterId)) v,
     ]..sort((a, b) => b.visitedAt.compareTo(a.visitedAt));
+  }
+
+  /// People recorded together with this person on a visit: the household
+  /// as the volunteer confirmed it at the door, whatever the list said.
+  List<Voter> householdOf(String voterId) {
+    final ids = <String>{};
+    for (final visit in visits) {
+      if (!visit.members.any((m) => m.voterId == voterId)) continue;
+      for (final m in visit.members) {
+        if (m.voterId != voterId) ids.add(m.voterId);
+      }
+    }
+    return [for (final id in ids) ?_voterById[id]]..sort(compareRollOrder);
   }
 
   /// Not visited yet, done, or to be visited again (nobody met, this person

@@ -50,6 +50,10 @@ class Voters extends Table {
   IntColumn get oldSerial => integer().nullable()();
   BoolColumn get alreadyOnRoll =>
       boolean().withDefault(const Constant(false))();
+  // The workbook's category (VoterCategory) and, for possibly deleted
+  // people, the closest April-2026 roll entry to check before visiting.
+  TextColumn get category => text().nullable()();
+  TextColumn get closest2026 => text().nullable()();
   BoolColumn get pending => boolean().withDefault(const Constant(false))();
 
   @override
@@ -154,7 +158,7 @@ class LocalDb extends _$LocalDb {
   LocalDb(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -162,6 +166,10 @@ class LocalDb extends _$LocalDb {
       if (from < 2) {
         await m.addColumn(voters, voters.oldPartNo);
         await m.addColumn(voters, voters.oldSerial);
+      }
+      if (from < 3) {
+        await m.addColumn(voters, voters.category);
+        await m.addColumn(voters, voters.closest2026);
       }
     },
   );

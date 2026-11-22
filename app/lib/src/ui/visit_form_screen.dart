@@ -11,6 +11,7 @@ import 'field_scope.dart';
 import 'form_detail_screen.dart';
 import 'labels.dart';
 import 'location_gate.dart';
+import 'search_screen.dart';
 import 'widgets.dart';
 
 class _MemberState {
@@ -77,6 +78,29 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
       m.mobile.dispose();
     }
     super.dispose();
+  }
+
+  /// The family names someone at the door gives: find each on the list and
+  /// count them in this visit, as one household.
+  Future<void> _addBySearch() async {
+    final picked = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => PersonSearchScreen(
+          pick: true,
+          exclude: {_lead.id, ..._alsoHere},
+        ),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    final voter = FieldScope.of(context).store.data.voter(picked);
+    if (voter == null) return;
+    setState(() {
+      if (!_candidates.any((v) => v.id == picked)) {
+        _candidates = [..._candidates, voter];
+      }
+      _alsoHere.add(picked);
+      _error = null;
+    });
   }
 
   _MemberState _state(Voter voter) =>
@@ -312,6 +336,14 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                 ),
               ),
           ],
+          const SizedBox(height: 6),
+          Text(l10n.visitAddBySearchHint, style: muted),
+          const SizedBox(height: 6),
+          OutlinedButton.icon(
+            onPressed: _addBySearch,
+            icon: const Icon(Icons.person_search_outlined),
+            label: Text(l10n.visitAddBySearch),
+          ),
           if (!_nobodyHome) ...[
             SectionTitle(l10n.contactTitle),
             TextField(

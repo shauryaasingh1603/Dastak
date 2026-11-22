@@ -189,6 +189,8 @@ class FieldStore extends ChangeNotifier {
             oldPartNo: v.oldPartNo,
             oldSerial: v.oldSerial,
             alreadyOnRoll: v.alreadyOnRoll,
+            category: v.category,
+            closest2026: v.closest2026,
             pending: v.pending,
           ),
       ],
@@ -380,6 +382,7 @@ class FieldStore extends ChangeNotifier {
               age: Value(draft.age),
               gender: Value(draft.gender),
               sourceList: 'NEW',
+              category: const Value(VoterCategory.added),
               pending: const Value(true),
             ),
           );
@@ -729,6 +732,8 @@ class FieldStore extends ChangeNotifier {
               oldPartNo: Value(r['old_part_no'] as int?),
               oldSerial: Value(r['old_serial'] as int?),
               alreadyOnRoll: Value(r['already_on_roll'] as bool? ?? false),
+              category: Value(r['category'] as String?),
+              closest2026: Value(r['closest_2026'] as String?),
             ),
         ]);
         b.insertAll(db.visits, mode: InsertMode.insertOrReplace, [

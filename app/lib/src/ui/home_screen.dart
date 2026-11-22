@@ -7,6 +7,7 @@ import 'booth_list_screen.dart';
 import 'dates.dart';
 import 'field_scope.dart';
 import 'messages.dart';
+import 'search_screen.dart';
 import 'widgets.dart';
 
 /// "आज का सारांश": today's progress, the deadline, sync state and the
@@ -84,8 +85,13 @@ class HomeScreen extends StatelessWidget {
               if (v.byMe && Ist.day(v.visitedAt) == today)
                 for (final m in v.members) m.voterId,
           }.length;
+          // People already back on the April-2026 roll need no visit.
           final remaining = data.voters
-              .where((v) => data.personStatus(v.id) == FamilyStatus.pending)
+              .where(
+                (v) =>
+                    v.categoryCode != VoterCategory.alreadyBack &&
+                    data.personStatus(v.id) == FamilyStatus.pending,
+              )
               .length;
           final revisitToday = data.voters.where((v) {
             if (data.personStatus(v.id) != FamilyStatus.revisit) return false;
@@ -105,6 +111,8 @@ class HomeScreen extends StatelessWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               children: [
+                const SearchLauncher(),
+                const SizedBox(height: 12),
                 _DeadlineBanner(daysLeft: daysLeft),
                 if (stale) ...[
                   const SizedBox(height: 8),
