@@ -225,6 +225,15 @@ void main() {
     ),
   );
   testWidgets(
+    'new voter, new house',
+    (tester) => shoot(
+      tester,
+      'new_voter_house',
+      const NewVoterScreen(partNo: 22),
+      height: 2200,
+    ),
+  );
+  testWidgets(
     'location permission',
     (tester) => shoot(
       tester,
