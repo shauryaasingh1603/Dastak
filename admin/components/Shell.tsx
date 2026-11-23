@@ -90,6 +90,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const links = [
     { href: "/", label: "Dashboard", count: 0 },
     { href: "/requests", label: "Sign-in requests", count: pending },
+    { href: "/forms", label: "Forms", count: 0 },
     { href: "/volunteers", label: "Field team", count: 0 },
     { href: "/admins", label: "Admins", count: 0 },
   ];

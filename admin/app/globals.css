@@ -830,3 +830,39 @@ table.mini tr.muted-row:first-of-type td,
 table.mini tr:not(.muted-row) + tr.muted-row td {
   border-top: 2px solid var(--line);
 }
+
+/* Forms page: face photos */
+.photo-thumb {
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  line-height: 0;
+  background: var(--surface);
+  cursor: zoom-in;
+}
+
+.photo-thumb img {
+  object-fit: cover;
+  display: block;
+}
+
+.photo-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 50;
+  padding: 16px;
+}
+
+.photo-overlay img {
+  max-width: min(92vw, 480px);
+  max-height: 80vh;
+  border-radius: 10px;
+  background: #fff;
+}
