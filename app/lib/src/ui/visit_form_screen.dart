@@ -7,6 +7,7 @@ import '../data/field_store.dart';
 import '../data/models.dart';
 import '../location.dart';
 import 'dates.dart';
+import 'face_photo.dart';
 import 'field_scope.dart';
 import 'form_detail_screen.dart';
 import 'labels.dart';
@@ -24,6 +25,7 @@ class _MemberState {
   final docs = <String>{};
   final mobile = TextEditingController();
   bool consent = false;
+  Uint8List? photo;
 }
 
 /// "भेंट फॉर्म": one door visit, opened from one listed person. The
@@ -85,10 +87,8 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
   Future<void> _addBySearch() async {
     final picked = await Navigator.of(context).push<String>(
       MaterialPageRoute(
-        builder: (_) => PersonSearchScreen(
-          pick: true,
-          exclude: {_lead.id, ..._alsoHere},
-        ),
+        builder: (_) =>
+            PersonSearchScreen(pick: true, exclude: {_lead.id, ..._alsoHere}),
       ),
     );
     if (picked == null || !mounted) return;
@@ -202,6 +202,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                         ? null
                         : normalizeMobile(m.mobile.text),
                     mobileConsent: m.consent,
+                    photo: m.photo,
                   ),
         ],
         remarks: _remarks.text,
@@ -580,6 +581,14 @@ class _MemberEditorState extends State<_MemberEditor> {
                     l10n.formAlreadyOpen(type),
                     style: theme.textTheme.bodySmall,
                   ),
+              // Right after the form is chosen: the applicant's face photo.
+              if (m.formType == '6' || m.formType == '8') ...[
+                const SizedBox(height: 10),
+                FacePhotoField(
+                  photo: m.photo,
+                  onChanged: (bytes) => _update(() => m.photo = bytes),
+                ),
+              ],
               // R9: Form 6 needs age 18 on 1 Jan 2027. A warning only.
               if (m.formType == '6' && voter.age != null && voter.age! < 18)
                 Padding(

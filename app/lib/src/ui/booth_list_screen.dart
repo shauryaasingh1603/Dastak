@@ -4,6 +4,7 @@ import '../../l10n/app_localizations.dart';
 import '../data/models.dart';
 import '../search.dart';
 import 'category_filter.dart';
+import 'new_voter_screen.dart';
 import 'person_screen.dart';
 import 'person_tile.dart';
 import 'search_screen.dart';
@@ -178,6 +179,17 @@ class _BoothFamiliesState extends State<BoothFamilies>
                       ),
                     ),
                   ),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) =>
+                          NewVoterScreen(partNo: widget.booth.partNo),
+                    ),
+                  ),
+                  icon: const Icon(Icons.person_add_alt_1),
+                  label: Text(l10n.newVoterOpen),
+                ),
+                const SizedBox(height: 10),
                 TextField(
                   onChanged: (value) => setState(() => _query = value),
                   textInputAction: TextInputAction.search,

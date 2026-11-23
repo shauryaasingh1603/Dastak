@@ -297,6 +297,21 @@ class $FamiliesTable extends Families
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _pendingMeta = const VerificationMeta(
+    'pending',
+  );
+  @override
+  late final GeneratedColumn<bool> pending = GeneratedColumn<bool>(
+    'pending',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("pending" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -307,6 +322,7 @@ class $FamiliesTable extends Families
     headNameHi,
     priority,
     needsReview,
+    pending,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -379,6 +395,12 @@ class $FamiliesTable extends Families
         ),
       );
     }
+    if (data.containsKey('pending')) {
+      context.handle(
+        _pendingMeta,
+        pending.isAcceptableOrUnknown(data['pending']!, _pendingMeta),
+      );
+    }
     return context;
   }
 
@@ -420,6 +442,10 @@ class $FamiliesTable extends Families
         DriftSqlType.bool,
         data['${effectivePrefix}needs_review'],
       )!,
+      pending: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}pending'],
+      )!,
     );
   }
 
@@ -438,6 +464,7 @@ class FamilyRow extends DataClass implements Insertable<FamilyRow> {
   final String? headNameHi;
   final int priority;
   final bool needsReview;
+  final bool pending;
   const FamilyRow({
     required this.id,
     required this.code,
@@ -447,6 +474,7 @@ class FamilyRow extends DataClass implements Insertable<FamilyRow> {
     this.headNameHi,
     required this.priority,
     required this.needsReview,
+    required this.pending,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -465,6 +493,7 @@ class FamilyRow extends DataClass implements Insertable<FamilyRow> {
     }
     map['priority'] = Variable<int>(priority);
     map['needs_review'] = Variable<bool>(needsReview);
+    map['pending'] = Variable<bool>(pending);
     return map;
   }
 
@@ -484,6 +513,7 @@ class FamilyRow extends DataClass implements Insertable<FamilyRow> {
           : Value(headNameHi),
       priority: Value(priority),
       needsReview: Value(needsReview),
+      pending: Value(pending),
     );
   }
 
@@ -501,6 +531,7 @@ class FamilyRow extends DataClass implements Insertable<FamilyRow> {
       headNameHi: serializer.fromJson<String?>(json['headNameHi']),
       priority: serializer.fromJson<int>(json['priority']),
       needsReview: serializer.fromJson<bool>(json['needsReview']),
+      pending: serializer.fromJson<bool>(json['pending']),
     );
   }
   @override
@@ -515,6 +546,7 @@ class FamilyRow extends DataClass implements Insertable<FamilyRow> {
       'headNameHi': serializer.toJson<String?>(headNameHi),
       'priority': serializer.toJson<int>(priority),
       'needsReview': serializer.toJson<bool>(needsReview),
+      'pending': serializer.toJson<bool>(pending),
     };
   }
 
@@ -527,6 +559,7 @@ class FamilyRow extends DataClass implements Insertable<FamilyRow> {
     Value<String?> headNameHi = const Value.absent(),
     int? priority,
     bool? needsReview,
+    bool? pending,
   }) => FamilyRow(
     id: id ?? this.id,
     code: code ?? this.code,
@@ -536,6 +569,7 @@ class FamilyRow extends DataClass implements Insertable<FamilyRow> {
     headNameHi: headNameHi.present ? headNameHi.value : this.headNameHi,
     priority: priority ?? this.priority,
     needsReview: needsReview ?? this.needsReview,
+    pending: pending ?? this.pending,
   );
   FamilyRow copyWithCompanion(FamiliesCompanion data) {
     return FamilyRow(
@@ -551,6 +585,7 @@ class FamilyRow extends DataClass implements Insertable<FamilyRow> {
       needsReview: data.needsReview.present
           ? data.needsReview.value
           : this.needsReview,
+      pending: data.pending.present ? data.pending.value : this.pending,
     );
   }
 
@@ -564,7 +599,8 @@ class FamilyRow extends DataClass implements Insertable<FamilyRow> {
           ..write('houseNo: $houseNo, ')
           ..write('headNameHi: $headNameHi, ')
           ..write('priority: $priority, ')
-          ..write('needsReview: $needsReview')
+          ..write('needsReview: $needsReview, ')
+          ..write('pending: $pending')
           ..write(')'))
         .toString();
   }
@@ -579,6 +615,7 @@ class FamilyRow extends DataClass implements Insertable<FamilyRow> {
     headNameHi,
     priority,
     needsReview,
+    pending,
   );
   @override
   bool operator ==(Object other) =>
@@ -591,7 +628,8 @@ class FamilyRow extends DataClass implements Insertable<FamilyRow> {
           other.houseNo == this.houseNo &&
           other.headNameHi == this.headNameHi &&
           other.priority == this.priority &&
-          other.needsReview == this.needsReview);
+          other.needsReview == this.needsReview &&
+          other.pending == this.pending);
 }
 
 class FamiliesCompanion extends UpdateCompanion<FamilyRow> {
@@ -603,6 +641,7 @@ class FamiliesCompanion extends UpdateCompanion<FamilyRow> {
   final Value<String?> headNameHi;
   final Value<int> priority;
   final Value<bool> needsReview;
+  final Value<bool> pending;
   final Value<int> rowid;
   const FamiliesCompanion({
     this.id = const Value.absent(),
@@ -613,6 +652,7 @@ class FamiliesCompanion extends UpdateCompanion<FamilyRow> {
     this.headNameHi = const Value.absent(),
     this.priority = const Value.absent(),
     this.needsReview = const Value.absent(),
+    this.pending = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   FamiliesCompanion.insert({
@@ -624,6 +664,7 @@ class FamiliesCompanion extends UpdateCompanion<FamilyRow> {
     this.headNameHi = const Value.absent(),
     required int priority,
     this.needsReview = const Value.absent(),
+    this.pending = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        code = Value(code),
@@ -638,6 +679,7 @@ class FamiliesCompanion extends UpdateCompanion<FamilyRow> {
     Expression<String>? headNameHi,
     Expression<int>? priority,
     Expression<bool>? needsReview,
+    Expression<bool>? pending,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -649,6 +691,7 @@ class FamiliesCompanion extends UpdateCompanion<FamilyRow> {
       if (headNameHi != null) 'head_name_hi': headNameHi,
       if (priority != null) 'priority': priority,
       if (needsReview != null) 'needs_review': needsReview,
+      if (pending != null) 'pending': pending,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -662,6 +705,7 @@ class FamiliesCompanion extends UpdateCompanion<FamilyRow> {
     Value<String?>? headNameHi,
     Value<int>? priority,
     Value<bool>? needsReview,
+    Value<bool>? pending,
     Value<int>? rowid,
   }) {
     return FamiliesCompanion(
@@ -673,6 +717,7 @@ class FamiliesCompanion extends UpdateCompanion<FamilyRow> {
       headNameHi: headNameHi ?? this.headNameHi,
       priority: priority ?? this.priority,
       needsReview: needsReview ?? this.needsReview,
+      pending: pending ?? this.pending,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -704,6 +749,9 @@ class FamiliesCompanion extends UpdateCompanion<FamilyRow> {
     if (needsReview.present) {
       map['needs_review'] = Variable<bool>(needsReview.value);
     }
+    if (pending.present) {
+      map['pending'] = Variable<bool>(pending.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -721,6 +769,7 @@ class FamiliesCompanion extends UpdateCompanion<FamilyRow> {
           ..write('headNameHi: $headNameHi, ')
           ..write('priority: $priority, ')
           ..write('needsReview: $needsReview, ')
+          ..write('pending: $pending, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -902,6 +951,28 @@ class $VotersTable extends Voters with TableInfo<$VotersTable, VoterRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _newReasonMeta = const VerificationMeta(
+    'newReason',
+  );
+  @override
+  late final GeneratedColumn<String> newReason = GeneratedColumn<String>(
+    'new_reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _newReasonNoteMeta = const VerificationMeta(
+    'newReasonNote',
+  );
+  @override
+  late final GeneratedColumn<String> newReasonNote = GeneratedColumn<String>(
+    'new_reason_note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _pendingMeta = const VerificationMeta(
     'pending',
   );
@@ -935,6 +1006,8 @@ class $VotersTable extends Voters with TableInfo<$VotersTable, VoterRow> {
     alreadyOnRoll,
     category,
     closest2026,
+    newReason,
+    newReasonNote,
     pending,
   ];
   @override
@@ -1065,6 +1138,21 @@ class $VotersTable extends Voters with TableInfo<$VotersTable, VoterRow> {
         ),
       );
     }
+    if (data.containsKey('new_reason')) {
+      context.handle(
+        _newReasonMeta,
+        newReason.isAcceptableOrUnknown(data['new_reason']!, _newReasonMeta),
+      );
+    }
+    if (data.containsKey('new_reason_note')) {
+      context.handle(
+        _newReasonNoteMeta,
+        newReasonNote.isAcceptableOrUnknown(
+          data['new_reason_note']!,
+          _newReasonNoteMeta,
+        ),
+      );
+    }
     if (data.containsKey('pending')) {
       context.handle(
         _pendingMeta,
@@ -1144,6 +1232,14 @@ class $VotersTable extends Voters with TableInfo<$VotersTable, VoterRow> {
         DriftSqlType.string,
         data['${effectivePrefix}closest2026'],
       ),
+      newReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}new_reason'],
+      ),
+      newReasonNote: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}new_reason_note'],
+      ),
       pending: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}pending'],
@@ -1174,6 +1270,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
   final bool alreadyOnRoll;
   final String? category;
   final String? closest2026;
+  final String? newReason;
+  final String? newReasonNote;
   final bool pending;
   const VoterRow({
     required this.id,
@@ -1192,6 +1290,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     required this.alreadyOnRoll,
     this.category,
     this.closest2026,
+    this.newReason,
+    this.newReasonNote,
     required this.pending,
   });
   @override
@@ -1235,6 +1335,12 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     if (!nullToAbsent || closest2026 != null) {
       map['closest2026'] = Variable<String>(closest2026);
     }
+    if (!nullToAbsent || newReason != null) {
+      map['new_reason'] = Variable<String>(newReason);
+    }
+    if (!nullToAbsent || newReasonNote != null) {
+      map['new_reason_note'] = Variable<String>(newReasonNote);
+    }
     map['pending'] = Variable<bool>(pending);
     return map;
   }
@@ -1275,6 +1381,12 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
       closest2026: closest2026 == null && nullToAbsent
           ? const Value.absent()
           : Value(closest2026),
+      newReason: newReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(newReason),
+      newReasonNote: newReasonNote == null && nullToAbsent
+          ? const Value.absent()
+          : Value(newReasonNote),
       pending: Value(pending),
     );
   }
@@ -1301,6 +1413,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
       alreadyOnRoll: serializer.fromJson<bool>(json['alreadyOnRoll']),
       category: serializer.fromJson<String?>(json['category']),
       closest2026: serializer.fromJson<String?>(json['closest2026']),
+      newReason: serializer.fromJson<String?>(json['newReason']),
+      newReasonNote: serializer.fromJson<String?>(json['newReasonNote']),
       pending: serializer.fromJson<bool>(json['pending']),
     );
   }
@@ -1324,6 +1438,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
       'alreadyOnRoll': serializer.toJson<bool>(alreadyOnRoll),
       'category': serializer.toJson<String?>(category),
       'closest2026': serializer.toJson<String?>(closest2026),
+      'newReason': serializer.toJson<String?>(newReason),
+      'newReasonNote': serializer.toJson<String?>(newReasonNote),
       'pending': serializer.toJson<bool>(pending),
     };
   }
@@ -1345,6 +1461,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     bool? alreadyOnRoll,
     Value<String?> category = const Value.absent(),
     Value<String?> closest2026 = const Value.absent(),
+    Value<String?> newReason = const Value.absent(),
+    Value<String?> newReasonNote = const Value.absent(),
     bool? pending,
   }) => VoterRow(
     id: id ?? this.id,
@@ -1367,6 +1485,10 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     alreadyOnRoll: alreadyOnRoll ?? this.alreadyOnRoll,
     category: category.present ? category.value : this.category,
     closest2026: closest2026.present ? closest2026.value : this.closest2026,
+    newReason: newReason.present ? newReason.value : this.newReason,
+    newReasonNote: newReasonNote.present
+        ? newReasonNote.value
+        : this.newReasonNote,
     pending: pending ?? this.pending,
   );
   VoterRow copyWithCompanion(VotersCompanion data) {
@@ -1401,6 +1523,10 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
       closest2026: data.closest2026.present
           ? data.closest2026.value
           : this.closest2026,
+      newReason: data.newReason.present ? data.newReason.value : this.newReason,
+      newReasonNote: data.newReasonNote.present
+          ? data.newReasonNote.value
+          : this.newReasonNote,
       pending: data.pending.present ? data.pending.value : this.pending,
     );
   }
@@ -1424,6 +1550,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
           ..write('alreadyOnRoll: $alreadyOnRoll, ')
           ..write('category: $category, ')
           ..write('closest2026: $closest2026, ')
+          ..write('newReason: $newReason, ')
+          ..write('newReasonNote: $newReasonNote, ')
           ..write('pending: $pending')
           ..write(')'))
         .toString();
@@ -1447,6 +1575,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     alreadyOnRoll,
     category,
     closest2026,
+    newReason,
+    newReasonNote,
     pending,
   );
   @override
@@ -1469,6 +1599,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
           other.alreadyOnRoll == this.alreadyOnRoll &&
           other.category == this.category &&
           other.closest2026 == this.closest2026 &&
+          other.newReason == this.newReason &&
+          other.newReasonNote == this.newReasonNote &&
           other.pending == this.pending);
 }
 
@@ -1489,6 +1621,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
   final Value<bool> alreadyOnRoll;
   final Value<String?> category;
   final Value<String?> closest2026;
+  final Value<String?> newReason;
+  final Value<String?> newReasonNote;
   final Value<bool> pending;
   final Value<int> rowid;
   const VotersCompanion({
@@ -1508,6 +1642,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     this.alreadyOnRoll = const Value.absent(),
     this.category = const Value.absent(),
     this.closest2026 = const Value.absent(),
+    this.newReason = const Value.absent(),
+    this.newReasonNote = const Value.absent(),
     this.pending = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -1528,6 +1664,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     this.alreadyOnRoll = const Value.absent(),
     this.category = const Value.absent(),
     this.closest2026 = const Value.absent(),
+    this.newReason = const Value.absent(),
+    this.newReasonNote = const Value.absent(),
     this.pending = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -1551,6 +1689,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     Expression<bool>? alreadyOnRoll,
     Expression<String>? category,
     Expression<String>? closest2026,
+    Expression<String>? newReason,
+    Expression<String>? newReasonNote,
     Expression<bool>? pending,
     Expression<int>? rowid,
   }) {
@@ -1571,6 +1711,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
       if (alreadyOnRoll != null) 'already_on_roll': alreadyOnRoll,
       if (category != null) 'category': category,
       if (closest2026 != null) 'closest2026': closest2026,
+      if (newReason != null) 'new_reason': newReason,
+      if (newReasonNote != null) 'new_reason_note': newReasonNote,
       if (pending != null) 'pending': pending,
       if (rowid != null) 'rowid': rowid,
     });
@@ -1593,6 +1735,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     Value<bool>? alreadyOnRoll,
     Value<String?>? category,
     Value<String?>? closest2026,
+    Value<String?>? newReason,
+    Value<String?>? newReasonNote,
     Value<bool>? pending,
     Value<int>? rowid,
   }) {
@@ -1613,6 +1757,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
       alreadyOnRoll: alreadyOnRoll ?? this.alreadyOnRoll,
       category: category ?? this.category,
       closest2026: closest2026 ?? this.closest2026,
+      newReason: newReason ?? this.newReason,
+      newReasonNote: newReasonNote ?? this.newReasonNote,
       pending: pending ?? this.pending,
       rowid: rowid ?? this.rowid,
     );
@@ -1669,6 +1815,12 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     if (closest2026.present) {
       map['closest2026'] = Variable<String>(closest2026.value);
     }
+    if (newReason.present) {
+      map['new_reason'] = Variable<String>(newReason.value);
+    }
+    if (newReasonNote.present) {
+      map['new_reason_note'] = Variable<String>(newReasonNote.value);
+    }
     if (pending.present) {
       map['pending'] = Variable<bool>(pending.value);
     }
@@ -1697,6 +1849,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
           ..write('alreadyOnRoll: $alreadyOnRoll, ')
           ..write('category: $category, ')
           ..write('closest2026: $closest2026, ')
+          ..write('newReason: $newReason, ')
+          ..write('newReasonNote: $newReasonNote, ')
           ..write('pending: $pending, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -2643,6 +2797,21 @@ class $FormsTable extends Forms with TableInfo<$FormsTable, FormRow> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _hasPhotoMeta = const VerificationMeta(
+    'hasPhoto',
+  );
+  @override
+  late final GeneratedColumn<bool> hasPhoto = GeneratedColumn<bool>(
+    'has_photo',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("has_photo" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _pendingMeta = const VerificationMeta(
     'pending',
   );
@@ -2669,6 +2838,7 @@ class $FormsTable extends Forms with TableInfo<$FormsTable, FormRow> {
     byMe,
     currentStatus,
     updatedAt,
+    hasPhoto,
     pending,
   ];
   @override
@@ -2752,6 +2922,12 @@ class $FormsTable extends Forms with TableInfo<$FormsTable, FormRow> {
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('has_photo')) {
+      context.handle(
+        _hasPhotoMeta,
+        hasPhoto.isAcceptableOrUnknown(data['has_photo']!, _hasPhotoMeta),
+      );
+    }
     if (data.containsKey('pending')) {
       context.handle(
         _pendingMeta,
@@ -2803,6 +2979,10 @@ class $FormsTable extends Forms with TableInfo<$FormsTable, FormRow> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
+      hasPhoto: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}has_photo'],
+      )!,
       pending: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}pending'],
@@ -2826,6 +3006,7 @@ class FormRow extends DataClass implements Insertable<FormRow> {
   final bool byMe;
   final String currentStatus;
   final DateTime updatedAt;
+  final bool hasPhoto;
   final bool pending;
   const FormRow({
     required this.id,
@@ -2837,6 +3018,7 @@ class FormRow extends DataClass implements Insertable<FormRow> {
     required this.byMe,
     required this.currentStatus,
     required this.updatedAt,
+    required this.hasPhoto,
     required this.pending,
   });
   @override
@@ -2857,6 +3039,7 @@ class FormRow extends DataClass implements Insertable<FormRow> {
     map['by_me'] = Variable<bool>(byMe);
     map['current_status'] = Variable<String>(currentStatus);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['has_photo'] = Variable<bool>(hasPhoto);
     map['pending'] = Variable<bool>(pending);
     return map;
   }
@@ -2878,6 +3061,7 @@ class FormRow extends DataClass implements Insertable<FormRow> {
       byMe: Value(byMe),
       currentStatus: Value(currentStatus),
       updatedAt: Value(updatedAt),
+      hasPhoto: Value(hasPhoto),
       pending: Value(pending),
     );
   }
@@ -2897,6 +3081,7 @@ class FormRow extends DataClass implements Insertable<FormRow> {
       byMe: serializer.fromJson<bool>(json['byMe']),
       currentStatus: serializer.fromJson<String>(json['currentStatus']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      hasPhoto: serializer.fromJson<bool>(json['hasPhoto']),
       pending: serializer.fromJson<bool>(json['pending']),
     );
   }
@@ -2913,6 +3098,7 @@ class FormRow extends DataClass implements Insertable<FormRow> {
       'byMe': serializer.toJson<bool>(byMe),
       'currentStatus': serializer.toJson<String>(currentStatus),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'hasPhoto': serializer.toJson<bool>(hasPhoto),
       'pending': serializer.toJson<bool>(pending),
     };
   }
@@ -2927,6 +3113,7 @@ class FormRow extends DataClass implements Insertable<FormRow> {
     bool? byMe,
     String? currentStatus,
     DateTime? updatedAt,
+    bool? hasPhoto,
     bool? pending,
   }) => FormRow(
     id: id ?? this.id,
@@ -2938,6 +3125,7 @@ class FormRow extends DataClass implements Insertable<FormRow> {
     byMe: byMe ?? this.byMe,
     currentStatus: currentStatus ?? this.currentStatus,
     updatedAt: updatedAt ?? this.updatedAt,
+    hasPhoto: hasPhoto ?? this.hasPhoto,
     pending: pending ?? this.pending,
   );
   FormRow copyWithCompanion(FormsCompanion data) {
@@ -2955,6 +3143,7 @@ class FormRow extends DataClass implements Insertable<FormRow> {
           ? data.currentStatus.value
           : this.currentStatus,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      hasPhoto: data.hasPhoto.present ? data.hasPhoto.value : this.hasPhoto,
       pending: data.pending.present ? data.pending.value : this.pending,
     );
   }
@@ -2971,6 +3160,7 @@ class FormRow extends DataClass implements Insertable<FormRow> {
           ..write('byMe: $byMe, ')
           ..write('currentStatus: $currentStatus, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('hasPhoto: $hasPhoto, ')
           ..write('pending: $pending')
           ..write(')'))
         .toString();
@@ -2987,6 +3177,7 @@ class FormRow extends DataClass implements Insertable<FormRow> {
     byMe,
     currentStatus,
     updatedAt,
+    hasPhoto,
     pending,
   );
   @override
@@ -3002,6 +3193,7 @@ class FormRow extends DataClass implements Insertable<FormRow> {
           other.byMe == this.byMe &&
           other.currentStatus == this.currentStatus &&
           other.updatedAt == this.updatedAt &&
+          other.hasPhoto == this.hasPhoto &&
           other.pending == this.pending);
 }
 
@@ -3015,6 +3207,7 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
   final Value<bool> byMe;
   final Value<String> currentStatus;
   final Value<DateTime> updatedAt;
+  final Value<bool> hasPhoto;
   final Value<bool> pending;
   final Value<int> rowid;
   const FormsCompanion({
@@ -3027,6 +3220,7 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
     this.byMe = const Value.absent(),
     this.currentStatus = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.hasPhoto = const Value.absent(),
     this.pending = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -3040,6 +3234,7 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
     required bool byMe,
     required String currentStatus,
     required DateTime updatedAt,
+    this.hasPhoto = const Value.absent(),
     this.pending = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -3058,6 +3253,7 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
     Expression<bool>? byMe,
     Expression<String>? currentStatus,
     Expression<DateTime>? updatedAt,
+    Expression<bool>? hasPhoto,
     Expression<bool>? pending,
     Expression<int>? rowid,
   }) {
@@ -3071,6 +3267,7 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
       if (byMe != null) 'by_me': byMe,
       if (currentStatus != null) 'current_status': currentStatus,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (hasPhoto != null) 'has_photo': hasPhoto,
       if (pending != null) 'pending': pending,
       if (rowid != null) 'rowid': rowid,
     });
@@ -3086,6 +3283,7 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
     Value<bool>? byMe,
     Value<String>? currentStatus,
     Value<DateTime>? updatedAt,
+    Value<bool>? hasPhoto,
     Value<bool>? pending,
     Value<int>? rowid,
   }) {
@@ -3099,6 +3297,7 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
       byMe: byMe ?? this.byMe,
       currentStatus: currentStatus ?? this.currentStatus,
       updatedAt: updatedAt ?? this.updatedAt,
+      hasPhoto: hasPhoto ?? this.hasPhoto,
       pending: pending ?? this.pending,
       rowid: rowid ?? this.rowid,
     );
@@ -3134,6 +3333,9 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (hasPhoto.present) {
+      map['has_photo'] = Variable<bool>(hasPhoto.value);
+    }
     if (pending.present) {
       map['pending'] = Variable<bool>(pending.value);
     }
@@ -3155,6 +3357,7 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
           ..write('byMe: $byMe, ')
           ..write('currentStatus: $currentStatus, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('hasPhoto: $hasPhoto, ')
           ..write('pending: $pending, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -3561,6 +3764,319 @@ class FormEventsCompanion extends UpdateCompanion<FormEventRow> {
           ..write('changedAt: $changedAt, ')
           ..write('byMe: $byMe, ')
           ..write('pending: $pending, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FormPhotosTable extends FormPhotos
+    with TableInfo<$FormPhotosTable, FormPhotoRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FormPhotosTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _formIdMeta = const VerificationMeta('formId');
+  @override
+  late final GeneratedColumn<String> formId = GeneratedColumn<String>(
+    'form_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bytesMeta = const VerificationMeta('bytes');
+  @override
+  late final GeneratedColumn<Uint8List> bytes = GeneratedColumn<Uint8List>(
+    'bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _takenAtMeta = const VerificationMeta(
+    'takenAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> takenAt = GeneratedColumn<DateTime>(
+    'taken_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _uploadedMeta = const VerificationMeta(
+    'uploaded',
+  );
+  @override
+  late final GeneratedColumn<bool> uploaded = GeneratedColumn<bool>(
+    'uploaded',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("uploaded" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [formId, bytes, takenAt, uploaded];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'form_photos';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FormPhotoRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('form_id')) {
+      context.handle(
+        _formIdMeta,
+        formId.isAcceptableOrUnknown(data['form_id']!, _formIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_formIdMeta);
+    }
+    if (data.containsKey('bytes')) {
+      context.handle(
+        _bytesMeta,
+        bytes.isAcceptableOrUnknown(data['bytes']!, _bytesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bytesMeta);
+    }
+    if (data.containsKey('taken_at')) {
+      context.handle(
+        _takenAtMeta,
+        takenAt.isAcceptableOrUnknown(data['taken_at']!, _takenAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_takenAtMeta);
+    }
+    if (data.containsKey('uploaded')) {
+      context.handle(
+        _uploadedMeta,
+        uploaded.isAcceptableOrUnknown(data['uploaded']!, _uploadedMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {formId};
+  @override
+  FormPhotoRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FormPhotoRow(
+      formId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}form_id'],
+      )!,
+      bytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}bytes'],
+      )!,
+      takenAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}taken_at'],
+      )!,
+      uploaded: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}uploaded'],
+      )!,
+    );
+  }
+
+  @override
+  $FormPhotosTable createAlias(String alias) {
+    return $FormPhotosTable(attachedDatabase, alias);
+  }
+}
+
+class FormPhotoRow extends DataClass implements Insertable<FormPhotoRow> {
+  final String formId;
+  final Uint8List bytes;
+  final DateTime takenAt;
+  final bool uploaded;
+  const FormPhotoRow({
+    required this.formId,
+    required this.bytes,
+    required this.takenAt,
+    required this.uploaded,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['form_id'] = Variable<String>(formId);
+    map['bytes'] = Variable<Uint8List>(bytes);
+    map['taken_at'] = Variable<DateTime>(takenAt);
+    map['uploaded'] = Variable<bool>(uploaded);
+    return map;
+  }
+
+  FormPhotosCompanion toCompanion(bool nullToAbsent) {
+    return FormPhotosCompanion(
+      formId: Value(formId),
+      bytes: Value(bytes),
+      takenAt: Value(takenAt),
+      uploaded: Value(uploaded),
+    );
+  }
+
+  factory FormPhotoRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FormPhotoRow(
+      formId: serializer.fromJson<String>(json['formId']),
+      bytes: serializer.fromJson<Uint8List>(json['bytes']),
+      takenAt: serializer.fromJson<DateTime>(json['takenAt']),
+      uploaded: serializer.fromJson<bool>(json['uploaded']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'formId': serializer.toJson<String>(formId),
+      'bytes': serializer.toJson<Uint8List>(bytes),
+      'takenAt': serializer.toJson<DateTime>(takenAt),
+      'uploaded': serializer.toJson<bool>(uploaded),
+    };
+  }
+
+  FormPhotoRow copyWith({
+    String? formId,
+    Uint8List? bytes,
+    DateTime? takenAt,
+    bool? uploaded,
+  }) => FormPhotoRow(
+    formId: formId ?? this.formId,
+    bytes: bytes ?? this.bytes,
+    takenAt: takenAt ?? this.takenAt,
+    uploaded: uploaded ?? this.uploaded,
+  );
+  FormPhotoRow copyWithCompanion(FormPhotosCompanion data) {
+    return FormPhotoRow(
+      formId: data.formId.present ? data.formId.value : this.formId,
+      bytes: data.bytes.present ? data.bytes.value : this.bytes,
+      takenAt: data.takenAt.present ? data.takenAt.value : this.takenAt,
+      uploaded: data.uploaded.present ? data.uploaded.value : this.uploaded,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FormPhotoRow(')
+          ..write('formId: $formId, ')
+          ..write('bytes: $bytes, ')
+          ..write('takenAt: $takenAt, ')
+          ..write('uploaded: $uploaded')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(formId, $driftBlobEquality.hash(bytes), takenAt, uploaded);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FormPhotoRow &&
+          other.formId == this.formId &&
+          $driftBlobEquality.equals(other.bytes, this.bytes) &&
+          other.takenAt == this.takenAt &&
+          other.uploaded == this.uploaded);
+}
+
+class FormPhotosCompanion extends UpdateCompanion<FormPhotoRow> {
+  final Value<String> formId;
+  final Value<Uint8List> bytes;
+  final Value<DateTime> takenAt;
+  final Value<bool> uploaded;
+  final Value<int> rowid;
+  const FormPhotosCompanion({
+    this.formId = const Value.absent(),
+    this.bytes = const Value.absent(),
+    this.takenAt = const Value.absent(),
+    this.uploaded = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FormPhotosCompanion.insert({
+    required String formId,
+    required Uint8List bytes,
+    required DateTime takenAt,
+    this.uploaded = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : formId = Value(formId),
+       bytes = Value(bytes),
+       takenAt = Value(takenAt);
+  static Insertable<FormPhotoRow> custom({
+    Expression<String>? formId,
+    Expression<Uint8List>? bytes,
+    Expression<DateTime>? takenAt,
+    Expression<bool>? uploaded,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (formId != null) 'form_id': formId,
+      if (bytes != null) 'bytes': bytes,
+      if (takenAt != null) 'taken_at': takenAt,
+      if (uploaded != null) 'uploaded': uploaded,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FormPhotosCompanion copyWith({
+    Value<String>? formId,
+    Value<Uint8List>? bytes,
+    Value<DateTime>? takenAt,
+    Value<bool>? uploaded,
+    Value<int>? rowid,
+  }) {
+    return FormPhotosCompanion(
+      formId: formId ?? this.formId,
+      bytes: bytes ?? this.bytes,
+      takenAt: takenAt ?? this.takenAt,
+      uploaded: uploaded ?? this.uploaded,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (formId.present) {
+      map['form_id'] = Variable<String>(formId.value);
+    }
+    if (bytes.present) {
+      map['bytes'] = Variable<Uint8List>(bytes.value);
+    }
+    if (takenAt.present) {
+      map['taken_at'] = Variable<DateTime>(takenAt.value);
+    }
+    if (uploaded.present) {
+      map['uploaded'] = Variable<bool>(uploaded.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FormPhotosCompanion(')
+          ..write('formId: $formId, ')
+          ..write('bytes: $bytes, ')
+          ..write('takenAt: $takenAt, ')
+          ..write('uploaded: $uploaded, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4326,6 +4842,7 @@ abstract class _$LocalDb extends GeneratedDatabase {
   late final $VisitVotersTable visitVoters = $VisitVotersTable(this);
   late final $FormsTable forms = $FormsTable(this);
   late final $FormEventsTable formEvents = $FormEventsTable(this);
+  late final $FormPhotosTable formPhotos = $FormPhotosTable(this);
   late final $OutboxTable outbox = $OutboxTable(this);
   late final $MetaTable meta = $MetaTable(this);
   @override
@@ -4340,6 +4857,7 @@ abstract class _$LocalDb extends GeneratedDatabase {
     visitVoters,
     forms,
     formEvents,
+    formPhotos,
     outbox,
     meta,
   ];
@@ -4482,6 +5000,7 @@ typedef $$FamiliesTableCreateCompanionBuilder = FamiliesCompanion Function({
   Value<String?> headNameHi,
   required int priority,
   Value<bool> needsReview,
+  Value<bool> pending,
   Value<int> rowid,
 });
 typedef $$FamiliesTableUpdateCompanionBuilder = FamiliesCompanion Function({
@@ -4493,6 +5012,7 @@ typedef $$FamiliesTableUpdateCompanionBuilder = FamiliesCompanion Function({
   Value<String?> headNameHi,
   Value<int> priority,
   Value<bool> needsReview,
+  Value<bool> pending,
   Value<int> rowid,
 });
 
@@ -4542,6 +5062,11 @@ class $$FamiliesTableFilterComposer
 
   ColumnFilters<bool> get needsReview => $composableBuilder(
     column: $table.needsReview,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get pending => $composableBuilder(
+    column: $table.pending,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4594,6 +5119,11 @@ class $$FamiliesTableOrderingComposer
     column: $table.needsReview,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get pending => $composableBuilder(
+    column: $table.pending,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$FamiliesTableAnnotationComposer
@@ -4632,6 +5162,9 @@ class $$FamiliesTableAnnotationComposer
     column: $table.needsReview,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get pending =>
+      $composableBuilder(column: $table.pending, builder: (column) => column);
 }
 
 class $$FamiliesTableTableManager
@@ -4670,6 +5203,7 @@ class $$FamiliesTableTableManager
                 Value<String?> headNameHi = const Value.absent(),
                 Value<int> priority = const Value.absent(),
                 Value<bool> needsReview = const Value.absent(),
+                Value<bool> pending = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FamiliesCompanion(
                 id: id,
@@ -4680,6 +5214,7 @@ class $$FamiliesTableTableManager
                 headNameHi: headNameHi,
                 priority: priority,
                 needsReview: needsReview,
+                pending: pending,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4692,6 +5227,7 @@ class $$FamiliesTableTableManager
                 Value<String?> headNameHi = const Value.absent(),
                 required int priority,
                 Value<bool> needsReview = const Value.absent(),
+                Value<bool> pending = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FamiliesCompanion.insert(
                 id: id,
@@ -4702,6 +5238,7 @@ class $$FamiliesTableTableManager
                 headNameHi: headNameHi,
                 priority: priority,
                 needsReview: needsReview,
+                pending: pending,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -4752,6 +5289,8 @@ typedef $$VotersTableCreateCompanionBuilder = VotersCompanion Function({
   Value<bool> alreadyOnRoll,
   Value<String?> category,
   Value<String?> closest2026,
+  Value<String?> newReason,
+  Value<String?> newReasonNote,
   Value<bool> pending,
   Value<int> rowid,
 });
@@ -4772,6 +5311,8 @@ typedef $$VotersTableUpdateCompanionBuilder = VotersCompanion Function({
   Value<bool> alreadyOnRoll,
   Value<String?> category,
   Value<String?> closest2026,
+  Value<String?> newReason,
+  Value<String?> newReasonNote,
   Value<bool> pending,
   Value<int> rowid,
 });
@@ -4861,6 +5402,16 @@ class $$VotersTableFilterComposer extends Composer<_$LocalDb, $VotersTable> {
 
   ColumnFilters<String> get closest2026 => $composableBuilder(
     column: $table.closest2026,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get newReason => $composableBuilder(
+    column: $table.newReason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get newReasonNote => $composableBuilder(
+    column: $table.newReasonNote,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4958,6 +5509,16 @@ class $$VotersTableOrderingComposer extends Composer<_$LocalDb, $VotersTable> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get newReason => $composableBuilder(
+    column: $table.newReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get newReasonNote => $composableBuilder(
+    column: $table.newReasonNote,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get pending => $composableBuilder(
     column: $table.pending,
     builder: (column) => ColumnOrderings(column),
@@ -5035,6 +5596,14 @@ class $$VotersTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get newReason =>
+      $composableBuilder(column: $table.newReason, builder: (column) => column);
+
+  GeneratedColumn<String> get newReasonNote => $composableBuilder(
+    column: $table.newReasonNote,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get pending =>
       $composableBuilder(column: $table.pending, builder: (column) => column);
 }
@@ -5083,6 +5652,8 @@ class $$VotersTableTableManager
                 Value<bool> alreadyOnRoll = const Value.absent(),
                 Value<String?> category = const Value.absent(),
                 Value<String?> closest2026 = const Value.absent(),
+                Value<String?> newReason = const Value.absent(),
+                Value<String?> newReasonNote = const Value.absent(),
                 Value<bool> pending = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VotersCompanion(
@@ -5102,6 +5673,8 @@ class $$VotersTableTableManager
                 alreadyOnRoll: alreadyOnRoll,
                 category: category,
                 closest2026: closest2026,
+                newReason: newReason,
+                newReasonNote: newReasonNote,
                 pending: pending,
                 rowid: rowid,
               ),
@@ -5123,6 +5696,8 @@ class $$VotersTableTableManager
                 Value<bool> alreadyOnRoll = const Value.absent(),
                 Value<String?> category = const Value.absent(),
                 Value<String?> closest2026 = const Value.absent(),
+                Value<String?> newReason = const Value.absent(),
+                Value<String?> newReasonNote = const Value.absent(),
                 Value<bool> pending = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VotersCompanion.insert(
@@ -5142,6 +5717,8 @@ class $$VotersTableTableManager
                 alreadyOnRoll: alreadyOnRoll,
                 category: category,
                 closest2026: closest2026,
+                newReason: newReason,
+                newReasonNote: newReasonNote,
                 pending: pending,
                 rowid: rowid,
               ),
@@ -5634,6 +6211,7 @@ typedef $$FormsTableCreateCompanionBuilder = FormsCompanion Function({
   required bool byMe,
   required String currentStatus,
   required DateTime updatedAt,
+  Value<bool> hasPhoto,
   Value<bool> pending,
   Value<int> rowid,
 });
@@ -5647,6 +6225,7 @@ typedef $$FormsTableUpdateCompanionBuilder = FormsCompanion Function({
   Value<bool> byMe,
   Value<String> currentStatus,
   Value<DateTime> updatedAt,
+  Value<bool> hasPhoto,
   Value<bool> pending,
   Value<int> rowid,
 });
@@ -5701,6 +6280,11 @@ class $$FormsTableFilterComposer extends Composer<_$LocalDb, $FormsTable> {
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get hasPhoto => $composableBuilder(
+    column: $table.hasPhoto,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5763,6 +6347,11 @@ class $$FormsTableOrderingComposer extends Composer<_$LocalDb, $FormsTable> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get hasPhoto => $composableBuilder(
+    column: $table.hasPhoto,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get pending => $composableBuilder(
     column: $table.pending,
     builder: (column) => ColumnOrderings(column),
@@ -5808,6 +6397,9 @@ class $$FormsTableAnnotationComposer extends Composer<_$LocalDb, $FormsTable> {
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
+  GeneratedColumn<bool> get hasPhoto =>
+      $composableBuilder(column: $table.hasPhoto, builder: (column) => column);
+
   GeneratedColumn<bool> get pending =>
       $composableBuilder(column: $table.pending, builder: (column) => column);
 }
@@ -5849,6 +6441,7 @@ class $$FormsTableTableManager
                 Value<bool> byMe = const Value.absent(),
                 Value<String> currentStatus = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<bool> hasPhoto = const Value.absent(),
                 Value<bool> pending = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FormsCompanion(
@@ -5861,6 +6454,7 @@ class $$FormsTableTableManager
                 byMe: byMe,
                 currentStatus: currentStatus,
                 updatedAt: updatedAt,
+                hasPhoto: hasPhoto,
                 pending: pending,
                 rowid: rowid,
               ),
@@ -5875,6 +6469,7 @@ class $$FormsTableTableManager
                 required bool byMe,
                 required String currentStatus,
                 required DateTime updatedAt,
+                Value<bool> hasPhoto = const Value.absent(),
                 Value<bool> pending = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FormsCompanion.insert(
@@ -5887,6 +6482,7 @@ class $$FormsTableTableManager
                 byMe: byMe,
                 currentStatus: currentStatus,
                 updatedAt: updatedAt,
+                hasPhoto: hasPhoto,
                 pending: pending,
                 rowid: rowid,
               ),
@@ -6138,6 +6734,191 @@ typedef $$FormEventsTableProcessedTableManager =
       $$FormEventsTableUpdateCompanionBuilder,
       (FormEventRow, BaseReferences<_$LocalDb, $FormEventsTable, FormEventRow>),
       FormEventRow,
+      PrefetchHooks Function()
+    >;
+typedef $$FormPhotosTableCreateCompanionBuilder = FormPhotosCompanion Function({
+  required String formId,
+  required Uint8List bytes,
+  required DateTime takenAt,
+  Value<bool> uploaded,
+  Value<int> rowid,
+});
+typedef $$FormPhotosTableUpdateCompanionBuilder = FormPhotosCompanion Function({
+  Value<String> formId,
+  Value<Uint8List> bytes,
+  Value<DateTime> takenAt,
+  Value<bool> uploaded,
+  Value<int> rowid,
+});
+
+class $$FormPhotosTableFilterComposer
+    extends Composer<_$LocalDb, $FormPhotosTable> {
+  $$FormPhotosTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get formId => $composableBuilder(
+    column: $table.formId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get bytes => $composableBuilder(
+    column: $table.bytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get takenAt => $composableBuilder(
+    column: $table.takenAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get uploaded => $composableBuilder(
+    column: $table.uploaded,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FormPhotosTableOrderingComposer
+    extends Composer<_$LocalDb, $FormPhotosTable> {
+  $$FormPhotosTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get formId => $composableBuilder(
+    column: $table.formId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get bytes => $composableBuilder(
+    column: $table.bytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get takenAt => $composableBuilder(
+    column: $table.takenAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get uploaded => $composableBuilder(
+    column: $table.uploaded,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FormPhotosTableAnnotationComposer
+    extends Composer<_$LocalDb, $FormPhotosTable> {
+  $$FormPhotosTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get formId =>
+      $composableBuilder(column: $table.formId, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get bytes =>
+      $composableBuilder(column: $table.bytes, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get takenAt =>
+      $composableBuilder(column: $table.takenAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get uploaded =>
+      $composableBuilder(column: $table.uploaded, builder: (column) => column);
+}
+
+class $$FormPhotosTableTableManager
+    extends
+        RootTableManager<
+          _$LocalDb,
+          $FormPhotosTable,
+          FormPhotoRow,
+          $$FormPhotosTableFilterComposer,
+          $$FormPhotosTableOrderingComposer,
+          $$FormPhotosTableAnnotationComposer,
+          $$FormPhotosTableCreateCompanionBuilder,
+          $$FormPhotosTableUpdateCompanionBuilder,
+          (
+            FormPhotoRow,
+            BaseReferences<_$LocalDb, $FormPhotosTable, FormPhotoRow>,
+          ),
+          FormPhotoRow,
+          PrefetchHooks Function()
+        > {
+  $$FormPhotosTableTableManager(_$LocalDb db, $FormPhotosTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FormPhotosTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FormPhotosTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FormPhotosTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> formId = const Value.absent(),
+                Value<Uint8List> bytes = const Value.absent(),
+                Value<DateTime> takenAt = const Value.absent(),
+                Value<bool> uploaded = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FormPhotosCompanion(
+                formId: formId,
+                bytes: bytes,
+                takenAt: takenAt,
+                uploaded: uploaded,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String formId,
+                required Uint8List bytes,
+                required DateTime takenAt,
+                Value<bool> uploaded = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FormPhotosCompanion.insert(
+                formId: formId,
+                bytes: bytes,
+                takenAt: takenAt,
+                uploaded: uploaded,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$FormPhotosTable, FormPhotoRow>(table),
+                  BaseReferences<_$LocalDb, $FormPhotosTable, FormPhotoRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FormPhotosTableProcessedTableManager =
+    ProcessedTableManager<
+      _$LocalDb,
+      $FormPhotosTable,
+      FormPhotoRow,
+      $$FormPhotosTableFilterComposer,
+      $$FormPhotosTableOrderingComposer,
+      $$FormPhotosTableAnnotationComposer,
+      $$FormPhotosTableCreateCompanionBuilder,
+      $$FormPhotosTableUpdateCompanionBuilder,
+      (FormPhotoRow, BaseReferences<_$LocalDb, $FormPhotosTable, FormPhotoRow>),
+      FormPhotoRow,
       PrefetchHooks Function()
     >;
 typedef $$OutboxTableCreateCompanionBuilder = OutboxCompanion Function({
@@ -6554,6 +7335,8 @@ class $LocalDbManager {
       $$FormsTableTableManager(_db, _db.forms);
   $$FormEventsTableTableManager get formEvents =>
       $$FormEventsTableTableManager(_db, _db.formEvents);
+  $$FormPhotosTableTableManager get formPhotos =>
+      $$FormPhotosTableTableManager(_db, _db.formPhotos);
   $$OutboxTableTableManager get outbox =>
       $$OutboxTableTableManager(_db, _db.outbox);
   $$MetaTableTableManager get meta => $$MetaTableTableManager(_db, _db.meta);

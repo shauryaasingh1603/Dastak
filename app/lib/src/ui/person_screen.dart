@@ -86,6 +86,18 @@ class PersonScreen extends StatelessWidget {
                       Pill(label: categoryLabel(l10n, category)),
                       const SizedBox(height: 4),
                       Text(categoryHint(l10n, category), style: muted),
+                      if (voter.newReason != null)
+                        Text(
+                          [
+                            voter.newReason == NewReason.turned18
+                                ? l10n.newReasonTurned18
+                                : l10n.newReasonOther,
+                            ?voter.newReasonNote,
+                          ].join(': '),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       if (voter.closest2026 != null) ...[
                         const SizedBox(height: 4),
                         Text(

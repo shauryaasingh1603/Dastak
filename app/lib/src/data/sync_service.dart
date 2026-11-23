@@ -15,6 +15,10 @@ abstract class SyncApi {
 
   /// Everything the user may see, as one JSON document.
   Future<Map<String, dynamic>> pull();
+
+  /// Puts a form's face photo in storage. False if the server refused it
+  /// (e.g. the form was rejected); network trouble throws.
+  Future<bool> uploadPhoto(String formId, Uint8List jpeg);
 }
 
 /// The server could not be reached, or did not answer properly.
@@ -84,6 +88,30 @@ class SupabaseSyncApi implements SyncApi {
       ];
     }
     return snapshot;
+  }
+
+  @override
+  Future<bool> uploadPhoto(String formId, Uint8List jpeg) async {
+    try {
+      await _client.storage
+          .from('form-photos')
+          .uploadBinary(
+            '$formId.jpg',
+            jpeg,
+            fileOptions: const FileOptions(
+              contentType: 'image/jpeg',
+              upsert: true,
+            ),
+          );
+      return true;
+    } on StorageException catch (e) {
+      final status = int.tryParse(e.statusCode ?? '');
+      if (status == null || status >= 500) throw SyncNetworkException(e);
+      if (status == 401) throw const SyncAccessException();
+      return false;
+    } catch (e) {
+      throw SyncNetworkException(e);
+    }
   }
 
   Future<dynamic> _call(Future<dynamic> Function() request) async {
@@ -160,6 +188,7 @@ class SyncService extends ChangeNotifier {
       do {
         _again = false;
         await _pushAll();
+        if (await _uploadPhotos()) await _pushAll();
         await store.applySnapshot(await api.pull(), userId: userId);
         _problem = SyncProblem.none;
       } while (_again && _userId != null);
@@ -187,6 +216,18 @@ class SyncService extends ChangeNotifier {
       await store.applyPushResults(batch, results);
       if (batch.length < 50) return;
     }
+  }
+
+  /// Uploads face photos for forms the server has; true if any went up.
+  Future<bool> _uploadPhotos() async {
+    var any = false;
+    for (final photo in await store.photosToUpload()) {
+      if (await api.uploadPhoto(photo.formId, photo.bytes)) {
+        await store.markPhotoUploaded(photo.formId);
+        any = true;
+      }
+    }
+    return any;
   }
 
   @override

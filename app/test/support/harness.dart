@@ -9,6 +9,7 @@ import 'package:dastak/src/l10n.dart';
 import 'package:dastak/src/theme.dart';
 import 'package:dastak/src/ui/field_scope.dart';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
+import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:drift/native.dart';
 import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
 import 'package:material_ui/material_ui.dart';
@@ -43,6 +44,10 @@ class OfflineApi implements SyncApi {
 
   @override
   Future<Map<String, dynamic>> pull() async =>
+      throw const SyncNetworkException();
+
+  @override
+  Future<bool> uploadPhoto(String formId, Uint8List jpeg) async =>
       throw const SyncNetworkException();
 }
 

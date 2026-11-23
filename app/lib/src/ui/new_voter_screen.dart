@@ -4,16 +4,23 @@ import 'package:material_ui/material_ui.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/auth_controller.dart' show normalizeMobile;
 import '../data/field_store.dart';
+import '../data/models.dart';
+import 'face_photo.dart';
 import 'field_scope.dart';
 import 'form_detail_screen.dart';
 import 'labels.dart';
 import 'widgets.dart';
 
-/// "नया मतदाता जोड़ें": someone at the house who is not on the list.
+/// "नया मतदाता जोड़ें": someone who is not on the list, such as a person who
+/// turned 18 this year. Opened from a listed person ([familyId]: the same
+/// household), or on its own, when nobody at the house is on the list: then
+/// the volunteer picks the booth ([partNo] preselects it) and house number,
+/// and a new household record is made.
 class NewVoterScreen extends StatefulWidget {
-  const NewVoterScreen({super.key, required this.familyId});
+  const NewVoterScreen({super.key, this.familyId, this.partNo});
 
-  final String familyId;
+  final String? familyId;
+  final int? partNo;
 
   @override
   State<NewVoterScreen> createState() => _NewVoterScreenState();
@@ -25,6 +32,11 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
   final _age = TextEditingController();
   final _epic = TextEditingController();
   final _mobile = TextEditingController();
+  final _house = TextEditingController();
+  final _reasonNote = TextEditingController();
+  String? _reason;
+  int? _part;
+  Uint8List? _photo;
   bool _consent = false;
   String _relation = 'F';
   String? _gender;
@@ -34,7 +46,15 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
 
   @override
   void dispose() {
-    for (final c in [_name, _relative, _age, _epic, _mobile]) {
+    for (final c in [
+      _name,
+      _relative,
+      _age,
+      _epic,
+      _mobile,
+      _house,
+      _reasonNote,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -42,15 +62,46 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
 
   int? get _ageValue => int.tryParse(_age.text.trim());
 
+  bool get _newHousehold => widget.familyId == null;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_part == null && _newHousehold) {
+      final booths = FieldScope.of(context).store.data.booths;
+      _part =
+          widget.partNo ?? (booths.length == 1 ? booths.single.partNo : null);
+    }
+  }
+
+  void _chooseReason(String reason) => setState(() {
+    _reason = reason;
+    _error = null;
+    // Someone who turned 18 this year is 18 (17 if the birthday is still
+    // to come before 1 January) and needs Form 6.
+    if (reason == NewReason.turned18) {
+      if (_age.text.trim().isEmpty) _age.text = '18';
+      _formType = '6';
+    }
+  });
+
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context);
     final age = _ageValue;
-    final String? error = _name.text.trim().isEmpty
+    final String? error = _reason == null
+        ? l10n.errNewReason
+        : _newHousehold && _part == null
+        ? '${l10n.newVoterBooth}: ${l10n.errRequired}'
+        : _newHousehold && _house.text.trim().isEmpty
+        ? l10n.errNewVoterHouse
+        : _name.text.trim().isEmpty
         ? '${l10n.fieldName}: ${l10n.errRequired}'
         : _relative.text.trim().isEmpty
         ? '${l10n.fieldRelativeName}: ${l10n.errRequired}'
         : age == null || age < 1 || age > 120
         ? l10n.errAge
+        : _reason == NewReason.turned18 && (age < 17 || age > 18)
+        ? l10n.errTurned18Age
         : _gender == null
         ? '${l10n.fieldGender}: ${l10n.errRequired}'
         : _mobile.text.isNotEmpty && normalizeMobile(_mobile.text) == null
@@ -70,6 +121,12 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
     final formId = await FieldScope.of(context).store.addVoter(
       NewVoterDraft(
         familyId: widget.familyId,
+        household: _newHousehold
+            ? NewHousehold(partNo: _part!, houseNo: _house.text)
+            : null,
+        newReason: _reason,
+        newReasonNote: _reason == NewReason.other ? _reasonNote.text : null,
+        photo: _formType == 'none' ? null : _photo,
         nameHi: _name.text,
         relationType: _relation,
         relativeNameHi: _relative.text,
@@ -99,11 +156,63 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final age = _ageValue;
+    final booths = FieldScope.of(context).store.data.booths;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.newVoterTitle)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
+          SectionTitle(l10n.newVoterReason),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final (code, label) in [
+                (NewReason.turned18, l10n.newReasonTurned18),
+                (NewReason.other, l10n.newReasonOther),
+              ])
+                ChoiceChip(
+                  label: Text(label),
+                  selected: _reason == code,
+                  onSelected: (_) => _chooseReason(code),
+                ),
+            ],
+          ),
+          if (_reason == NewReason.other) ...[
+            const SizedBox(height: 8),
+            TextField(
+              controller: _reasonNote,
+              maxLength: 200,
+              decoration: InputDecoration(labelText: l10n.newReasonNote),
+            ),
+          ],
+          if (_newHousehold) ...[
+            SectionTitle(l10n.newVoterBooth),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final b in booths)
+                  ChoiceChip(
+                    label: Text(l10n.boothNumber(b.partNo)),
+                    selected: _part == b.partNo,
+                    onSelected: (_) => setState(() {
+                      _part = b.partNo;
+                      _error = null;
+                    }),
+                  ),
+              ],
+            ),
+            SectionTitle(l10n.newVoterHouse),
+            TextField(
+              controller: _house,
+              onChanged: (_) => setState(() => _error = null),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.newVoterHouseHint,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
           SectionTitle(l10n.fieldName),
           TextField(
             controller: _name,
@@ -185,6 +294,13 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
                 ),
             ],
           ),
+          if (_formType != 'none') ...[
+            const SizedBox(height: 12),
+            FacePhotoField(
+              photo: _photo,
+              onChanged: (bytes) => setState(() => _photo = bytes),
+            ),
+          ],
           // R9: a warning, not a block.
           if (_formType == '6' && age != null && age < 18) ...[
             const SizedBox(height: 8),

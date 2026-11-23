@@ -7,6 +7,7 @@ import 'booth_list_screen.dart';
 import 'dates.dart';
 import 'field_scope.dart';
 import 'messages.dart';
+import 'new_voter_screen.dart';
 import 'search_screen.dart';
 import 'widgets.dart';
 
@@ -112,6 +113,24 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               children: [
                 const SearchLauncher(),
+                const SizedBox(height: 8),
+                Card(
+                  clipBehavior: Clip.antiAlias,
+                  child: ListTile(
+                    leading: Icon(
+                      Icons.person_add_alt_1,
+                      color: theme.colorScheme.primary,
+                    ),
+                    title: Text(l10n.newVoterOpen),
+                    subtitle: Text(l10n.newVoterOpenHint),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const NewVoterScreen(),
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 12),
                 _DeadlineBanner(daysLeft: daysLeft),
                 if (stale) ...[

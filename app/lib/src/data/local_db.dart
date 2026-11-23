@@ -26,6 +26,8 @@ class Families extends Table {
   TextColumn get headNameHi => text().nullable()();
   IntColumn get priority => integer()();
   BoolColumn get needsReview => boolean().withDefault(const Constant(false))();
+  // A household added on this phone that has not reached the server yet.
+  BoolColumn get pending => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -54,6 +56,9 @@ class Voters extends Table {
   // people, the closest April-2026 roll entry to check before visiting.
   TextColumn get category => text().nullable()();
   TextColumn get closest2026 => text().nullable()();
+  // Voters added in the field: TURNED_18_THIS_YEAR or OTHER, with a note.
+  TextColumn get newReason => text().nullable()();
+  TextColumn get newReasonNote => text().nullable()();
   BoolColumn get pending => boolean().withDefault(const Constant(false))();
 
   @override
@@ -98,10 +103,25 @@ class Forms extends Table {
   BoolColumn get byMe => boolean()();
   TextColumn get currentStatus => text()();
   DateTimeColumn get updatedAt => dateTime()();
+  // The server has the applicant's face photo for this form.
+  BoolColumn get hasPhoto => boolean().withDefault(const Constant(false))();
   BoolColumn get pending => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
+}
+
+/// Face photos taken on this phone, kept until the server has them.
+@DataClassName('FormPhotoRow')
+class FormPhotos extends Table {
+  TextColumn get formId => text()();
+  BlobColumn get bytes => blob()(); // JPEG
+  DateTimeColumn get takenAt => dateTime()();
+  // Uploaded to storage; waiting for the form to record it.
+  BoolColumn get uploaded => boolean().withDefault(const Constant(false))();
+
+  @override
+  Set<Column> get primaryKey => {formId};
 }
 
 @DataClassName('FormEventRow')
@@ -122,7 +142,8 @@ class FormEvents extends Table {
 class Outbox extends Table {
   IntColumn get seq => integer().autoIncrement()();
   TextColumn get uuid => text()();
-  TextColumn get entity => text()(); // voter | visit | form | form_event
+  TextColumn get entity =>
+      text()(); // family | voter | visit | form | form_event | form_photo
   TextColumn get payload => text()(); // JSON
   DateTimeColumn get createdAt => dateTime()();
   IntColumn get attempts => integer().withDefault(const Constant(0))();
@@ -150,6 +171,7 @@ class Meta extends Table {
     VisitVoters,
     Forms,
     FormEvents,
+    FormPhotos,
     Outbox,
     Meta,
   ],
@@ -158,7 +180,7 @@ class LocalDb extends _$LocalDb {
   LocalDb(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -170,6 +192,13 @@ class LocalDb extends _$LocalDb {
       if (from < 3) {
         await m.addColumn(voters, voters.category);
         await m.addColumn(voters, voters.closest2026);
+      }
+      if (from < 4) {
+        await m.addColumn(families, families.pending);
+        await m.addColumn(voters, voters.newReason);
+        await m.addColumn(voters, voters.newReasonNote);
+        await m.addColumn(forms, forms.hasPhoto);
+        await m.createTable(formPhotos);
       }
     },
   );

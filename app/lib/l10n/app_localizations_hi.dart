@@ -917,4 +917,74 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get personHousehold => 'भेंट में इसी घर के बताए गए लोग';
+
+  @override
+  String get photoTitle => 'चेहरे की फ़ोटो';
+
+  @override
+  String get photoHint =>
+      'फ़ॉर्म के लिए। व्यक्ति से पूछकर लें: चेहरा सामने से, अच्छी रोशनी में, सादी दीवार के आगे।';
+
+  @override
+  String get photoTake => 'फ़ोटो लें';
+
+  @override
+  String get photoRetake => 'दोबारा लें';
+
+  @override
+  String get photoRemove => 'हटाएँ';
+
+  @override
+  String get photoOnServer => 'फ़ोटो भेजी जा चुकी है';
+
+  @override
+  String get photoWaiting => 'फ़ोटो फ़ोन पर है, नेटवर्क मिलते ही भेजी जाएगी';
+
+  @override
+  String get photoMissing => 'फ़ोटो नहीं ली गई';
+
+  @override
+  String get photoFailed => 'कैमरा नहीं खुला। दोबारा कोशिश करें।';
+
+  @override
+  String get photoSaved => 'फ़ोटो सेव हुई';
+
+  @override
+  String get newVoterReason => 'क्यों जोड़ रहे हैं?';
+
+  @override
+  String get newReasonTurned18 => 'इस साल 18 के हुए';
+
+  @override
+  String get newReasonOther => 'अन्य';
+
+  @override
+  String get newReasonNote =>
+      'कारण लिखें (जैसे: कभी नाम नहीं जुड़ा, बाहर से आकर बसे)';
+
+  @override
+  String get errNewReason => 'बताएँ कि क्यों जोड़ रहे हैं';
+
+  @override
+  String get errTurned18Age => 'इस साल 18 के हुए: उम्र 17 या 18 होनी चाहिए';
+
+  @override
+  String get newVoterBooth => 'बूथ';
+
+  @override
+  String get newVoterHouse => 'मकान नंबर';
+
+  @override
+  String get newVoterHouseHint =>
+      'इस घर में सूची का कोई व्यक्ति नहीं है, इसलिए नया घर दर्ज होगा।';
+
+  @override
+  String get errNewVoterHouse => 'मकान नंबर लिखें';
+
+  @override
+  String get newVoterOpen => 'नया मतदाता जोड़ें';
+
+  @override
+  String get newVoterOpenHint =>
+      'जिनका नाम सूची में नहीं है, जैसे जो इस साल 18 के हुए';
 }

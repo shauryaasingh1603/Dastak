@@ -1,8 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../data/models.dart';
 import 'dates.dart';
+import 'face_photo.dart';
 import 'field_scope.dart';
 import 'labels.dart';
 import 'widgets.dart';
@@ -172,6 +175,16 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                   ),
                 ),
               ),
+              if (form.byMe) ...[
+                const SizedBox(height: 12),
+                _PhotoCard(
+                  form: form,
+                  // Reloads the preview when a photo is taken or sent.
+                  key: ValueKey(
+                    '${data.localPhotos.contains(form.id)}${form.hasPhoto}',
+                  ),
+                ),
+              ],
               if (scope.profile.isBla2) ...[
                 const SizedBox(height: 12),
                 const QuotaCard(),
@@ -282,6 +295,68 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+/// The applicant's face photo: taken on this phone (waiting to be sent), on
+/// the server, or not taken yet, with a button to take or retake it.
+class _PhotoCard extends StatefulWidget {
+  const _PhotoCard({super.key, required this.form});
+
+  final ClaimForm form;
+
+  @override
+  State<_PhotoCard> createState() => _PhotoCardState();
+}
+
+class _PhotoCardState extends State<_PhotoCard> {
+  Uint8List? _local;
+  bool _loaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_loaded) return;
+    _loaded = true;
+    FieldScope.of(context).store.photoOf(widget.form.id).then((bytes) {
+      if (mounted && bytes != null) setState(() => _local = bytes);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final store = FieldScope.of(context).store;
+    final waiting = _local != null && !widget.form.hasPhoto;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            FacePhotoField(
+              photo: _local,
+              onServer: widget.form.hasPhoto,
+              onChanged: (bytes) async {
+                setState(() => _local = bytes);
+                if (bytes == null) {
+                  await store.removeFormPhoto(widget.form.id);
+                } else {
+                  await store.setFormPhoto(widget.form.id, bytes);
+                }
+              },
+            ),
+            if (waiting) ...[
+              const SizedBox(height: 6),
+              Text(l10n.photoWaiting),
+            ] else if (_local == null && !widget.form.hasPhoto) ...[
+              const SizedBox(height: 6),
+              Text(l10n.photoMissing),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

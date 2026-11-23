@@ -130,6 +130,8 @@ class Voter {
     this.alreadyOnRoll = false,
     this.category,
     this.closest2026,
+    this.newReason,
+    this.newReasonNote,
     this.pending = false,
   });
 
@@ -149,6 +151,10 @@ class Voter {
   final bool alreadyOnRoll;
   final String? category;
   final String? closest2026;
+
+  /// Added in the field: [NewReason] code and an optional note.
+  final String? newReason;
+  final String? newReasonNote;
   final bool pending;
 
   bool get isNew => sourceList == 'NEW';
@@ -162,6 +168,12 @@ class Voter {
           : sourceList == 'POSS_DEL'
           ? 'POSS_${matchConfidence ?? 'MEDIUM'}'
           : asddReason ?? VoterCategory.shifted);
+}
+
+/// Why a volunteer added a voter who is not on the list.
+abstract final class NewReason {
+  static const turned18 = 'TURNED_18_THIS_YEAR';
+  static const other = 'OTHER';
 }
 
 /// Why a person is on the list, as the campaign workbook groups them.
@@ -236,6 +248,7 @@ class ClaimForm {
     required this.byMe,
     required this.status,
     required this.updatedAt,
+    this.hasPhoto = false,
     this.pending = false,
   });
 
@@ -248,6 +261,9 @@ class ClaimForm {
   final bool byMe;
   final String status;
   final DateTime updatedAt;
+
+  /// The server has the applicant's face photo.
+  final bool hasPhoto;
   final bool pending;
 
   bool get isOpen => FormStatus.isOpen(status);
@@ -387,6 +403,7 @@ class FieldData {
     required this.quota,
     required this.outbox,
     required this.lastSyncAt,
+    this.localPhotos = const {},
   }) {
     for (final v in voters) {
       (_votersByFamily[v.familyId] ??= []).add(v);
@@ -436,6 +453,13 @@ class FieldData {
   final Quota? quota;
   final List<OutboxEntry> outbox;
   final DateTime? lastSyncAt;
+
+  /// Forms with a face photo on this phone not yet confirmed by the server.
+  final Set<String> localPhotos;
+
+  /// A face photo was taken for the form (on this phone or on the server).
+  bool formHasPhoto(String formId) =>
+      localPhotos.contains(formId) || (form(formId)?.hasPhoto ?? false);
 
   final _votersByFamily = <String, List<Voter>>{};
   final _voterById = <String, Voter>{};

@@ -4,6 +4,7 @@ import 'package:dastak/src/data/models.dart';
 import 'package:dastak/src/data/sync_service.dart';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
+import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/sample_snapshot.dart';
@@ -13,6 +14,17 @@ class FakeApi implements SyncApi {
   int pulls = 0;
   Object? failWith;
   String? rejectEntity;
+  final uploads = <String, Uint8List>{};
+
+  /// What the next pull returns; the sample data by default.
+  Map<String, dynamic> Function() snapshot = sampleSnapshot;
+
+  @override
+  Future<bool> uploadPhoto(String formId, Uint8List jpeg) async {
+    if (failWith != null) throw failWith!;
+    uploads[formId] = jpeg;
+    return true;
+  }
 
   @override
   Future<List<({bool ok, String? code, String? messageHi})>> push(
@@ -37,7 +49,7 @@ class FakeApi implements SyncApi {
   Future<Map<String, dynamic>> pull() async {
     if (failWith != null) throw failWith!;
     pulls++;
-    return sampleSnapshot();
+    return snapshot();
   }
 }
 
@@ -138,5 +150,80 @@ void main() {
     sync.start('me');
     await settle();
     expect(accessLost, 1);
+  });
+
+  test('a face photo goes up after its form, then leaves the phone', () async {
+    final jpeg = Uint8List.fromList([0xFF, 0xD8, 0xFF, 0xD9]);
+    // Once uploaded and recorded, the server lists the form with its photo.
+    api.snapshot = () => sampleSnapshot(
+      forms: [
+        for (final id in api.uploads.keys)
+          {
+            'id': id,
+            'voter_id': 'v1',
+            'form_type': '6',
+            'route': null,
+            'reference_no': null,
+            'filed_on': null,
+            'by_me': true,
+            'current_status': 'FILLED',
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+            'has_photo': true,
+          },
+      ],
+    );
+    sync.start('me');
+    await settle();
+
+    final formId = (await store.saveVisit(
+      VisitDraft(
+        familyId: 'f1',
+        nobodyHome: false,
+        members: [
+          MemberEntry(
+            voterId: 'v1',
+            outcome: Outcome.eligible,
+            formType: '6',
+            photo: jpeg,
+          ),
+        ],
+      ),
+    )).single;
+    expect(store.data.localPhotos, {formId});
+    await settle();
+
+    expect(api.uploads[formId], jpeg);
+    final photoItem = api.pushed
+        .expand((batch) => batch)
+        .singleWhere((i) => i['entity'] == 'form_photo');
+    expect(photoItem['data'], {'form_id': formId});
+    expect(photoItem['uuid'], isNot(formId));
+    expect(store.data.form(formId)!.hasPhoto, isTrue);
+    expect(store.data.localPhotos, isEmpty, reason: 'the server has it now');
+    expect(store.data.outbox, isEmpty);
+  });
+
+  test('offline, the photo stays on the phone', () async {
+    sync.start('me');
+    await settle();
+    api.failWith = const SyncNetworkException();
+    final formId = (await store.saveVisit(
+      VisitDraft(
+        familyId: 'f1',
+        nobodyHome: false,
+        members: [
+          MemberEntry(
+            voterId: 'v1',
+            outcome: Outcome.eligible,
+            formType: '6',
+            photo: Uint8List.fromList([1, 2, 3]),
+          ),
+        ],
+      ),
+    )).single;
+    await settle();
+    expect(sync.problem, SyncProblem.offline);
+    expect(api.uploads, isEmpty);
+    expect(await store.photoOf(formId), [1, 2, 3]);
   });
 }

@@ -16,6 +16,7 @@ class MemberEntry {
     this.docs = const [],
     this.mobile,
     this.mobileConsent = false,
+    this.photo,
   });
 
   final String voterId;
@@ -26,6 +27,9 @@ class MemberEntry {
   final List<String> docs;
   final String? mobile;
   final bool mobileConsent;
+
+  /// Face photo (JPEG) for the form, if one is started.
+  final Uint8List? photo;
 }
 
 class VisitDraft {
@@ -71,9 +75,17 @@ class VisitDraft {
   final bool contactRefused;
 }
 
+/// A house where nobody is on the list, for a voter added there.
+class NewHousehold {
+  const NewHousehold({required this.partNo, this.houseNo});
+  final int partNo;
+  final String? houseNo;
+}
+
 class NewVoterDraft {
   const NewVoterDraft({
-    required this.familyId,
+    this.familyId,
+    this.household,
     required this.nameHi,
     required this.relationType,
     required this.relativeNameHi,
@@ -83,9 +95,14 @@ class NewVoterDraft {
     this.formType,
     this.mobile,
     this.mobileConsent = false,
-  });
+    this.newReason,
+    this.newReasonNote,
+    this.photo,
+  }) : assert(familyId != null || household != null);
 
-  final String familyId;
+  /// The listed household the voter joins, or [household] for a new one.
+  final String? familyId;
+  final NewHousehold? household;
   final String nameHi;
   final String relationType;
   final String relativeNameHi;
@@ -97,6 +114,13 @@ class NewVoterDraft {
   /// Kept only with consent, and never stored on the phone after sending.
   final String? mobile;
   final bool mobileConsent;
+
+  /// [NewReason] code, and an optional note for "other".
+  final String? newReason;
+  final String? newReasonNote;
+
+  /// Face photo (JPEG) for the form, if one is started.
+  final Uint8List? photo;
 }
 
 /// The phone's working copy: reads the local database into [data] and
@@ -191,6 +215,8 @@ class FieldStore extends ChangeNotifier {
             alreadyOnRoll: v.alreadyOnRoll,
             category: v.category,
             closest2026: v.closest2026,
+            newReason: v.newReason,
+            newReasonNote: v.newReasonNote,
             pending: v.pending,
           ),
       ],
@@ -220,9 +246,13 @@ class FieldStore extends ChangeNotifier {
             byMe: f.byMe,
             status: f.currentStatus,
             updatedAt: f.updatedAt,
+            hasPhoto: f.hasPhoto,
             pending: f.pending,
           ),
       ],
+      localPhotos: {
+        for (final p in await db.select(db.formPhotos).get()) p.formId,
+      },
       events: [
         for (final e in await db.select(db.formEvents).get())
           FormEvent(
@@ -354,7 +384,9 @@ class FieldStore extends ChangeNotifier {
       for (final m in draft.members) {
         final type = m.formType;
         if (type == null || _data.hasOpenForm(m.voterId, type)) continue;
-        createdForms.add(await _startForm(m.voterId, type, now));
+        createdForms.add(
+          await _startForm(m.voterId, type, now, photo: m.photo),
+        );
       }
     });
 
@@ -369,12 +401,36 @@ class FieldStore extends ChangeNotifier {
     final now = DateTime.now().toUtc();
     String? formId;
     await db.transaction(() async {
+      var familyId = draft.familyId;
+      final household = draft.household;
+      if (familyId == null && household != null) {
+        // A house with nobody on the list: a new household record, sent first.
+        familyId = newId();
+        await db
+            .into(db.families)
+            .insert(
+              FamiliesCompanion.insert(
+                id: familyId,
+                code: '371-${household.partNo.toString().padLeft(3, '0')}-नया',
+                partNo: household.partNo,
+                houseNo: Value(_blankToNull(household.houseNo)),
+                headNameHi: Value(draft.nameHi.trim()),
+                priority: 4,
+                pending: const Value(true),
+              ),
+            );
+        await _enqueue('family', familyId, {
+          'part_no': household.partNo,
+          'house_no': _blankToNull(household.houseNo),
+          'head_name_hi': draft.nameHi.trim(),
+        });
+      }
       await db
           .into(db.voters)
           .insert(
             VotersCompanion.insert(
               id: voterId,
-              familyId: draft.familyId,
+              familyId: familyId!,
               epic: Value(_blankToNull(draft.epic)?.toUpperCase()),
               nameHi: draft.nameHi.trim(),
               relationType: Value(draft.relationType),
@@ -383,11 +439,13 @@ class FieldStore extends ChangeNotifier {
               gender: Value(draft.gender),
               sourceList: 'NEW',
               category: const Value(VoterCategory.added),
+              newReason: Value(draft.newReason),
+              newReasonNote: Value(_blankToNull(draft.newReasonNote)),
               pending: const Value(true),
             ),
           );
       await _enqueue('voter', voterId, {
-        'family_id': draft.familyId,
+        'family_id': familyId,
         'name_hi': draft.nameHi.trim(),
         'relation_type': draft.relationType,
         'relative_name_hi': draft.relativeNameHi.trim(),
@@ -396,13 +454,78 @@ class FieldStore extends ChangeNotifier {
         'epic': _blankToNull(draft.epic)?.toUpperCase(),
         'mobile': _blankToNull(draft.mobile),
         'mobile_consent': draft.mobileConsent,
+        'new_reason': draft.newReason,
+        'new_reason_note': _blankToNull(draft.newReasonNote),
       });
       if (draft.formType != null) {
-        formId = await _startForm(voterId, draft.formType!, now);
+        formId = await _startForm(
+          voterId,
+          draft.formType!,
+          now,
+          photo: draft.photo,
+        );
       }
     });
     await _afterChange();
     return formId;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Face photos
+  // ---------------------------------------------------------------------------
+
+  /// Takes, or replaces, the face photo for a form. Kept on the phone until
+  /// the server has recorded it.
+  Future<void> setFormPhoto(String formId, Uint8List jpeg) async {
+    await db
+        .into(db.formPhotos)
+        .insertOnConflictUpdate(
+          FormPhotosCompanion.insert(
+            formId: formId,
+            bytes: jpeg,
+            takenAt: DateTime.now().toUtc(),
+            uploaded: const Value(false),
+          ),
+        );
+    await _afterChange();
+  }
+
+  /// Drops a photo taken on this phone (before the server has recorded it).
+  Future<void> removeFormPhoto(String formId) async {
+    await (db.delete(
+      db.formPhotos,
+    )..where((t) => t.formId.equals(formId))).go();
+    await reload();
+  }
+
+  /// The photo taken on this phone for a form, if it is still here.
+  Future<Uint8List?> photoOf(String formId) async {
+    final row = await (db.select(
+      db.formPhotos,
+    )..where((t) => t.formId.equals(formId))).getSingleOrNull();
+    return row?.bytes;
+  }
+
+  /// Photos to upload: not uploaded yet, for forms the server already has.
+  Future<List<({String formId, Uint8List bytes})>> photosToUpload() async {
+    final rows = await (db.select(
+      db.formPhotos,
+    )..where((t) => t.uploaded.equals(false))).get();
+    return [
+      for (final r in rows)
+        if (_data.form(r.formId) case final form? when !form.pending)
+          (formId: r.formId, bytes: r.bytes),
+    ];
+  }
+
+  /// The photo is in storage: ask the server to record it on the form.
+  Future<void> markPhotoUploaded(String formId) async {
+    await db.transaction(() async {
+      await (db.update(db.formPhotos)..where((t) => t.formId.equals(formId)))
+          .write(const FormPhotosCompanion(uploaded: Value(true)));
+      await _enqueue('form_photo', newId(), {'form_id': formId});
+    });
+    await reload();
   }
 
   /// Saves how and when a form was submitted, and its receipt number.
@@ -471,9 +594,21 @@ class FieldStore extends ChangeNotifier {
   Future<String> _startForm(
     String voterId,
     String formType,
-    DateTime now,
-  ) async {
+    DateTime now, {
+    Uint8List? photo,
+  }) async {
     final formId = newId();
+    if (photo != null) {
+      await db
+          .into(db.formPhotos)
+          .insert(
+            FormPhotosCompanion.insert(
+              formId: formId,
+              bytes: photo,
+              takenAt: now,
+            ),
+          );
+    }
     final eventId = newId();
     await db
         .into(db.forms)
@@ -604,6 +739,10 @@ class FieldStore extends ChangeNotifier {
     )..where((t) => t.uuid.equals(uuid))).get();
     if (stillWaiting.isNotEmpty) return;
     switch (entity) {
+      case 'family':
+        await (db.update(db.families)..where((t) => t.id.equals(uuid))).write(
+          const FamiliesCompanion(pending: Value(false)),
+        );
       case 'voter':
         await (db.update(db.voters)..where((t) => t.id.equals(uuid))).write(
           const VotersCompanion(pending: Value(false)),
@@ -681,7 +820,9 @@ class FieldStore extends ChangeNotifier {
       );
 
       await db.delete(db.booths).go();
-      await db.delete(db.families).go();
+      await (db.delete(
+        db.families,
+      )..where((t) => t.pending.equals(false))).go();
       await (db.delete(db.voters)..where((t) => t.pending.equals(false))).go();
       await (db.delete(
         db.visitVoters,
@@ -702,7 +843,7 @@ class FieldStore extends ChangeNotifier {
               ),
             ),
         ]);
-        b.insertAll(db.families, [
+        b.insertAll(db.families, mode: InsertMode.insertOrReplace, [
           for (final r in rows('families'))
             FamiliesCompanion.insert(
               id: r['id'] as String,
@@ -734,6 +875,8 @@ class FieldStore extends ChangeNotifier {
               alreadyOnRoll: Value(r['already_on_roll'] as bool? ?? false),
               category: Value(r['category'] as String?),
               closest2026: Value(r['closest_2026'] as String?),
+              newReason: Value(r['new_reason'] as String?),
+              newReasonNote: Value(r['new_reason_note'] as String?),
             ),
         ]);
         b.insertAll(db.visits, mode: InsertMode.insertOrReplace, [
@@ -772,6 +915,7 @@ class FieldStore extends ChangeNotifier {
                 byMe: r['by_me'] as bool? ?? false,
                 currentStatus: r['current_status'] as String,
                 updatedAt: DateTime.parse(r['updated_at'] as String),
+                hasPhoto: Value(r['has_photo'] as bool? ?? false),
               ),
         ]);
         b.insertAll(db.formEvents, mode: InsertMode.insertOrReplace, [
@@ -807,6 +951,15 @@ class FieldStore extends ChangeNotifier {
           const VisitsCompanion(pending: Value(false)),
         );
       }
+
+      // Photos the server has recorded need not stay on the phone.
+      final recorded = [
+        for (final r in rows('forms'))
+          if (r['has_photo'] == true) r['id'] as String,
+      ];
+      await (db.delete(
+        db.formPhotos,
+      )..where((t) => t.uploaded.equals(true) & t.formId.isIn(recorded))).go();
 
       final serverTime =
           snap['server_time'] as String? ??

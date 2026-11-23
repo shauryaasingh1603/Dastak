@@ -1719,6 +1719,138 @@ abstract class AppLocalizations {
   /// In hi, this message translates to:
   /// **'भेंट में इसी घर के बताए गए लोग'**
   String get personHousehold;
+
+  /// No description provided for @photoTitle.
+  ///
+  /// In hi, this message translates to:
+  /// **'चेहरे की फ़ोटो'**
+  String get photoTitle;
+
+  /// No description provided for @photoHint.
+  ///
+  /// In hi, this message translates to:
+  /// **'फ़ॉर्म के लिए। व्यक्ति से पूछकर लें: चेहरा सामने से, अच्छी रोशनी में, सादी दीवार के आगे।'**
+  String get photoHint;
+
+  /// No description provided for @photoTake.
+  ///
+  /// In hi, this message translates to:
+  /// **'फ़ोटो लें'**
+  String get photoTake;
+
+  /// No description provided for @photoRetake.
+  ///
+  /// In hi, this message translates to:
+  /// **'दोबारा लें'**
+  String get photoRetake;
+
+  /// No description provided for @photoRemove.
+  ///
+  /// In hi, this message translates to:
+  /// **'हटाएँ'**
+  String get photoRemove;
+
+  /// No description provided for @photoOnServer.
+  ///
+  /// In hi, this message translates to:
+  /// **'फ़ोटो भेजी जा चुकी है'**
+  String get photoOnServer;
+
+  /// No description provided for @photoWaiting.
+  ///
+  /// In hi, this message translates to:
+  /// **'फ़ोटो फ़ोन पर है, नेटवर्क मिलते ही भेजी जाएगी'**
+  String get photoWaiting;
+
+  /// No description provided for @photoMissing.
+  ///
+  /// In hi, this message translates to:
+  /// **'फ़ोटो नहीं ली गई'**
+  String get photoMissing;
+
+  /// No description provided for @photoFailed.
+  ///
+  /// In hi, this message translates to:
+  /// **'कैमरा नहीं खुला। दोबारा कोशिश करें।'**
+  String get photoFailed;
+
+  /// No description provided for @photoSaved.
+  ///
+  /// In hi, this message translates to:
+  /// **'फ़ोटो सेव हुई'**
+  String get photoSaved;
+
+  /// No description provided for @newVoterReason.
+  ///
+  /// In hi, this message translates to:
+  /// **'क्यों जोड़ रहे हैं?'**
+  String get newVoterReason;
+
+  /// No description provided for @newReasonTurned18.
+  ///
+  /// In hi, this message translates to:
+  /// **'इस साल 18 के हुए'**
+  String get newReasonTurned18;
+
+  /// No description provided for @newReasonOther.
+  ///
+  /// In hi, this message translates to:
+  /// **'अन्य'**
+  String get newReasonOther;
+
+  /// No description provided for @newReasonNote.
+  ///
+  /// In hi, this message translates to:
+  /// **'कारण लिखें (जैसे: कभी नाम नहीं जुड़ा, बाहर से आकर बसे)'**
+  String get newReasonNote;
+
+  /// No description provided for @errNewReason.
+  ///
+  /// In hi, this message translates to:
+  /// **'बताएँ कि क्यों जोड़ रहे हैं'**
+  String get errNewReason;
+
+  /// No description provided for @errTurned18Age.
+  ///
+  /// In hi, this message translates to:
+  /// **'इस साल 18 के हुए: उम्र 17 या 18 होनी चाहिए'**
+  String get errTurned18Age;
+
+  /// No description provided for @newVoterBooth.
+  ///
+  /// In hi, this message translates to:
+  /// **'बूथ'**
+  String get newVoterBooth;
+
+  /// No description provided for @newVoterHouse.
+  ///
+  /// In hi, this message translates to:
+  /// **'मकान नंबर'**
+  String get newVoterHouse;
+
+  /// No description provided for @newVoterHouseHint.
+  ///
+  /// In hi, this message translates to:
+  /// **'इस घर में सूची का कोई व्यक्ति नहीं है, इसलिए नया घर दर्ज होगा।'**
+  String get newVoterHouseHint;
+
+  /// No description provided for @errNewVoterHouse.
+  ///
+  /// In hi, this message translates to:
+  /// **'मकान नंबर लिखें'**
+  String get errNewVoterHouse;
+
+  /// No description provided for @newVoterOpen.
+  ///
+  /// In hi, this message translates to:
+  /// **'नया मतदाता जोड़ें'**
+  String get newVoterOpen;
+
+  /// No description provided for @newVoterOpenHint.
+  ///
+  /// In hi, this message translates to:
+  /// **'जिनका नाम सूची में नहीं है, जैसे जो इस साल 18 के हुए'**
+  String get newVoterOpenHint;
 }
 
 class _AppLocalizationsDelegate
