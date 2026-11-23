@@ -177,7 +177,8 @@ begin
         when 'visit'      then perform private.push_visit(v_me, v_settings, v_id, v_item -> 'data', v_skew);
         when 'form'       then perform private.push_form(v_me, v_settings, v_id, v_item -> 'data');
         when 'form_event' then perform private.push_form_event(v_me, v_settings, v_id, v_item -> 'data');
-        when 'form_photo' then perform private.push_form_photo(v_me, v_id);
+        -- The item has its own id; the form it belongs to is in its data.
+        when 'form_photo' then perform private.push_form_photo(v_me, (v_item -> 'data' ->> 'form_id')::uuid);
         else perform private.sync_reject('INVALID');
       end case;
     exception
