@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Shell from "@/components/Shell";
+import SheetUpload from "@/components/SheetUpload";
 import { formatBooths, parseBooths } from "@/lib/booths";
 import { ROLE_LABEL, formatTime, supabase } from "@/lib/supabase";
 
@@ -227,6 +228,8 @@ function Team() {
         </div>
         <div className="hint">Booths are part numbers 1–443. You can leave them empty and add them later.</div>
       </form>
+
+      <SheetUpload onRegistered={load} />
 
       <div className="card">
         <div className="page-head" style={{ marginBottom: 12 }}>
