@@ -13,11 +13,14 @@ abstract class AuthBackend {
   Stream<void> get sessionEnded;
 
   /// Asks to sign in as [mobile]. Throws [LoginException].
+  /// [deviceKey] stays on this phone for good: once an admin approves this
+  /// phone, later requests carrying it are approved at once for 35 days.
   Future<({String requestId, String matchCode})> requestLogin({
     required String mobile,
     required String deviceId,
     required String deviceSecret,
     String? deviceModel,
+    String? deviceKey,
   });
 
   /// Asks whether the admin has decided. Throws [LoginException] with
@@ -57,6 +60,7 @@ class SupabaseAuthBackend implements AuthBackend {
     required String deviceId,
     required String deviceSecret,
     String? deviceModel,
+    String? deviceKey,
   }) async {
     final Map<String, dynamic> result;
     try {
@@ -68,6 +72,7 @@ class SupabaseAuthBackend implements AuthBackend {
             'p_device_id': deviceId,
             'p_device_secret': deviceSecret,
             'p_device_model': deviceModel,
+            'p_device_key': deviceKey,
           },
         ) as Map,
       );

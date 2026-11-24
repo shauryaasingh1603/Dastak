@@ -48,8 +48,14 @@ There are no passwords or OTPs for field users.
 4. The app signs in. That phone is now the volunteer's only signed-in phone;
    approving a new phone signs the old one out.
 
-Deactivating a volunteer, or using "Sign out phone", cuts access immediately.
-This is enforced in the database (row-level security), not in the app.
+Once approved, that phone can sign back in on its own for 35 days from the
+approval (it proves itself with a device key that never leaves it), so
+admins are not asked again each time. A different phone or browser still
+needs an admin. Approving a new phone moves the 35 days to it.
+
+Deactivating a volunteer, or using "Sign out phone", cuts access immediately
+and ends the 35 days. This is enforced in the database (row-level security
+and a trigger on users), not in the app.
 
 Admins sign in to the website with email and password. The first admin is
 created once at `/setup` with a setup code; further admins are added from the

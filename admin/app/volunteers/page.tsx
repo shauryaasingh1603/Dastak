@@ -17,6 +17,7 @@ type FieldUser = {
   device_model: string | null;
   active_session_id: string | null;
   last_login_at: string | null;
+  trusted_until: string | null;
   assignments: Assignment[];
 };
 
@@ -49,7 +50,7 @@ function Team() {
     const { data, error } = await supabase
       .from("users")
       .select(
-        "id, name, mobile, role, is_active, device_model, active_session_id, last_login_at, assignments!assignments_user_id_fkey(id, part_no, section_no, from_date, to_date)",
+        "id, name, mobile, role, is_active, device_model, active_session_id, last_login_at, trusted_until, assignments!assignments_user_id_fkey(id, part_no, section_no, from_date, to_date)",
       )
       .neq("role", "admin")
       .order("name");
@@ -312,6 +313,11 @@ function Team() {
                           <>
                             {user.device_model || "Signed in"}
                             <div className="hint">since {formatTime(user.last_login_at)}</div>
+                            {user.trusted_until && new Date(user.trusted_until) > new Date() && (
+                              <div className="hint">
+                                Signs back in without approval until {formatTime(user.trusted_until)}
+                              </div>
+                            )}
                           </>
                         ) : (
                           <span className="muted">Not signed in</span>

@@ -30,6 +30,7 @@ class FakeBackend implements AuthBackend {
   int requests = 0;
   String? lastMobile;
   String? lastSecret;
+  String? lastDeviceKey;
 
   /// Answers for successive status checks; the last one repeats.
   List<Object> statuses = [const LoginPending()];
@@ -47,10 +48,12 @@ class FakeBackend implements AuthBackend {
     required String deviceId,
     required String deviceSecret,
     String? deviceModel,
+    String? deviceKey,
   }) async {
     requests++;
     lastMobile = mobile;
     lastSecret = deviceSecret;
+    lastDeviceKey = deviceKey;
     if (requestError != null) throw LoginException(requestError!);
     return (requestId: 'req-$requests', matchCode: '4821');
   }
@@ -185,6 +188,36 @@ void main() {
     expect(store.values['device_id'], deviceId);
   });
 
+  test('the device key is sent every time and survives signing out', () async {
+    await auth.start();
+    await auth.submitMobile('9000000001');
+    final key = backend.lastDeviceKey;
+    expect(key, isNotNull);
+    expect(key!.length, 64);
+
+    backend.statuses = [_approved];
+    backend.checks = 0;
+    await auth.pollOnce();
+    expect(auth.state, isA<AuthSignedIn>());
+    await auth.signOut();
+
+    await auth.submitMobile('9000000001');
+    expect(backend.lastDeviceKey, key, reason: 'the same phone, recognised');
+  });
+
+  test(
+    'a phone approved earlier is signed in at once, without waiting',
+    () async {
+      // The server approves the request as it is made (trusted phone).
+      backend.statuses = [_approved];
+      await auth.start();
+      await auth.submitMobile('9000000001');
+      await pumpEventQueue();
+      expect(auth.state, isA<AuthSignedIn>());
+      expect(backend.adopts, 1);
+    },
+  );
+
   test('rejection returns to login with the reason', () async {
     await auth.start();
     await auth.submitMobile('9000000001');
@@ -197,6 +230,7 @@ void main() {
   test('losing the network while waiting keeps waiting and recovers', () async {
     await auth.start();
     await auth.submitMobile('9000000001');
+    backend.checks = 0; // after the check made right after asking
     backend.statuses = [
       const LoginException(LoginError.network),
       const LoginPending(),
@@ -216,6 +250,7 @@ void main() {
     () async {
       await auth.start();
       await auth.submitMobile('9000000001');
+      backend.checks = 0; // after the check made right after asking
       backend.statuses = [_approved, const LoginClosed(LoginError.generic)];
       backend.adoptFailsWithNetwork = true;
 

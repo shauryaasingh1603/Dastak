@@ -9,6 +9,7 @@ type LoginRequest = {
   match_code: string;
   status: "pending" | "approved" | "rejected" | "consumed" | "expired";
   device_model: string | null;
+  auto_approved: boolean;
   created_at: string;
   decided_at: string | null;
   user: { name: string; mobile: string; role: string } | null;
@@ -33,7 +34,7 @@ function Requests() {
     const { data, error } = await supabase
       .from("login_requests")
       .select(
-        "id, match_code, status, device_model, created_at, decided_at, user:users!login_requests_user_id_fkey(name, mobile, role)",
+        "id, match_code, status, device_model, auto_approved, created_at, decided_at, user:users!login_requests_user_id_fkey(name, mobile, role)",
       )
       .order("created_at", { ascending: false })
       .limit(60);
@@ -145,6 +146,9 @@ function Requests() {
                       <td>{formatTime(request.created_at)}</td>
                       <td>
                         <span className={`pill ${status.tone}`}>{status.label}</span>
+                        {request.auto_approved && (
+                          <div className="hint">Automatic: same phone, approved in the last 35 days</div>
+                        )}
                       </td>
                     </tr>
                   );

@@ -47,6 +47,7 @@ class AuthController extends ChangeNotifier {
   });
 
   static const _deviceIdKey = 'device_id';
+  static const _deviceKeyKey = 'device_key';
   static const _pendingKey = 'pending_login';
   static const _approvedKey = 'approved_login';
   static const _profileKey = 'profile';
@@ -104,6 +105,7 @@ class AuthController extends ChangeNotifier {
         deviceId: await _deviceId(),
         deviceSecret: secret,
         deviceModel: deviceModel,
+        deviceKey: await _deviceKey(),
       );
       final pending = PendingLogin(
         requestId: result.requestId,
@@ -114,6 +116,9 @@ class AuthController extends ChangeNotifier {
       await _store.write(_pendingKey, pending.encode());
       _set(AuthWaiting(pending));
       _startPolling();
+      // A phone approved in the last 35 days is approved at once: check now
+      // rather than after the first poll interval.
+      await pollOnce();
       return null;
     } on LoginException catch (e) {
       return e.error;
@@ -211,6 +216,16 @@ class AuthController extends ChangeNotifier {
     await _store.delete(_profileKey);
     await _backend.signOut();
     await onAccessLost?.call();
+  }
+
+  /// A secret that never leaves this phone except to ask to sign in; with
+  /// the device id it identifies a phone the admin already approved.
+  Future<String> _deviceKey() async {
+    final existing = await _store.read(_deviceKeyKey);
+    if (existing != null) return existing;
+    final created = _randomHex(32);
+    await _store.write(_deviceKeyKey, created);
+    return created;
   }
 
   Future<String> _deviceId() async {
