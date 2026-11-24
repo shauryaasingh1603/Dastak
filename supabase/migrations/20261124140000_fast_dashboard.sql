@@ -66,7 +66,7 @@ begin
     from public.voters vo join public.families f on f.id = vo.family_id
     where not f.is_hidden
     group by 1, 2, 3;
-    update private.dashboard_state set summary_stale = false;
+    update private.dashboard_state set summary_stale = false where id;
   end if;
   select * into v_settings from public.campaign_settings;
   v_from := least(v_settings.visits_open_from, v_today);
@@ -310,7 +310,7 @@ begin
     )
   ) into v_result;
 
-  update private.dashboard_state set cached = v_result, cached_at = now();
+  update private.dashboard_state set cached = v_result, cached_at = now() where id;
   return v_result;
 end
 $$;

@@ -218,7 +218,7 @@ begin
     and not exists (select 1 from public.families f where f.part_no = b.part_no)
     and not exists (select 1 from public.assignments a where a.part_no = b.part_no);
 
-  update private.dashboard_state set summary_stale = true, cached_at = null;
+  update private.dashboard_state set summary_stale = true, cached_at = null where id;
 
   return v_stats || jsonb_build_object(
     'committed', true,
