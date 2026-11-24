@@ -72,6 +72,10 @@ dev_dependencies:
 flutter:
   generate: true
   uses-material-design: true
+  assets:
+    # Example of the ECI "Track application status" screenshot, with the
+    # reference number and name blanked out.
+    - assets/images/eci_example.jpg
   fonts:
     - family: NotoSansDevanagari
       fonts:
