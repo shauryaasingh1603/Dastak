@@ -9,6 +9,15 @@ export const OUTCOME: Record<string, string> = {
   SHIFTED: "Shifted away",
   DEAD: "Dead",
   NOT_MET: "Not met",
+  OTHER: "Other reason",
+};
+
+/** How far the ECI screenshot has been read. */
+export const ECI_STATUS: Record<string, string> = {
+  PENDING: "Waiting to be read",
+  READ: "Read",
+  FAILED: "Could not read, check by hand",
+  NOT_ECI: "Not an ECI screenshot",
 };
 
 export const FORM_STATUS: Record<string, string> = {

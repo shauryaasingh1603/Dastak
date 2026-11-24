@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import EciReading, { type EciFields } from "@/components/EciReading";
 import { supabase } from "@/lib/supabase";
 import {
   CATEGORY,
@@ -71,7 +72,7 @@ type Person = {
     flags: string[] | null;
     members: { id: string; name: string; outcome: string }[] | null;
   }[];
-  forms: {
+  forms: (EciFields & {
     id: string;
     type: string;
     status: string;
@@ -83,7 +84,7 @@ type Person = {
     photo_path: string | null;
     photo_at: string | null;
     events: { status: string; at: string; note: string | null; by: string | null }[] | null;
-  }[];
+  })[];
   same_record: { id: string; name: string; age: number | null; relation: string | null; relative: string | null }[];
 };
 
@@ -107,12 +108,16 @@ export default function PersonPanel({ voterId, onClose }: { voterId: string; onC
   const [person, setPerson] = useState<Person | null>(null);
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
+  const [reload, setReload] = useState(0);
 
   useEffect(() => setShown(voterId), [voterId]);
+  useEffect(() => {
+    setPerson(null);
+    setPhotos({});
+  }, [shown]);
 
   useEffect(() => {
     let active = true;
-    setPerson(null);
     setError("");
     (async () => {
       const { data, error } = await supabase.rpc("admin_person", { p_voter: shown });
@@ -123,7 +128,7 @@ export default function PersonPanel({ voterId, onClose }: { voterId: string; onC
       }
       const p = data as Person;
       setPerson(p);
-      const paths = p.forms.map((f) => f.photo_path).filter((x): x is string => !!x);
+      const paths = p.forms.flatMap((f) => [f.photo_path, f.eci_path]).filter((x): x is string => !!x);
       if (paths.length) {
         const { data: signed } = await supabase.storage.from("form-photos").createSignedUrls(paths, 3600);
         if (active) setPhotos(Object.fromEntries((signed ?? []).filter((s) => s.signedUrl).map((s) => [s.path, s.signedUrl])));
@@ -132,7 +137,7 @@ export default function PersonPanel({ voterId, onClose }: { voterId: string; onC
     return () => {
       active = false;
     };
-  }, [shown]);
+  }, [shown, reload]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -219,15 +224,28 @@ export default function PersonPanel({ voterId, onClose }: { voterId: string; onC
                     <span className="pill neutral">{label(FORM_STATUS, f.status)}</span>
                   </div>
                   <div className="sub-card-body">
-                    {f.photo_path && photos[f.photo_path] ? (
-                      <a href={photos[f.photo_path]} target="_blank" rel="noreferrer" className="photo-thumb">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={photos[f.photo_path]} alt="Photo or ECI screenshot" width={96} height={96} />
-                      </a>
-                    ) : (
-                      <span className="pill warn">No photo</span>
-                    )}
+                    <div className="thumbs">
+                      {f.eci_path && photos[f.eci_path] && (
+                        <div>
+                          <a href={photos[f.eci_path]} target="_blank" rel="noreferrer" className="photo-thumb eci">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={photos[f.eci_path]} alt="ECI screenshot" width={96} height={96} />
+                          </a>
+                          <span className="thumb-label">ECI</span>
+                        </div>
+                      )}
+                      {f.photo_path && photos[f.photo_path] && (
+                        <div>
+                          <a href={photos[f.photo_path]} target="_blank" rel="noreferrer" className="photo-thumb">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={photos[f.photo_path]} alt="Face photo" width={96} height={96} />
+                          </a>
+                          <span className="thumb-label">Photo</span>
+                        </div>
+                      )}
+                    </div>
                     <div className="grow">
+                      <EciReading f={f} formId={f.id} onRead={() => setReload((n) => n + 1)} />
                       <Row name="Receipt">{f.reference_no}</Row>
                       <Row name="Route">{label(ROUTE, f.route)}</Row>
                       <Row name="Filed on">{f.filed_on}</Row>

@@ -1176,3 +1176,41 @@ button.small.selected {
 .person-name .muted {
   font-weight: 400;
 }
+
+/* ECI screenshot and what was read from it */
+.photo-thumb.eci img {
+  object-position: top;
+}
+
+.thumbs {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.thumb-label {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+.eci-reading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  font-size: 13.5px;
+  min-width: 0;
+}
+
+.eci-reading .mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.02em;
+}
+
+.warn-text {
+  color: var(--warn);
+}

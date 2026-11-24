@@ -39,6 +39,8 @@ type VisitRow = {
   form_type: string | null;
   form_status: string | null;
   has_photo: boolean;
+  has_eci: boolean;
+  eci_status: string | null;
 };
 
 type Range = "today" | "yesterday" | "week" | "custom";
@@ -264,6 +266,7 @@ function Activity() {
                         {r.form_type && (
                           <span className="pill neutral">
                             Form {r.form_type}: {label(FORM_STATUS, r.form_status)}
+                            {r.has_eci ? (r.eci_status === "READ" ? " · ECI ✓" : " · ECI") : " · no ECI"}
                             {r.has_photo ? " · photo" : ""}
                           </span>
                         )}

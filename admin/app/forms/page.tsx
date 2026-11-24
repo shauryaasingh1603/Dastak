@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import EciReading, { type EciFields, readEciNow } from "@/components/EciReading";
 import ExportDialog, { EMPTY_FILTERS } from "@/components/ExportDialog";
 import PersonPanel from "@/components/PersonPanel";
 import Shell from "@/components/Shell";
 import { formatTime, supabase } from "@/lib/supabase";
+import { ECI_STATUS, label } from "@/lib/labels";
 
-type FormRow = {
+type FormRow = EciFields & {
   id: string;
   form_type: string;
   route: string | null;
@@ -46,7 +48,10 @@ const REASON: Record<string, string> = { TURNED_18_THIS_YEAR: "Turned 18 this ye
 const LIMIT = 300;
 
 function downloadCsv(rows: FormRow[]) {
-  const header = ["Form", "Applicant", "Age", "EPIC", "Booth", "House", "New voter", "Status", "Route", "Receipt", "Filed on", "Volunteer", "Photo"];
+  const header = [
+    "Form", "Applicant", "Age", "EPIC", "Booth", "House", "New voter", "Status", "Route", "Receipt", "Filed on", "Volunteer",
+    "Face photo", "ECI screenshot", "ECI reading", "ECI reference", "Name on ECI", "Name matches", "ECI status", "ECI date", "ECI note",
+  ];
   const cell = (v: unknown) => {
     const s = String(v ?? "");
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -66,6 +71,14 @@ function downloadCsv(rows: FormRow[]) {
       f.filed_on,
       f.filer?.name,
       f.photo_path ? "yes" : "no",
+      f.eci_path ? "yes" : "no",
+      label(ECI_STATUS, f.eci_status),
+      f.eci_reference_no,
+      f.eci_name,
+      f.eci_name_matches == null ? "" : f.eci_name_matches ? "yes" : "no",
+      f.eci_tracking_status,
+      f.eci_status_date,
+      f.eci_note,
     ]
       .map(cell)
       .join(","),
@@ -81,12 +94,14 @@ function downloadCsv(rows: FormRow[]) {
 function Forms() {
   const [rows, setRows] = useState<FormRow[] | null>(null);
   const [photos, setPhotos] = useState<Record<string, string>>({});
-  const [counts, setCounts] = useState<{ forms: number; photos: number; turned18: number } | null>(null);
+  const [counts, setCounts] = useState<{ forms: number; photos: number; ecis: number; waiting: number; turned18: number } | null>(null);
   const [error, setError] = useState("");
   const [booth, setBooth] = useState("");
   const [type, setType] = useState("");
   const [status, setStatus] = useState("");
   const [photo, setPhoto] = useState("");
+  const [eci, setEci] = useState("");
+  const [reading, setReading] = useState("");
   const [query, setQuery] = useState("");
   const [large, setLarge] = useState<string | null>(null);
   const [person, setPerson] = useState<string | null>(null);
@@ -107,6 +122,7 @@ function Forms() {
       .from("forms")
       .select(
         "id, form_type, route, reference_no, filed_on, current_status, created_at, photo_path, photo_at, " +
+          "eci_path, eci_status, eci_reference_no, eci_name, eci_form_type, eci_tracking_status, eci_status_date, eci_name_matches, eci_note, " +
           "filer:users!forms_filed_by_user_id_fkey(name), " +
           "voter:voters!inner(id, name_hi, age, gender, epic, category, new_reason, new_reason_note, family:families!inner(part_no, house_no))",
       )
@@ -117,6 +133,9 @@ function Forms() {
     if (status) request = request.eq("current_status", status);
     if (photo === "yes") request = request.not("photo_path", "is", null);
     if (photo === "no") request = request.is("photo_path", null);
+    if (eci === "none") request = request.is("eci_path", null);
+    else if (eci === "mismatch") request = request.eq("eci_name_matches", false);
+    else if (eci) request = request.eq("eci_status", eci);
     const { data, error } = await request;
     if (error) {
       setError("Could not load the forms. Check your connection.");
@@ -127,29 +146,47 @@ function Forms() {
     setRows(list);
 
     // Short-lived links to the photos on this page.
-    const paths = list.map((f) => f.photo_path).filter((p): p is string => !!p);
+    const paths = list.flatMap((f) => [f.photo_path, f.eci_path]).filter((p): p is string => !!p);
     if (paths.length) {
       const { data: signed } = await supabase.storage.from("form-photos").createSignedUrls(paths, 3600);
       setPhotos(Object.fromEntries((signed ?? []).filter((s) => s.signedUrl).map((s) => [s.path, s.signedUrl])));
     } else {
       setPhotos({});
     }
-  }, [booth, type, status, photo]);
+  }, [booth, type, status, photo, eci]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  useEffect(() => {
-    (async () => {
-      const [all, withPhoto, turned18] = await Promise.all([
-        supabase.from("forms").select("id", { count: "exact", head: true }),
-        supabase.from("forms").select("id", { count: "exact", head: true }).not("photo_path", "is", null),
-        supabase.from("voters").select("id", { count: "exact", head: true }).eq("new_reason", "TURNED_18_THIS_YEAR"),
-      ]);
-      setCounts({ forms: all.count ?? 0, photos: withPhoto.count ?? 0, turned18: turned18.count ?? 0 });
-    })();
+  const loadCounts = useCallback(async () => {
+    const head = { count: "exact" as const, head: true };
+    const [all, withPhoto, withEci, waiting, turned18] = await Promise.all([
+      supabase.from("forms").select("id", head),
+      supabase.from("forms").select("id", head).not("photo_path", "is", null),
+      supabase.from("forms").select("id", head).not("eci_path", "is", null),
+      supabase.from("forms").select("id", head).eq("eci_status", "PENDING"),
+      supabase.from("voters").select("id", head).eq("new_reason", "TURNED_18_THIS_YEAR"),
+    ]);
+    setCounts({
+      forms: all.count ?? 0,
+      photos: withPhoto.count ?? 0,
+      ecis: withEci.count ?? 0,
+      waiting: waiting.count ?? 0,
+      turned18: turned18.count ?? 0,
+    });
   }, []);
+
+  useEffect(() => {
+    loadCounts();
+  }, [loadCounts]);
+
+  const readWaiting = async () => {
+    setReading("Reading…");
+    setReading(await readEciNow());
+    load();
+    loadCounts();
+  };
 
   const needle = query.trim().toLowerCase();
   const shown = (rows ?? []).filter(
@@ -157,6 +194,8 @@ function Forms() {
       !needle ||
       f.voter.name_hi.toLowerCase().includes(needle) ||
       (f.reference_no ?? "").toLowerCase().includes(needle) ||
+      (f.eci_reference_no ?? "").toLowerCase().includes(needle) ||
+      (f.eci_name ?? "").toLowerCase().includes(needle) ||
       (f.voter.epic ?? "").toLowerCase().includes(needle) ||
       (f.filer?.name ?? "").toLowerCase().includes(needle),
   );
@@ -167,12 +206,17 @@ function Forms() {
         <div>
           <h1>Forms</h1>
           <p className="muted">
-            Claim forms filled in the field, newest first, with the applicant&apos;s face photo.
+            Claim forms filled in the field, newest first, with the ECI screenshot and what was read from it.
             {counts &&
-              ` ${counts.forms.toLocaleString("en-IN")} forms · ${counts.photos.toLocaleString("en-IN")} with a photo · ${counts.turned18.toLocaleString("en-IN")} new voters who turned 18 this year`}
+              ` ${counts.forms.toLocaleString("en-IN")} forms · ${counts.ecis.toLocaleString("en-IN")} with an ECI screenshot · ${counts.photos.toLocaleString("en-IN")} with a face photo · ${counts.turned18.toLocaleString("en-IN")} new voters who turned 18 this year`}
           </p>
         </div>
         <div className="toolbar" style={{ margin: 0 }}>
+          {counts && counts.waiting > 0 && (
+            <button className="small" onClick={readWaiting} disabled={reading === "Reading…"}>
+              Read {Math.min(counts.waiting, 5)} waiting screenshot{counts.waiting === 1 ? "" : "s"}
+            </button>
+          )}
           <button className="small" onClick={() => rows && downloadCsv(shown)} disabled={!rows?.length}>
             CSV of this page
           </button>
@@ -183,6 +227,7 @@ function Forms() {
       </div>
 
       {error && <div className="notice error">{error}</div>}
+      {reading && <div className="notice">{reading}</div>}
 
       <div className="card">
         <div className="toolbar">
@@ -213,6 +258,15 @@ function Forms() {
             <option value="yes">With photo</option>
             <option value="no">No photo yet</option>
           </select>
+          <select value={eci} onChange={(e) => setEci(e.target.value)} aria-label="ECI screenshot">
+            <option value="">Any ECI screenshot</option>
+            <option value="none">No ECI screenshot</option>
+            <option value="READ">ECI read</option>
+            <option value="mismatch">Name does not match</option>
+            <option value="FAILED">Could not read</option>
+            <option value="NOT_ECI">Not an ECI screenshot</option>
+            <option value="PENDING">Waiting to be read</option>
+          </select>
         </div>
 
         {rows === null ? (
@@ -228,29 +282,37 @@ function Forms() {
               <table>
                 <thead>
                   <tr>
-                    <th>Photo</th>
+                    <th>ECI / Photo</th>
                     <th>Applicant</th>
                     <th>Form</th>
                     <th>Booth</th>
                     <th>Status</th>
-                    <th>Receipt</th>
+                    <th>ECI reading</th>
                     <th>Volunteer</th>
                   </tr>
                 </thead>
                 <tbody>
                   {shown.map((f) => {
                     const url = f.photo_path ? photos[f.photo_path] : undefined;
+                    const eciUrl = f.eci_path ? photos[f.eci_path] : undefined;
                     return (
                       <tr key={f.id}>
                         <td>
-                          {url ? (
-                            <button className="photo-thumb" onClick={() => setLarge(url)} aria-label="Show photo larger">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={url} alt="" width={56} height={56} />
-                            </button>
-                          ) : (
-                            <span className="pill warn">No photo</span>
-                          )}
+                          <div className="thumbs">
+                            {eciUrl && (
+                              <button className="photo-thumb eci" onClick={() => setLarge(eciUrl)} aria-label="Show ECI screenshot larger">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={eciUrl} alt="" width={56} height={56} />
+                              </button>
+                            )}
+                            {url && (
+                              <button className="photo-thumb" onClick={() => setLarge(url)} aria-label="Show photo larger">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={url} alt="" width={56} height={56} />
+                              </button>
+                            )}
+                            {!eciUrl && !url && <span className="muted">—</span>}
+                          </div>
                         </td>
                         <td>
                           <button className="link" onClick={() => setPerson(f.voter.id)}>
@@ -277,8 +339,10 @@ function Forms() {
                           {f.route && <div className="muted small-text">{ROUTE[f.route]}</div>}
                         </td>
                         <td>
-                          {f.reference_no ?? <span className="muted">—</span>}
-                          {f.filed_on && <div className="muted small-text">{f.filed_on}</div>}
+                          <EciReading f={f} formId={f.id} onRead={() => { load(); loadCounts(); }} />
+                          {f.reference_no && f.reference_no !== f.eci_reference_no && (
+                            <div className="muted small-text">Receipt {f.reference_no}</div>
+                          )}
                         </td>
                         <td>
                           {f.filer?.name ?? "—"}
@@ -306,7 +370,7 @@ function Forms() {
       {large && (
         <div className="photo-overlay" role="dialog" aria-label="Photo" onClick={() => setLarge(null)}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={large} alt="Applicant's face photo" />
+          <img src={large} alt="Face photo or ECI screenshot" />
           <button className="small">Close</button>
         </div>
       )}

@@ -17,6 +17,7 @@ import {
   istDate,
   istTime,
   label,
+  ECI_STATUS,
 } from "@/lib/labels";
 
 export type ExportFilters = {
@@ -96,7 +97,14 @@ const VISIT_COLUMNS: Column[] = [
   ["Form route", (r) => label(ROUTE, s(r, "form_route"))],
   ["Receipt no", (r) => r.reference_no],
   ["Filed on", (r) => r.filed_on],
-  ["Photo / ECI", (r) => (r.form_type ? (r.has_photo ? "yes" : "no") : "")],
+  ["Face photo", (r) => (r.form_type ? (r.has_photo ? "yes" : "no") : "")],
+  ["ECI screenshot", (r) => (r.form_type ? (r.has_eci ? "yes" : "no") : "")],
+  ["ECI reading", (r) => label(ECI_STATUS, s(r, "eci_status"))],
+  ["ECI reference", (r) => r.eci_reference_no],
+  ["Name on ECI", (r) => r.eci_name],
+  ["Name matches", (r) => (r.eci_name_matches == null ? "" : r.eci_name_matches ? "yes" : "no")],
+  ["ECI status", (r) => r.eci_tracking_status],
+  ["ECI date", (r) => r.eci_status_date],
   ["Sent at", (r) => istTime(s(r, "received_at"))],
 ];
 
@@ -109,7 +117,14 @@ const FORM_COLUMNS: Column[] = [
   ["Filled at", (r) => istTime(s(r, "created_at"))],
   ["Filled by", (r) => r.filed_by],
   ["Filled by mobile", (r) => r.filed_by_mobile],
-  ["Photo / ECI", (r) => (r.has_photo ? "yes" : "no")],
+  ["Face photo", (r) => (r.has_photo ? "yes" : "no")],
+  ["ECI screenshot", (r) => (r.has_eci ? "yes" : "no")],
+  ["ECI reading", (r) => label(ECI_STATUS, s(r, "eci_status"))],
+  ["ECI reference", (r) => r.eci_reference_no],
+  ["Name on ECI", (r) => r.eci_name],
+  ["Name matches", (r) => (r.eci_name_matches == null ? "" : r.eci_name_matches ? "yes" : "no")],
+  ["ECI status", (r) => r.eci_tracking_status],
+  ["ECI date", (r) => r.eci_status_date],
   ...PERSON,
   ["New voter note", (r) => r.new_reason_note],
   ["Person's mobile", (r) => r.person_mobile],
