@@ -59,6 +59,9 @@ class Voters extends Table {
   // Voters added in the field: TURNED_18_THIS_YEAR or OTHER, with a note.
   TextColumn get newReason => text().nullable()();
   TextColumn get newReasonNote => text().nullable()();
+  // Part and section on the 2027 draft roll.
+  IntColumn get draftPart => integer().nullable()();
+  TextColumn get draftSection => text().nullable()();
   BoolColumn get pending => boolean().withDefault(const Constant(false))();
 
   @override
@@ -180,7 +183,7 @@ class LocalDb extends _$LocalDb {
   LocalDb(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -199,6 +202,10 @@ class LocalDb extends _$LocalDb {
         await m.addColumn(voters, voters.newReasonNote);
         await m.addColumn(forms, forms.hasPhoto);
         await m.createTable(formPhotos);
+      }
+      if (from < 5) {
+        await m.addColumn(voters, voters.draftPart);
+        await m.addColumn(voters, voters.draftSection);
       }
     },
   );

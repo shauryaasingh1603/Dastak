@@ -1609,19 +1609,19 @@ abstract class AppLocalizations {
   /// No description provided for @catHintPossHigh.
   ///
   /// In hi, this message translates to:
-  /// **'2026 की सूची में कोई मिलता-जुलता नाम नहीं मिला। नाम हटने की सबसे ज़्यादा संभावना।'**
+  /// **'ड्राफ्ट सूची (17 नवंबर) में कोई मिलता-जुलता नाम नहीं मिला। नाम हटने की सबसे ज़्यादा संभावना।'**
   String get catHintPossHigh;
 
   /// No description provided for @catHintPossMedium.
   ///
   /// In hi, this message translates to:
-  /// **'2026 की सूची में सिर्फ़ कमज़ोर मिलान मिला। नाम हटा हो सकता है।'**
+  /// **'ड्राफ्ट सूची में सिर्फ़ कमज़ोर मिलान मिला। नाम हटा हो सकता है।'**
   String get catHintPossMedium;
 
   /// No description provided for @catHintPossLow.
   ///
   /// In hi, this message translates to:
-  /// **'2026 की सूची में मिलता-जुलता नाम है, शायद नाम अभी भी दर्ज है। भेंट से पहले नीचे की प्रविष्टि जाँचें।'**
+  /// **'ड्राफ्ट सूची में मिलता-जुलता नाम है, शायद नाम अभी भी दर्ज है। भेंट से पहले नीचे की प्रविष्टि जाँचें।'**
   String get catHintPossLow;
 
   /// No description provided for @catHintAdded.
@@ -1645,7 +1645,7 @@ abstract class AppLocalizations {
   /// No description provided for @closestEntry.
   ///
   /// In hi, this message translates to:
-  /// **'2026 सूची में मिलती-जुलती प्रविष्टि: {entry}'**
+  /// **'सूची में मिलती-जुलती प्रविष्टि (पहले जाँचें): {entry}'**
   String closestEntry(String entry);
 
   /// No description provided for @searchTitle.
@@ -1851,6 +1851,30 @@ abstract class AppLocalizations {
   /// In hi, this message translates to:
   /// **'जिनका नाम सूची में नहीं है, जैसे जो इस साल 18 के हुए'**
   String get newVoterOpenHint;
+
+  /// No description provided for @catOnDraftRoll.
+  ///
+  /// In hi, this message translates to:
+  /// **'ड्राफ्ट सूची में नाम है'**
+  String get catOnDraftRoll;
+
+  /// No description provided for @catHintOnDraftRoll.
+  ///
+  /// In hi, this message translates to:
+  /// **'17 नवंबर की ड्राफ्ट सूची में नाम मिल गया है, भेंट ज़रूरी नहीं। नीचे लिखी प्रविष्टि से मिलान कर लें।'**
+  String get catHintOnDraftRoll;
+
+  /// No description provided for @draftPartLine.
+  ///
+  /// In hi, this message translates to:
+  /// **'2027 ड्राफ्ट सूची: भाग {part}'**
+  String draftPartLine(int part);
+
+  /// No description provided for @draftPartSectionLine.
+  ///
+  /// In hi, this message translates to:
+  /// **'2027 ड्राफ्ट सूची: भाग {part}, सेक्शन {section}'**
+  String draftPartSectionLine(int part, String section);
 }
 
 class _AppLocalizationsDelegate

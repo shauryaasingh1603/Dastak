@@ -132,6 +132,8 @@ class Voter {
     this.closest2026,
     this.newReason,
     this.newReasonNote,
+    this.draftPart,
+    this.draftSection,
     this.pending = false,
   });
 
@@ -155,6 +157,10 @@ class Voter {
   /// Added in the field: [NewReason] code and an optional note.
   final String? newReason;
   final String? newReasonNote;
+
+  /// Part and section on the 2027 draft roll (published 17 Nov 2026).
+  final int? draftPart;
+  final String? draftSection;
   final bool pending;
 
   bool get isNew => sourceList == 'NEW';
@@ -183,6 +189,7 @@ abstract final class VoterCategory {
   static const deceased = 'DECEASED';
   static const duplicate = 'DUPLICATE';
   static const alreadyBack = 'ALREADY_BACK';
+  static const onDraftRoll = 'ON_DRAFT_ROLL';
   static const possHigh = 'POSS_HIGH';
   static const possMedium = 'POSS_MEDIUM';
   static const possLow = 'POSS_LOW';
@@ -198,8 +205,13 @@ abstract final class VoterCategory {
     deceased,
     duplicate,
     alreadyBack,
+    onDraftRoll,
     added,
   ];
+
+  /// Already on a roll again: listed for reference, no visit needed.
+  static bool noVisitNeeded(String code) =>
+      code == alreadyBack || code == onDraftRoll;
 }
 
 class VisitMember {

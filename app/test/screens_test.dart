@@ -495,8 +495,9 @@ void main() {
     await tester.pumpWidget(h.wrap(const PersonScreen(voterId: 'v1')));
     await tester.pumpAndSettle();
     expect(find.text('शायद सूची में है'), findsOneWidget);
+    expect(find.text('2027 ड्राफ्ट सूची: भाग 24, सेक्शन 3'), findsOneWidget);
     expect(
-      find.textContaining('2026 सूची में मिलती-जुलती प्रविष्टि'),
+      find.textContaining('मिलती-जुलती प्रविष्टि (पहले जाँचें)'),
       findsOneWidget,
     );
   });

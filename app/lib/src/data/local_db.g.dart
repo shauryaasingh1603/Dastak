@@ -973,6 +973,28 @@ class $VotersTable extends Voters with TableInfo<$VotersTable, VoterRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _draftPartMeta = const VerificationMeta(
+    'draftPart',
+  );
+  @override
+  late final GeneratedColumn<int> draftPart = GeneratedColumn<int>(
+    'draft_part',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _draftSectionMeta = const VerificationMeta(
+    'draftSection',
+  );
+  @override
+  late final GeneratedColumn<String> draftSection = GeneratedColumn<String>(
+    'draft_section',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _pendingMeta = const VerificationMeta(
     'pending',
   );
@@ -1008,6 +1030,8 @@ class $VotersTable extends Voters with TableInfo<$VotersTable, VoterRow> {
     closest2026,
     newReason,
     newReasonNote,
+    draftPart,
+    draftSection,
     pending,
   ];
   @override
@@ -1153,6 +1177,21 @@ class $VotersTable extends Voters with TableInfo<$VotersTable, VoterRow> {
         ),
       );
     }
+    if (data.containsKey('draft_part')) {
+      context.handle(
+        _draftPartMeta,
+        draftPart.isAcceptableOrUnknown(data['draft_part']!, _draftPartMeta),
+      );
+    }
+    if (data.containsKey('draft_section')) {
+      context.handle(
+        _draftSectionMeta,
+        draftSection.isAcceptableOrUnknown(
+          data['draft_section']!,
+          _draftSectionMeta,
+        ),
+      );
+    }
     if (data.containsKey('pending')) {
       context.handle(
         _pendingMeta,
@@ -1240,6 +1279,14 @@ class $VotersTable extends Voters with TableInfo<$VotersTable, VoterRow> {
         DriftSqlType.string,
         data['${effectivePrefix}new_reason_note'],
       ),
+      draftPart: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}draft_part'],
+      ),
+      draftSection: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}draft_section'],
+      ),
       pending: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}pending'],
@@ -1272,6 +1319,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
   final String? closest2026;
   final String? newReason;
   final String? newReasonNote;
+  final int? draftPart;
+  final String? draftSection;
   final bool pending;
   const VoterRow({
     required this.id,
@@ -1292,6 +1341,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     this.closest2026,
     this.newReason,
     this.newReasonNote,
+    this.draftPart,
+    this.draftSection,
     required this.pending,
   });
   @override
@@ -1341,6 +1392,12 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     if (!nullToAbsent || newReasonNote != null) {
       map['new_reason_note'] = Variable<String>(newReasonNote);
     }
+    if (!nullToAbsent || draftPart != null) {
+      map['draft_part'] = Variable<int>(draftPart);
+    }
+    if (!nullToAbsent || draftSection != null) {
+      map['draft_section'] = Variable<String>(draftSection);
+    }
     map['pending'] = Variable<bool>(pending);
     return map;
   }
@@ -1387,6 +1444,12 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
       newReasonNote: newReasonNote == null && nullToAbsent
           ? const Value.absent()
           : Value(newReasonNote),
+      draftPart: draftPart == null && nullToAbsent
+          ? const Value.absent()
+          : Value(draftPart),
+      draftSection: draftSection == null && nullToAbsent
+          ? const Value.absent()
+          : Value(draftSection),
       pending: Value(pending),
     );
   }
@@ -1415,6 +1478,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
       closest2026: serializer.fromJson<String?>(json['closest2026']),
       newReason: serializer.fromJson<String?>(json['newReason']),
       newReasonNote: serializer.fromJson<String?>(json['newReasonNote']),
+      draftPart: serializer.fromJson<int?>(json['draftPart']),
+      draftSection: serializer.fromJson<String?>(json['draftSection']),
       pending: serializer.fromJson<bool>(json['pending']),
     );
   }
@@ -1440,6 +1505,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
       'closest2026': serializer.toJson<String?>(closest2026),
       'newReason': serializer.toJson<String?>(newReason),
       'newReasonNote': serializer.toJson<String?>(newReasonNote),
+      'draftPart': serializer.toJson<int?>(draftPart),
+      'draftSection': serializer.toJson<String?>(draftSection),
       'pending': serializer.toJson<bool>(pending),
     };
   }
@@ -1463,6 +1530,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     Value<String?> closest2026 = const Value.absent(),
     Value<String?> newReason = const Value.absent(),
     Value<String?> newReasonNote = const Value.absent(),
+    Value<int?> draftPart = const Value.absent(),
+    Value<String?> draftSection = const Value.absent(),
     bool? pending,
   }) => VoterRow(
     id: id ?? this.id,
@@ -1489,6 +1558,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     newReasonNote: newReasonNote.present
         ? newReasonNote.value
         : this.newReasonNote,
+    draftPart: draftPart.present ? draftPart.value : this.draftPart,
+    draftSection: draftSection.present ? draftSection.value : this.draftSection,
     pending: pending ?? this.pending,
   );
   VoterRow copyWithCompanion(VotersCompanion data) {
@@ -1527,6 +1598,10 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
       newReasonNote: data.newReasonNote.present
           ? data.newReasonNote.value
           : this.newReasonNote,
+      draftPart: data.draftPart.present ? data.draftPart.value : this.draftPart,
+      draftSection: data.draftSection.present
+          ? data.draftSection.value
+          : this.draftSection,
       pending: data.pending.present ? data.pending.value : this.pending,
     );
   }
@@ -1552,13 +1627,15 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
           ..write('closest2026: $closest2026, ')
           ..write('newReason: $newReason, ')
           ..write('newReasonNote: $newReasonNote, ')
+          ..write('draftPart: $draftPart, ')
+          ..write('draftSection: $draftSection, ')
           ..write('pending: $pending')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     familyId,
     epic,
@@ -1577,8 +1654,10 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
     closest2026,
     newReason,
     newReasonNote,
+    draftPart,
+    draftSection,
     pending,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1601,6 +1680,8 @@ class VoterRow extends DataClass implements Insertable<VoterRow> {
           other.closest2026 == this.closest2026 &&
           other.newReason == this.newReason &&
           other.newReasonNote == this.newReasonNote &&
+          other.draftPart == this.draftPart &&
+          other.draftSection == this.draftSection &&
           other.pending == this.pending);
 }
 
@@ -1623,6 +1704,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
   final Value<String?> closest2026;
   final Value<String?> newReason;
   final Value<String?> newReasonNote;
+  final Value<int?> draftPart;
+  final Value<String?> draftSection;
   final Value<bool> pending;
   final Value<int> rowid;
   const VotersCompanion({
@@ -1644,6 +1727,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     this.closest2026 = const Value.absent(),
     this.newReason = const Value.absent(),
     this.newReasonNote = const Value.absent(),
+    this.draftPart = const Value.absent(),
+    this.draftSection = const Value.absent(),
     this.pending = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -1666,6 +1751,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     this.closest2026 = const Value.absent(),
     this.newReason = const Value.absent(),
     this.newReasonNote = const Value.absent(),
+    this.draftPart = const Value.absent(),
+    this.draftSection = const Value.absent(),
     this.pending = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -1691,6 +1778,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     Expression<String>? closest2026,
     Expression<String>? newReason,
     Expression<String>? newReasonNote,
+    Expression<int>? draftPart,
+    Expression<String>? draftSection,
     Expression<bool>? pending,
     Expression<int>? rowid,
   }) {
@@ -1713,6 +1802,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
       if (closest2026 != null) 'closest2026': closest2026,
       if (newReason != null) 'new_reason': newReason,
       if (newReasonNote != null) 'new_reason_note': newReasonNote,
+      if (draftPart != null) 'draft_part': draftPart,
+      if (draftSection != null) 'draft_section': draftSection,
       if (pending != null) 'pending': pending,
       if (rowid != null) 'rowid': rowid,
     });
@@ -1737,6 +1828,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     Value<String?>? closest2026,
     Value<String?>? newReason,
     Value<String?>? newReasonNote,
+    Value<int?>? draftPart,
+    Value<String?>? draftSection,
     Value<bool>? pending,
     Value<int>? rowid,
   }) {
@@ -1759,6 +1852,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
       closest2026: closest2026 ?? this.closest2026,
       newReason: newReason ?? this.newReason,
       newReasonNote: newReasonNote ?? this.newReasonNote,
+      draftPart: draftPart ?? this.draftPart,
+      draftSection: draftSection ?? this.draftSection,
       pending: pending ?? this.pending,
       rowid: rowid ?? this.rowid,
     );
@@ -1821,6 +1916,12 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
     if (newReasonNote.present) {
       map['new_reason_note'] = Variable<String>(newReasonNote.value);
     }
+    if (draftPart.present) {
+      map['draft_part'] = Variable<int>(draftPart.value);
+    }
+    if (draftSection.present) {
+      map['draft_section'] = Variable<String>(draftSection.value);
+    }
     if (pending.present) {
       map['pending'] = Variable<bool>(pending.value);
     }
@@ -1851,6 +1952,8 @@ class VotersCompanion extends UpdateCompanion<VoterRow> {
           ..write('closest2026: $closest2026, ')
           ..write('newReason: $newReason, ')
           ..write('newReasonNote: $newReasonNote, ')
+          ..write('draftPart: $draftPart, ')
+          ..write('draftSection: $draftSection, ')
           ..write('pending: $pending, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -5291,6 +5394,8 @@ typedef $$VotersTableCreateCompanionBuilder = VotersCompanion Function({
   Value<String?> closest2026,
   Value<String?> newReason,
   Value<String?> newReasonNote,
+  Value<int?> draftPart,
+  Value<String?> draftSection,
   Value<bool> pending,
   Value<int> rowid,
 });
@@ -5313,6 +5418,8 @@ typedef $$VotersTableUpdateCompanionBuilder = VotersCompanion Function({
   Value<String?> closest2026,
   Value<String?> newReason,
   Value<String?> newReasonNote,
+  Value<int?> draftPart,
+  Value<String?> draftSection,
   Value<bool> pending,
   Value<int> rowid,
 });
@@ -5412,6 +5519,16 @@ class $$VotersTableFilterComposer extends Composer<_$LocalDb, $VotersTable> {
 
   ColumnFilters<String> get newReasonNote => $composableBuilder(
     column: $table.newReasonNote,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get draftPart => $composableBuilder(
+    column: $table.draftPart,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get draftSection => $composableBuilder(
+    column: $table.draftSection,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5519,6 +5636,16 @@ class $$VotersTableOrderingComposer extends Composer<_$LocalDb, $VotersTable> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get draftPart => $composableBuilder(
+    column: $table.draftPart,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get draftSection => $composableBuilder(
+    column: $table.draftSection,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get pending => $composableBuilder(
     column: $table.pending,
     builder: (column) => ColumnOrderings(column),
@@ -5604,6 +5731,14 @@ class $$VotersTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get draftPart =>
+      $composableBuilder(column: $table.draftPart, builder: (column) => column);
+
+  GeneratedColumn<String> get draftSection => $composableBuilder(
+    column: $table.draftSection,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get pending =>
       $composableBuilder(column: $table.pending, builder: (column) => column);
 }
@@ -5654,6 +5789,8 @@ class $$VotersTableTableManager
                 Value<String?> closest2026 = const Value.absent(),
                 Value<String?> newReason = const Value.absent(),
                 Value<String?> newReasonNote = const Value.absent(),
+                Value<int?> draftPart = const Value.absent(),
+                Value<String?> draftSection = const Value.absent(),
                 Value<bool> pending = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VotersCompanion(
@@ -5675,6 +5812,8 @@ class $$VotersTableTableManager
                 closest2026: closest2026,
                 newReason: newReason,
                 newReasonNote: newReasonNote,
+                draftPart: draftPart,
+                draftSection: draftSection,
                 pending: pending,
                 rowid: rowid,
               ),
@@ -5698,6 +5837,8 @@ class $$VotersTableTableManager
                 Value<String?> closest2026 = const Value.absent(),
                 Value<String?> newReason = const Value.absent(),
                 Value<String?> newReasonNote = const Value.absent(),
+                Value<int?> draftPart = const Value.absent(),
+                Value<String?> draftSection = const Value.absent(),
                 Value<bool> pending = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => VotersCompanion.insert(
@@ -5719,6 +5860,8 @@ class $$VotersTableTableManager
                 closest2026: closest2026,
                 newReason: newReason,
                 newReasonNote: newReasonNote,
+                draftPart: draftPart,
+                draftSection: draftSection,
                 pending: pending,
                 rowid: rowid,
               ),

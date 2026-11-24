@@ -98,6 +98,16 @@ class PersonScreen extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                      if (voter.draftPart != null)
+                        Text(
+                          voter.draftSection == null
+                              ? l10n.draftPartLine(voter.draftPart!)
+                              : l10n.draftPartSectionLine(
+                                  voter.draftPart!,
+                                  voter.draftSection!,
+                                ),
+                          style: muted,
+                        ),
                       if (voter.closest2026 != null) ...[
                         const SizedBox(height: 4),
                         Text(

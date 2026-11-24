@@ -851,15 +851,15 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get catHintPossHigh =>
-      '2026 की सूची में कोई मिलता-जुलता नाम नहीं मिला। नाम हटने की सबसे ज़्यादा संभावना।';
+      'ड्राफ्ट सूची (17 नवंबर) में कोई मिलता-जुलता नाम नहीं मिला। नाम हटने की सबसे ज़्यादा संभावना।';
 
   @override
   String get catHintPossMedium =>
-      '2026 की सूची में सिर्फ़ कमज़ोर मिलान मिला। नाम हटा हो सकता है।';
+      'ड्राफ्ट सूची में सिर्फ़ कमज़ोर मिलान मिला। नाम हटा हो सकता है।';
 
   @override
   String get catHintPossLow =>
-      '2026 की सूची में मिलता-जुलता नाम है, शायद नाम अभी भी दर्ज है। भेंट से पहले नीचे की प्रविष्टि जाँचें।';
+      'ड्राफ्ट सूची में मिलता-जुलता नाम है, शायद नाम अभी भी दर्ज है। भेंट से पहले नीचे की प्रविष्टि जाँचें।';
 
   @override
   String get catHintAdded => 'मैदान में जोड़ा गया नया मतदाता।';
@@ -872,7 +872,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String closestEntry(String entry) {
-    return '2026 सूची में मिलती-जुलती प्रविष्टि: $entry';
+    return 'सूची में मिलती-जुलती प्रविष्टि (पहले जाँचें): $entry';
   }
 
   @override
@@ -987,4 +987,21 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get newVoterOpenHint =>
       'जिनका नाम सूची में नहीं है, जैसे जो इस साल 18 के हुए';
+
+  @override
+  String get catOnDraftRoll => 'ड्राफ्ट सूची में नाम है';
+
+  @override
+  String get catHintOnDraftRoll =>
+      '17 नवंबर की ड्राफ्ट सूची में नाम मिल गया है, भेंट ज़रूरी नहीं। नीचे लिखी प्रविष्टि से मिलान कर लें।';
+
+  @override
+  String draftPartLine(int part) {
+    return '2027 ड्राफ्ट सूची: भाग $part';
+  }
+
+  @override
+  String draftPartSectionLine(int part, String section) {
+    return '2027 ड्राफ्ट सूची: भाग $part, सेक्शन $section';
+  }
 }

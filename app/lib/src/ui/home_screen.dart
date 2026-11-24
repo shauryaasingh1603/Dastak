@@ -86,11 +86,11 @@ class HomeScreen extends StatelessWidget {
               if (v.byMe && Ist.day(v.visitedAt) == today)
                 for (final m in v.members) m.voterId,
           }.length;
-          // People already back on the April-2026 roll need no visit.
+          // People already back on a roll need no visit.
           final remaining = data.voters
               .where(
                 (v) =>
-                    v.categoryCode != VoterCategory.alreadyBack &&
+                    !VoterCategory.noVisitNeeded(v.categoryCode) &&
                     data.personStatus(v.id) == FamilyStatus.pending,
               )
               .length;

@@ -141,6 +141,11 @@ CodeLabel categoryLabel(AppLocalizations l10n, String code) => switch (code) {
     Icons.verified_outlined,
     const Color(0xFF1F7A4D),
   ),
+  VoterCategory.onDraftRoll => CodeLabel(
+    l10n.catOnDraftRoll,
+    Icons.how_to_reg_outlined,
+    const Color(0xFF1F7A4D),
+  ),
   VoterCategory.possHigh => CodeLabel(
     l10n.catPossHigh,
     Icons.report_outlined,
@@ -170,6 +175,7 @@ String categoryHint(AppLocalizations l10n, String code) => switch (code) {
   VoterCategory.deceased => l10n.catHintDeceased,
   VoterCategory.duplicate => l10n.catHintDuplicate,
   VoterCategory.alreadyBack => l10n.catHintAlreadyBack,
+  VoterCategory.onDraftRoll => l10n.catHintOnDraftRoll,
   VoterCategory.possHigh => l10n.catHintPossHigh,
   VoterCategory.possMedium => l10n.catHintPossMedium,
   VoterCategory.possLow => l10n.catHintPossLow,

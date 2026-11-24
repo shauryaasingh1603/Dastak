@@ -76,6 +76,8 @@ Map<String, dynamic> sampleSnapshot({
       'epic': 'MOCK0000001',
       'name_hi': 'रामलाल यादव',
       'category': 'POSS_LOW',
+      'draft_part': 24,
+      'draft_section': '3',
       'closest_2026': 'रामलाल यादव / श्याम यादव (भाग 22)',
       'relation_type': 'F',
       'relative_name_hi': 'श्याम यादव',

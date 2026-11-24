@@ -21,6 +21,7 @@ type Dashboard = {
   totals: {
     people: number;
     already_back: number;
+    on_draft_roll: number;
     attempted: number;
     reached: number;
     visits: number;
@@ -136,6 +137,7 @@ const CATEGORY: Record<string, string> = {
   DECEASED: "Deceased (verify with family)",
   DUPLICATE: "Duplicate (check enrolment elsewhere)",
   ALREADY_BACK: "Already back on the roll (no visit)",
+  ON_DRAFT_ROLL: "On the 17 Nov draft roll (no visit)",
   POSS_HIGH: "Possibly deleted: high",
   POSS_MEDIUM: "Possibly deleted: medium",
   POSS_LOW: "Possibly deleted: low (check first)",
@@ -273,7 +275,7 @@ function DashboardView() {
         <Tile
           label="People reached"
           value={`${n(t.reached)} / ${n(t.people)}`}
-          sub={`${pct(t.reached, t.people)} reached · ${n(t.attempted)} visited at least once · ${n(t.already_back)} already back on the roll, not counted`}
+          sub={`${pct(t.reached, t.people)} reached · ${n(t.attempted)} visited at least once · ${n(t.already_back + (t.on_draft_roll ?? 0))} already back on a roll, not counted`}
         >
           <Meter value={t.reached} total={t.people} />
         </Tile>

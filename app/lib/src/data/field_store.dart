@@ -217,6 +217,8 @@ class FieldStore extends ChangeNotifier {
             closest2026: v.closest2026,
             newReason: v.newReason,
             newReasonNote: v.newReasonNote,
+            draftPart: v.draftPart,
+            draftSection: v.draftSection,
             pending: v.pending,
           ),
       ],
@@ -877,6 +879,8 @@ class FieldStore extends ChangeNotifier {
               closest2026: Value(r['closest_2026'] as String?),
               newReason: Value(r['new_reason'] as String?),
               newReasonNote: Value(r['new_reason_note'] as String?),
+              draftPart: Value(r['draft_part'] as int?),
+              draftSection: Value(r['draft_section'] as String?),
             ),
         ]);
         b.insertAll(db.visits, mode: InsertMode.insertOrReplace, [

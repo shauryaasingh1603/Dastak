@@ -129,6 +129,19 @@ token was expired and the functions closed to the public afterwards.
 Every listed person is their own record; households are confirmed in the
 field. Never commit the workbook or anything in `tools/import/out/`.
 
+Version 2 of the workbook (re-checked against the draft roll of 17 Nov
+2026) was applied on 24 Nov 2026 without touching anyone's visits:
+
+```bash
+python3 -I tools/import/update_v2.py AC371_Zafrabad_Visit_List_v2_DraftRoll_aligned.xlsx
+DASTAK_IMPORT_TOKEN_FILE=<token file> python3 -I tools/import/send.py --v2
+```
+
+It added 3,369 newly found possibly deleted people, moved 3,106 people
+found on the draft roll to the category ON_DRAFT_ROLL (no visit; the
+matched draft entry is kept to check), re-graded the possibly deleted, and
+stored everyone's 2027 draft part and section. 82,343 people in all.
+
 ## Backend
 
 Supabase project `dastak` (Mumbai, `ap-south-1`). Schema changes go in
