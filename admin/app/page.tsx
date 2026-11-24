@@ -198,6 +198,29 @@ function Tile({ label, value, sub, children }: { label: string; value: string; s
   );
 }
 
+/** Flags waiting for review: shown at the top so they are not missed. */
+function FlagsNotice() {
+  const [flags, setFlags] = useState<{ open: number; high: number } | null>(null);
+  useEffect(() => {
+    let active = true;
+    const load = () =>
+      supabase.rpc("admin_open_flags").then(({ data }) => active && data && setFlags(data as { open: number; high: number }));
+    load();
+    const timer = setInterval(load, 60_000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, []);
+  if (!flags || flags.open === 0) return null;
+  return (
+    <div className={`notice ${flags.high > 0 ? "error" : "info"}`}>
+      {flags.open} flag{flags.open > 1 ? "s" : ""} to review
+      {flags.high > 0 && `, ${flags.high} serious`}. <Link href="/flags">Open flags</Link>
+    </div>
+  );
+}
+
 function DashboardView() {
   const [data, setData] = useState<Dashboard | null>(null);
   const [error, setError] = useState("");
@@ -250,7 +273,6 @@ function DashboardView() {
   const daysLeft = Math.max(0, Math.ceil((closeAt - now) / 86_400_000));
   const left = t.people - t.reached;
   const neededPerDay = daysLeft > 0 ? Math.ceil(left / daysLeft) : left;
-  const teamTarget = t.field_users * data.settings.daily_people_target;
   const formsTotal = Object.values(data.forms.by_type).reduce((a, b) => a + b, 0);
   const formsSubmitted = formsTotal - (data.forms.by_status.FILLED ?? 0);
   const outcomesTotal = Object.values(data.outcomes).reduce((a, b) => a + b, 0);
@@ -276,6 +298,7 @@ function DashboardView() {
       </div>
 
       {error && <div className="notice error">{error}</div>}
+      <FlagsNotice />
       {t.pending_sign_ins > 0 && (
         <div className="notice info">
           {t.pending_sign_ins} sign-in request{t.pending_sign_ins > 1 ? "s are" : " is"} waiting.{" "}
@@ -294,10 +317,8 @@ function DashboardView() {
         <Tile
           label="Visited today"
           value={`${n(t.people_today)} people`}
-          sub={`${n(t.people_met_today ?? 0)} met, ${n(t.people_today - (t.people_met_today ?? 0))} not met · ${n(t.visits_today)} visits · ${t.active_today} of ${t.field_users} volunteers out · team target ${n(teamTarget)}`}
-        >
-          <Meter value={t.people_today} total={teamTarget} />
-        </Tile>
+          sub={`${n(t.people_met_today ?? 0)} met, ${n(t.people_today - (t.people_met_today ?? 0))} not met · ${n(t.visits_today)} visits · ${t.active_today} of ${t.field_users} volunteers out`}
+        />
         <Tile
           label="Claim forms"
           value={n(formsTotal)}
@@ -319,7 +340,6 @@ function DashboardView() {
             rows={data.daily}
             series={[{ key: "people", label: "People", color: BLUE }]}
             xLabel={(r) => dayLabel(r.day)}
-            reference={teamTarget > 0 ? { value: teamTarget, label: `Team target ${n(teamTarget)}` } : undefined}
             emptyText="No visits yet"
             tooltip={(r) => ({
               title: dayLabel(r.day),
@@ -436,7 +456,7 @@ function DashboardView() {
         </p>
       </section>
 
-      <VolunteersTable volunteers={data.volunteers} target={data.settings.daily_people_target} now={now} />
+      <VolunteersTable volunteers={data.volunteers} now={now} />
       <BoothsTable booths={data.booths} now={now} />
       <RecentVisits recent={data.recent} now={now} />
     </div>
@@ -455,7 +475,7 @@ function Attention({ count, tone, label, hint }: { count: number; tone: string; 
   );
 }
 
-function VolunteersTable({ volunteers, target, now }: { volunteers: Volunteer[]; target: number; now: number }) {
+function VolunteersTable({ volunteers, now }: { volunteers: Volunteer[]; now: number }) {
   const rows = useMemo(
     () =>
       [...volunteers]
@@ -503,7 +523,7 @@ function VolunteersTable({ volunteers, target, now }: { volunteers: Volunteer[];
               <tr>
                 <th>Name</th>
                 <th>Booths</th>
-                <th>Today (target {target})</th>
+                <th className="num">People today</th>
                 <th className="num">People total</th>
                 <th className="num">Forms</th>
                 <th>Last visit</th>
@@ -519,12 +539,7 @@ function VolunteersTable({ volunteers, target, now }: { volunteers: Volunteer[];
                     <div className="muted small-text">{ROLE_LABEL[v.role] ?? v.role}</div>
                   </td>
                   <td>{v.booths.length ? v.booths.join(", ") : <span className="muted">none</span>}</td>
-                  <td>
-                    <div className="today-cell">
-                      <Meter value={v.people_today} total={target} tone={v.people_today >= target ? "ok" : undefined} />
-                      <span>{v.people_today}</span>
-                    </div>
-                  </td>
+                  <td className="num">{n(v.people_today)}</td>
                   <td className="num">{n(v.people_total)}</td>
                   <td className="num">
                     {v.forms}

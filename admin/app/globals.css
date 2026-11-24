@@ -1214,3 +1214,66 @@ button.small.selected {
 .warn-text {
   color: var(--warn);
 }
+
+/* Flags */
+.flag-card {
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.flag-card.sev-high {
+  border-left-color: var(--bad);
+}
+
+.flag-card.sev-medium {
+  border-left-color: var(--warn);
+}
+
+.flag-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.flag-summary {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.flag-people {
+  margin-top: 2px;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 3px 10px;
+  font-size: 13px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--accent, #b4441f);
+}
+
+.flag-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.flag-actions input {
+  flex: 1 1 200px;
+  min-width: 0;
+}

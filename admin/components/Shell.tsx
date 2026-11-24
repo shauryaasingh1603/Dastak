@@ -25,6 +25,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [admin, setAdmin] = useState<Admin | null>(null);
   const [pending, setPending] = useState(0);
+  const [openFlags, setOpenFlags] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -79,6 +80,22 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     };
   }, [admin]);
 
+  // Flags waiting for review, for the badge on "Flags".
+  useEffect(() => {
+    if (!admin) return;
+    let active = true;
+    async function count() {
+      const { data } = await supabase.rpc("admin_open_flags");
+      if (active && data) setOpenFlags((data as { open: number }).open);
+    }
+    count();
+    const timer = setInterval(count, 30_000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [admin, pathname]);
+
   if (!admin) {
     return (
       <div className="center">
@@ -92,6 +109,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     { href: "/activity", label: "Activity", count: 0 },
     { href: "/requests", label: "Sign-in requests", count: pending },
     { href: "/forms", label: "Forms", count: 0 },
+    { href: "/flags", label: "Flags", count: openFlags },
     { href: "/volunteers", label: "Field team", count: 0 },
     { href: "/admins", label: "Admins", count: 0 },
   ];
