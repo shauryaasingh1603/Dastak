@@ -60,7 +60,7 @@ begin
   -- People per booth, priority and category change only when the list
   -- does (imports, voters added in the field): recount them only then.
   if v_state.summary_stale then
-    delete from private.people_summary;
+    delete from private.people_summary where true; -- API requests need a WHERE (safeupdate)
     insert into private.people_summary (part_no, priority, category, people)
     select f.part_no, f.priority, vo.category, count(*)
     from public.voters vo join public.families f on f.id = vo.family_id
