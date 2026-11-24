@@ -1241,7 +1241,7 @@ void main() {
     addTearDown(() => FacePhotoField.take = takeWithCamera);
     await tester.pumpWidget(h.wrap(const VisitFormScreen(voterId: 'v4')));
     await tester.pumpAndSettle();
-    expect(find.text('चेहरे की फ़ोटो'), findsNothing);
+    expect(find.text('चेहरे की फ़ोटो / ECI स्क्रीनशॉट'), findsNothing);
 
     await contactRefused(tester);
     await tapAndSettle(
@@ -1249,9 +1249,9 @@ void main() {
       find.widgetWithText(ChoiceChip, 'पात्र – फॉर्म भराना है'),
     );
     await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'फॉर्म 6'));
-    expect(find.text('चेहरे की फ़ोटो'), findsOneWidget);
-    await tapAndSettle(tester, find.text('फ़ोटो लें'));
-    expect(find.text('दोबारा लें'), findsOneWidget);
+    expect(find.text('चेहरे की फ़ोटो / ECI स्क्रीनशॉट'), findsOneWidget);
+    await tapAndSettle(tester, find.text('फ़ोटो लें / ECI अपलोड करें'));
+    expect(find.text('बदलें'), findsOneWidget);
     await save(tester);
     await settle(tester);
 

@@ -1723,25 +1723,25 @@ abstract class AppLocalizations {
   /// No description provided for @photoTitle.
   ///
   /// In hi, this message translates to:
-  /// **'चेहरे की फ़ोटो'**
+  /// **'चेहरे की फ़ोटो / ECI स्क्रीनशॉट'**
   String get photoTitle;
 
   /// No description provided for @photoHint.
   ///
   /// In hi, this message translates to:
-  /// **'फ़ॉर्म के लिए। व्यक्ति से पूछकर लें: चेहरा सामने से, अच्छी रोशनी में, सादी दीवार के आगे।'**
+  /// **'व्यक्ति से पूछकर चेहरे की फ़ोटो लें (सामने से, अच्छी रोशनी में), या ECI वेबसाइट का स्क्रीनशॉट अपलोड करें।'**
   String get photoHint;
 
   /// No description provided for @photoTake.
   ///
   /// In hi, this message translates to:
-  /// **'फ़ोटो लें'**
+  /// **'फ़ोटो लें / ECI अपलोड करें'**
   String get photoTake;
 
   /// No description provided for @photoRetake.
   ///
   /// In hi, this message translates to:
-  /// **'दोबारा लें'**
+  /// **'बदलें'**
   String get photoRetake;
 
   /// No description provided for @photoRemove.
@@ -1771,7 +1771,7 @@ abstract class AppLocalizations {
   /// No description provided for @photoFailed.
   ///
   /// In hi, this message translates to:
-  /// **'कैमरा नहीं खुला। दोबारा कोशिश करें।'**
+  /// **'फ़ोटो नहीं खुली। दोबारा कोशिश करें।'**
   String get photoFailed;
 
   /// No description provided for @photoSaved.

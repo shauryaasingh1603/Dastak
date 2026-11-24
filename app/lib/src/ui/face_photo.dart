@@ -1,21 +1,26 @@
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/app_localizations.dart';
 
-/// Opens the camera (front camera where the phone allows) and returns a
-/// small JPEG, or null if the volunteer cancelled. Replaced in tests.
+/// Lets the volunteer take a photo or pick an image (such as a screenshot
+/// from the ECI website) and returns it, or null if they cancelled.
+/// Replaced in tests.
 typedef PhotoTaker = Future<Uint8List?> Function();
 
 Future<Uint8List?> takeWithCamera() async {
   final file = await ImagePicker().pickImage(
-    source: ImageSource.camera,
+    // In the browser this opens the phone's own chooser: camera, photos or
+    // files, so one button covers a new photo and an ECI screenshot.
+    source: kIsWeb ? ImageSource.gallery : ImageSource.camera,
     preferredCameraDevice: CameraDevice.front,
-    // About 60–120 KB: enough for the form, light on mobile data.
-    maxWidth: 720,
-    maxHeight: 720,
+    // Large enough to read an ECI screenshot, still light on data
+    // (about 100–300 KB).
+    maxWidth: 1280,
+    maxHeight: 1600,
     imageQuality: 75,
   );
   return file?.readAsBytes();

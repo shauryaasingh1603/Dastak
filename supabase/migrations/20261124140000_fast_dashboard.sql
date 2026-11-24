@@ -146,6 +146,8 @@ begin
         'visits', (select count(*) from live_visits),
         'visits_today', (select count(*) from live_visits where day = v_today),
         'people_today', (select count(distinct voter_id) from visit_people where day = v_today),
+        'people_met_today', (select count(distinct voter_id) from visit_people
+                             where day = v_today and voter_outcome <> 'NOT_MET'),
         'new_voters', (select coalesce(sum(people), 0) from listed where category = 'NEW'),
         'contacts_given', (select count(*) from live_visits where contact_mobile is not null),
         'contacts_refused', (select count(*) from live_visits where contact_refused),

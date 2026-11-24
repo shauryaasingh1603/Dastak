@@ -702,12 +702,26 @@ table.mini td {
   border-bottom: 1px solid #f0ede6;
 }
 
+/* Label | meter | count: labels wrap so the table never leaves its card. */
+table.mini {
+  table-layout: fixed;
+}
+
 table.mini td:first-child {
-  white-space: nowrap;
+  width: 52%;
+  overflow-wrap: anywhere;
 }
 
 table.mini td.grow {
-  width: 100%;
+  width: 22%;
+}
+
+table.mini td.grow .meter {
+  min-width: 0;
+}
+
+table.mini td.num {
+  width: 26%;
 }
 
 td.num,

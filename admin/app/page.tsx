@@ -27,6 +27,7 @@ type Dashboard = {
     visits: number;
     visits_today: number;
     people_today: number;
+    people_met_today?: number;
     new_voters: number;
     contacts_given: number;
     contacts_refused: number;
@@ -284,16 +285,16 @@ function DashboardView() {
 
       <section className="tiles">
         <Tile
-          label="People reached"
+          label="People met"
           value={`${n(t.reached)} / ${n(t.people)}`}
-          sub={`${pct(t.reached, t.people)} reached · ${n(t.attempted)} visited at least once · ${n(t.already_back + (t.on_draft_roll ?? 0))} already back on a roll, not counted`}
+          sub={`${pct(t.reached, t.people)} of the list met · ${n(t.attempted)} visited at least once, ${n(t.attempted - t.reached)} of them not met yet`}
         >
           <Meter value={t.reached} total={t.people} />
         </Tile>
         <Tile
-          label="Today"
+          label="Visited today"
           value={`${n(t.people_today)} people`}
-          sub={`${n(t.visits_today)} visits · ${t.active_today} of ${t.field_users} volunteers out · team target ${n(teamTarget)}`}
+          sub={`${n(t.people_met_today ?? 0)} met, ${n(t.people_today - (t.people_met_today ?? 0))} not met · ${n(t.visits_today)} visits · ${t.active_today} of ${t.field_users} volunteers out · team target ${n(teamTarget)}`}
         >
           <Meter value={t.people_today} total={teamTarget} />
         </Tile>

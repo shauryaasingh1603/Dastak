@@ -919,17 +919,17 @@ class AppLocalizationsHi extends AppLocalizations {
   String get personHousehold => 'भेंट में इसी घर के बताए गए लोग';
 
   @override
-  String get photoTitle => 'चेहरे की फ़ोटो';
+  String get photoTitle => 'चेहरे की फ़ोटो / ECI स्क्रीनशॉट';
 
   @override
   String get photoHint =>
-      'फ़ॉर्म के लिए। व्यक्ति से पूछकर लें: चेहरा सामने से, अच्छी रोशनी में, सादी दीवार के आगे।';
+      'व्यक्ति से पूछकर चेहरे की फ़ोटो लें (सामने से, अच्छी रोशनी में), या ECI वेबसाइट का स्क्रीनशॉट अपलोड करें।';
 
   @override
-  String get photoTake => 'फ़ोटो लें';
+  String get photoTake => 'फ़ोटो लें / ECI अपलोड करें';
 
   @override
-  String get photoRetake => 'दोबारा लें';
+  String get photoRetake => 'बदलें';
 
   @override
   String get photoRemove => 'हटाएँ';
@@ -944,7 +944,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get photoMissing => 'फ़ोटो नहीं ली गई';
 
   @override
-  String get photoFailed => 'कैमरा नहीं खुला। दोबारा कोशिश करें।';
+  String get photoFailed => 'फ़ोटो नहीं खुली। दोबारा कोशिश करें।';
 
   @override
   String get photoSaved => 'फ़ोटो सेव हुई';
