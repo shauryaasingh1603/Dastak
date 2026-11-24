@@ -6,7 +6,7 @@ and the closest-2026-entry notes of people already loaded are filled in
 (import_voter_notes). Both functions need a one-time import token, opened and
 closed by an admin around the run (see the import migrations).
 
-    DASTAK_IMPORT_TOKEN_FILE=<file holding the token> python3 -I tools/import/send.py [--out DIR] [--v2]
+    DASTAK_IMPORT_TOKEN_FILE=<file holding the token> python3 -I tools/import/send.py [--out DIR] [--v2 | --final]
 
 Prints counts only, never voter details.
 """
@@ -34,6 +34,10 @@ def app_config():
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--out', default=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out'))
+    ap.add_argument('--final', action='store_true',
+                    help='load the final list into the staging tables: final_booths.json and '
+                         'final_people.jsonl (import_final_stage); nothing changes until '
+                         'private.apply_final_list(true) is run')
     ap.add_argument('--v2', action='store_true',
                     help='send version 2 instead: v2_updates.jsonl (import_voter_updates), '
                          'then v2_new.jsonl (import_people)')
@@ -57,6 +61,17 @@ def main():
     def lines(name):
         with open(os.path.join(args.out, name), encoding='utf-8') as f:
             return [json.loads(line) for line in f]
+
+    if args.final:
+        with open(os.path.join(args.out, 'final_booths.json'), encoding='utf-8') as f:
+            booths = json.load(f)
+        call('import_final_stage', {'p_token': token, 'p_people': [], 'p_booths': booths})
+        rows = lines('final_people.jsonl')
+        staged = 0
+        for start in range(0, len(rows), BATCH):
+            staged += call('import_final_stage', {'p_token': token, 'p_people': rows[start:start + BATCH]})
+        print(f'final list: {len(booths)} booths, {len(rows)} people sent, {staged} staged')
+        return
 
     if args.v2:
         rows = lines('v2_updates.jsonl')
