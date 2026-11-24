@@ -10,6 +10,9 @@ abstract final class Outcome {
   static const notMet = 'NOT_MET';
   static const alreadyOnRoll = 'ALREADY_ON_ROLL';
 
+  /// Some other reason, written in the visit's remarks.
+  static const other = 'OTHER';
+
   static const all = [
     eligible,
     correction,
@@ -18,6 +21,7 @@ abstract final class Outcome {
     dead,
     notMet,
     alreadyOnRoll,
+    other,
   ];
 
   /// Outcomes that lead to a claim form (spec section 6, visit flow step 4).
@@ -43,6 +47,20 @@ abstract final class FormStatus {
   ];
 
   static bool isOpen(String status) => status != accepted && status != rejected;
+}
+
+/// How far the server has read a form's ECI screenshot.
+abstract final class EciStatus {
+  static const pending = 'PENDING';
+  static const read = 'READ';
+  static const failed = 'FAILED';
+  static const notEci = 'NOT_ECI';
+}
+
+/// The kinds of image kept for a form.
+abstract final class PhotoKind {
+  static const face = 'face';
+  static const eci = 'eci';
 }
 
 abstract final class SubmitRoute {
@@ -261,6 +279,9 @@ class ClaimForm {
     required this.status,
     required this.updatedAt,
     this.hasPhoto = false,
+    this.hasEci = false,
+    this.eciStatus,
+    this.eciReferenceNo,
     this.pending = false,
   });
 
@@ -276,6 +297,12 @@ class ClaimForm {
 
   /// The server has the applicant's face photo.
   final bool hasPhoto;
+
+  /// The server has the ECI screenshot; [eciStatus] says how far it has
+  /// been read (EciStatus) and [eciReferenceNo] what reference it shows.
+  final bool hasEci;
+  final String? eciStatus;
+  final String? eciReferenceNo;
   final bool pending;
 
   bool get isOpen => FormStatus.isOpen(status);
@@ -416,6 +443,7 @@ class FieldData {
     required this.outbox,
     required this.lastSyncAt,
     this.localPhotos = const {},
+    this.localEci = const {},
   }) {
     for (final v in voters) {
       (_votersByFamily[v.familyId] ??= []).add(v);
@@ -472,6 +500,13 @@ class FieldData {
   /// A face photo was taken for the form (on this phone or on the server).
   bool formHasPhoto(String formId) =>
       localPhotos.contains(formId) || (form(formId)?.hasPhoto ?? false);
+
+  /// Forms with an ECI screenshot on this phone not yet confirmed by the server.
+  final Set<String> localEci;
+
+  /// An ECI screenshot was added for the form (on this phone or on the server).
+  bool formHasEci(String formId) =>
+      localEci.contains(formId) || (form(formId)?.hasEci ?? false);
 
   final _votersByFamily = <String, List<Voter>>{};
   final _voterById = <String, Voter>{};
@@ -610,7 +645,15 @@ class FieldData {
 
   /// The voter already has an open form of this type (R6).
   bool hasOpenForm(String voterId, String formType) =>
-      formsOf(voterId).any((f) => f.formType == formType && f.isOpen);
+      openForm(voterId, formType) != null;
+
+  /// The voter's open form of this type, if there is one.
+  ClaimForm? openForm(String voterId, String formType) {
+    for (final f in formsOf(voterId)) {
+      if (f.formType == formType && f.isOpen) return f;
+    }
+    return null;
+  }
 
   int get pendingCount => outbox.where((e) => !e.rejected).length;
   int get rejectedCount => outbox.where((e) => e.rejected).length;

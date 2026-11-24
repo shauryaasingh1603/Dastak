@@ -108,23 +108,29 @@ class Forms extends Table {
   DateTimeColumn get updatedAt => dateTime()();
   // The server has the applicant's face photo for this form.
   BoolColumn get hasPhoto => boolean().withDefault(const Constant(false))();
+  // The server has the ECI screenshot, and what was read from it.
+  BoolColumn get hasEci => boolean().withDefault(const Constant(false))();
+  TextColumn get eciStatus => text().nullable()();
+  TextColumn get eciReferenceNo => text().nullable()();
   BoolColumn get pending => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
 }
 
-/// Face photos taken on this phone, kept until the server has them.
+/// Images taken on this phone for a form, kept until the server has them:
+/// the applicant's face photo (kind 'face') and the ECI screenshot ('eci').
 @DataClassName('FormPhotoRow')
 class FormPhotos extends Table {
   TextColumn get formId => text()();
+  TextColumn get kind => text().withDefault(const Constant('face'))();
   BlobColumn get bytes => blob()(); // JPEG
   DateTimeColumn get takenAt => dateTime()();
   // Uploaded to storage; waiting for the form to record it.
   BoolColumn get uploaded => boolean().withDefault(const Constant(false))();
 
   @override
-  Set<Column> get primaryKey => {formId};
+  Set<Column> get primaryKey => {formId, kind};
 }
 
 @DataClassName('FormEventRow')
@@ -183,7 +189,7 @@ class LocalDb extends _$LocalDb {
   LocalDb(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -206,6 +212,17 @@ class LocalDb extends _$LocalDb {
       if (from < 5) {
         await m.addColumn(voters, voters.draftPart);
         await m.addColumn(voters, voters.draftSection);
+      }
+      if (from < 6) {
+        if (from >= 4) {
+          // Rebuilt with the image kind in the key; existing rows are faces.
+          await m.alterTable(
+            TableMigration(formPhotos, newColumns: [formPhotos.kind]),
+          );
+        }
+        await m.addColumn(forms, forms.hasEci);
+        await m.addColumn(forms, forms.eciStatus);
+        await m.addColumn(forms, forms.eciReferenceNo);
       }
     },
   );

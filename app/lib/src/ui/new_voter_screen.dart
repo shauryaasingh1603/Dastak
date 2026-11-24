@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../auth/auth_controller.dart' show normalizeMobile;
 import '../data/field_store.dart';
 import '../data/models.dart';
+import 'eci_shot.dart';
 import 'face_photo.dart';
 import 'field_scope.dart';
 import 'form_detail_screen.dart';
@@ -37,6 +38,7 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
   String? _reason;
   int? _part;
   Uint8List? _photo;
+  Uint8List? _eci;
   bool _consent = false;
   String _relation = 'F';
   String? _gender;
@@ -109,6 +111,9 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
               .errMobileInvalid // R7
         : _mobile.text.isNotEmpty && !_consent
         ? l10n.errConsentRequired
+        // Form 6 is filed in the ECI app; its screenshot is the proof.
+        : _formType == '6' && _eci == null
+        ? l10n.errEciRequired
         : null;
     if (error != null) {
       setState(() => _error = error);
@@ -127,6 +132,7 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
         newReason: _reason,
         newReasonNote: _reason == NewReason.other ? _reasonNote.text : null,
         photo: _formType == 'none' ? null : _photo,
+        eci: _formType == 'none' ? null : _eci,
         nameHi: _name.text,
         relationType: _relation,
         relativeNameHi: _relative.text,
@@ -141,7 +147,7 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(l10n.newVoterSaved)));
-    if (formId == null) {
+    if (formId == null || _formType == '6') {
       Navigator.of(context).pop();
     } else {
       Navigator.of(context).pushReplacement(
@@ -290,11 +296,25 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
                 ChoiceChip(
                   label: Text(t == 'none' ? l10n.formNone : l10n.formType(t)),
                   selected: _formType == t,
-                  onSelected: (_) => setState(() => _formType = t),
+                  onSelected: (_) async {
+                    setState(() {
+                      _formType = t;
+                      _error = null;
+                    });
+                    if (t == '6') await showEciReminder(context);
+                  },
                 ),
             ],
           ),
           if (_formType != 'none') ...[
+            const SizedBox(height: 12),
+            EciShotField(
+              shot: _eci,
+              onChanged: (bytes) => setState(() {
+                _eci = bytes;
+                _error = null;
+              }),
+            ),
             const SizedBox(height: 12),
             FacePhotoField(
               photo: _photo,

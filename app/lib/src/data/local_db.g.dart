@@ -2915,6 +2915,41 @@ class $FormsTable extends Forms with TableInfo<$FormsTable, FormRow> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _hasEciMeta = const VerificationMeta('hasEci');
+  @override
+  late final GeneratedColumn<bool> hasEci = GeneratedColumn<bool>(
+    'has_eci',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("has_eci" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _eciStatusMeta = const VerificationMeta(
+    'eciStatus',
+  );
+  @override
+  late final GeneratedColumn<String> eciStatus = GeneratedColumn<String>(
+    'eci_status',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _eciReferenceNoMeta = const VerificationMeta(
+    'eciReferenceNo',
+  );
+  @override
+  late final GeneratedColumn<String> eciReferenceNo = GeneratedColumn<String>(
+    'eci_reference_no',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _pendingMeta = const VerificationMeta(
     'pending',
   );
@@ -2942,6 +2977,9 @@ class $FormsTable extends Forms with TableInfo<$FormsTable, FormRow> {
     currentStatus,
     updatedAt,
     hasPhoto,
+    hasEci,
+    eciStatus,
+    eciReferenceNo,
     pending,
   ];
   @override
@@ -3031,6 +3069,27 @@ class $FormsTable extends Forms with TableInfo<$FormsTable, FormRow> {
         hasPhoto.isAcceptableOrUnknown(data['has_photo']!, _hasPhotoMeta),
       );
     }
+    if (data.containsKey('has_eci')) {
+      context.handle(
+        _hasEciMeta,
+        hasEci.isAcceptableOrUnknown(data['has_eci']!, _hasEciMeta),
+      );
+    }
+    if (data.containsKey('eci_status')) {
+      context.handle(
+        _eciStatusMeta,
+        eciStatus.isAcceptableOrUnknown(data['eci_status']!, _eciStatusMeta),
+      );
+    }
+    if (data.containsKey('eci_reference_no')) {
+      context.handle(
+        _eciReferenceNoMeta,
+        eciReferenceNo.isAcceptableOrUnknown(
+          data['eci_reference_no']!,
+          _eciReferenceNoMeta,
+        ),
+      );
+    }
     if (data.containsKey('pending')) {
       context.handle(
         _pendingMeta,
@@ -3086,6 +3145,18 @@ class $FormsTable extends Forms with TableInfo<$FormsTable, FormRow> {
         DriftSqlType.bool,
         data['${effectivePrefix}has_photo'],
       )!,
+      hasEci: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}has_eci'],
+      )!,
+      eciStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}eci_status'],
+      ),
+      eciReferenceNo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}eci_reference_no'],
+      ),
       pending: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}pending'],
@@ -3110,6 +3181,9 @@ class FormRow extends DataClass implements Insertable<FormRow> {
   final String currentStatus;
   final DateTime updatedAt;
   final bool hasPhoto;
+  final bool hasEci;
+  final String? eciStatus;
+  final String? eciReferenceNo;
   final bool pending;
   const FormRow({
     required this.id,
@@ -3122,6 +3196,9 @@ class FormRow extends DataClass implements Insertable<FormRow> {
     required this.currentStatus,
     required this.updatedAt,
     required this.hasPhoto,
+    required this.hasEci,
+    this.eciStatus,
+    this.eciReferenceNo,
     required this.pending,
   });
   @override
@@ -3143,6 +3220,13 @@ class FormRow extends DataClass implements Insertable<FormRow> {
     map['current_status'] = Variable<String>(currentStatus);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     map['has_photo'] = Variable<bool>(hasPhoto);
+    map['has_eci'] = Variable<bool>(hasEci);
+    if (!nullToAbsent || eciStatus != null) {
+      map['eci_status'] = Variable<String>(eciStatus);
+    }
+    if (!nullToAbsent || eciReferenceNo != null) {
+      map['eci_reference_no'] = Variable<String>(eciReferenceNo);
+    }
     map['pending'] = Variable<bool>(pending);
     return map;
   }
@@ -3165,6 +3249,13 @@ class FormRow extends DataClass implements Insertable<FormRow> {
       currentStatus: Value(currentStatus),
       updatedAt: Value(updatedAt),
       hasPhoto: Value(hasPhoto),
+      hasEci: Value(hasEci),
+      eciStatus: eciStatus == null && nullToAbsent
+          ? const Value.absent()
+          : Value(eciStatus),
+      eciReferenceNo: eciReferenceNo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(eciReferenceNo),
       pending: Value(pending),
     );
   }
@@ -3185,6 +3276,9 @@ class FormRow extends DataClass implements Insertable<FormRow> {
       currentStatus: serializer.fromJson<String>(json['currentStatus']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       hasPhoto: serializer.fromJson<bool>(json['hasPhoto']),
+      hasEci: serializer.fromJson<bool>(json['hasEci']),
+      eciStatus: serializer.fromJson<String?>(json['eciStatus']),
+      eciReferenceNo: serializer.fromJson<String?>(json['eciReferenceNo']),
       pending: serializer.fromJson<bool>(json['pending']),
     );
   }
@@ -3202,6 +3296,9 @@ class FormRow extends DataClass implements Insertable<FormRow> {
       'currentStatus': serializer.toJson<String>(currentStatus),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'hasPhoto': serializer.toJson<bool>(hasPhoto),
+      'hasEci': serializer.toJson<bool>(hasEci),
+      'eciStatus': serializer.toJson<String?>(eciStatus),
+      'eciReferenceNo': serializer.toJson<String?>(eciReferenceNo),
       'pending': serializer.toJson<bool>(pending),
     };
   }
@@ -3217,6 +3314,9 @@ class FormRow extends DataClass implements Insertable<FormRow> {
     String? currentStatus,
     DateTime? updatedAt,
     bool? hasPhoto,
+    bool? hasEci,
+    Value<String?> eciStatus = const Value.absent(),
+    Value<String?> eciReferenceNo = const Value.absent(),
     bool? pending,
   }) => FormRow(
     id: id ?? this.id,
@@ -3229,6 +3329,11 @@ class FormRow extends DataClass implements Insertable<FormRow> {
     currentStatus: currentStatus ?? this.currentStatus,
     updatedAt: updatedAt ?? this.updatedAt,
     hasPhoto: hasPhoto ?? this.hasPhoto,
+    hasEci: hasEci ?? this.hasEci,
+    eciStatus: eciStatus.present ? eciStatus.value : this.eciStatus,
+    eciReferenceNo: eciReferenceNo.present
+        ? eciReferenceNo.value
+        : this.eciReferenceNo,
     pending: pending ?? this.pending,
   );
   FormRow copyWithCompanion(FormsCompanion data) {
@@ -3247,6 +3352,11 @@ class FormRow extends DataClass implements Insertable<FormRow> {
           : this.currentStatus,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       hasPhoto: data.hasPhoto.present ? data.hasPhoto.value : this.hasPhoto,
+      hasEci: data.hasEci.present ? data.hasEci.value : this.hasEci,
+      eciStatus: data.eciStatus.present ? data.eciStatus.value : this.eciStatus,
+      eciReferenceNo: data.eciReferenceNo.present
+          ? data.eciReferenceNo.value
+          : this.eciReferenceNo,
       pending: data.pending.present ? data.pending.value : this.pending,
     );
   }
@@ -3264,6 +3374,9 @@ class FormRow extends DataClass implements Insertable<FormRow> {
           ..write('currentStatus: $currentStatus, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('hasPhoto: $hasPhoto, ')
+          ..write('hasEci: $hasEci, ')
+          ..write('eciStatus: $eciStatus, ')
+          ..write('eciReferenceNo: $eciReferenceNo, ')
           ..write('pending: $pending')
           ..write(')'))
         .toString();
@@ -3281,6 +3394,9 @@ class FormRow extends DataClass implements Insertable<FormRow> {
     currentStatus,
     updatedAt,
     hasPhoto,
+    hasEci,
+    eciStatus,
+    eciReferenceNo,
     pending,
   );
   @override
@@ -3297,6 +3413,9 @@ class FormRow extends DataClass implements Insertable<FormRow> {
           other.currentStatus == this.currentStatus &&
           other.updatedAt == this.updatedAt &&
           other.hasPhoto == this.hasPhoto &&
+          other.hasEci == this.hasEci &&
+          other.eciStatus == this.eciStatus &&
+          other.eciReferenceNo == this.eciReferenceNo &&
           other.pending == this.pending);
 }
 
@@ -3311,6 +3430,9 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
   final Value<String> currentStatus;
   final Value<DateTime> updatedAt;
   final Value<bool> hasPhoto;
+  final Value<bool> hasEci;
+  final Value<String?> eciStatus;
+  final Value<String?> eciReferenceNo;
   final Value<bool> pending;
   final Value<int> rowid;
   const FormsCompanion({
@@ -3324,6 +3446,9 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
     this.currentStatus = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.hasPhoto = const Value.absent(),
+    this.hasEci = const Value.absent(),
+    this.eciStatus = const Value.absent(),
+    this.eciReferenceNo = const Value.absent(),
     this.pending = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -3338,6 +3463,9 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
     required String currentStatus,
     required DateTime updatedAt,
     this.hasPhoto = const Value.absent(),
+    this.hasEci = const Value.absent(),
+    this.eciStatus = const Value.absent(),
+    this.eciReferenceNo = const Value.absent(),
     this.pending = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -3357,6 +3485,9 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
     Expression<String>? currentStatus,
     Expression<DateTime>? updatedAt,
     Expression<bool>? hasPhoto,
+    Expression<bool>? hasEci,
+    Expression<String>? eciStatus,
+    Expression<String>? eciReferenceNo,
     Expression<bool>? pending,
     Expression<int>? rowid,
   }) {
@@ -3371,6 +3502,9 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
       if (currentStatus != null) 'current_status': currentStatus,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (hasPhoto != null) 'has_photo': hasPhoto,
+      if (hasEci != null) 'has_eci': hasEci,
+      if (eciStatus != null) 'eci_status': eciStatus,
+      if (eciReferenceNo != null) 'eci_reference_no': eciReferenceNo,
       if (pending != null) 'pending': pending,
       if (rowid != null) 'rowid': rowid,
     });
@@ -3387,6 +3521,9 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
     Value<String>? currentStatus,
     Value<DateTime>? updatedAt,
     Value<bool>? hasPhoto,
+    Value<bool>? hasEci,
+    Value<String?>? eciStatus,
+    Value<String?>? eciReferenceNo,
     Value<bool>? pending,
     Value<int>? rowid,
   }) {
@@ -3401,6 +3538,9 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
       currentStatus: currentStatus ?? this.currentStatus,
       updatedAt: updatedAt ?? this.updatedAt,
       hasPhoto: hasPhoto ?? this.hasPhoto,
+      hasEci: hasEci ?? this.hasEci,
+      eciStatus: eciStatus ?? this.eciStatus,
+      eciReferenceNo: eciReferenceNo ?? this.eciReferenceNo,
       pending: pending ?? this.pending,
       rowid: rowid ?? this.rowid,
     );
@@ -3439,6 +3579,15 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
     if (hasPhoto.present) {
       map['has_photo'] = Variable<bool>(hasPhoto.value);
     }
+    if (hasEci.present) {
+      map['has_eci'] = Variable<bool>(hasEci.value);
+    }
+    if (eciStatus.present) {
+      map['eci_status'] = Variable<String>(eciStatus.value);
+    }
+    if (eciReferenceNo.present) {
+      map['eci_reference_no'] = Variable<String>(eciReferenceNo.value);
+    }
     if (pending.present) {
       map['pending'] = Variable<bool>(pending.value);
     }
@@ -3461,6 +3610,9 @@ class FormsCompanion extends UpdateCompanion<FormRow> {
           ..write('currentStatus: $currentStatus, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('hasPhoto: $hasPhoto, ')
+          ..write('hasEci: $hasEci, ')
+          ..write('eciStatus: $eciStatus, ')
+          ..write('eciReferenceNo: $eciReferenceNo, ')
           ..write('pending: $pending, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -3888,6 +4040,16 @@ class $FormPhotosTable extends FormPhotos
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('face'),
+  );
   static const VerificationMeta _bytesMeta = const VerificationMeta('bytes');
   @override
   late final GeneratedColumn<Uint8List> bytes = GeneratedColumn<Uint8List>(
@@ -3924,7 +4086,13 @@ class $FormPhotosTable extends FormPhotos
     defaultValue: const Constant(false),
   );
   @override
-  List<GeneratedColumn> get $columns => [formId, bytes, takenAt, uploaded];
+  List<GeneratedColumn> get $columns => [
+    formId,
+    kind,
+    bytes,
+    takenAt,
+    uploaded,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3944,6 +4112,12 @@ class $FormPhotosTable extends FormPhotos
       );
     } else if (isInserting) {
       context.missing(_formIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
     }
     if (data.containsKey('bytes')) {
       context.handle(
@@ -3971,7 +4145,7 @@ class $FormPhotosTable extends FormPhotos
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {formId};
+  Set<GeneratedColumn> get $primaryKey => {formId, kind};
   @override
   FormPhotoRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
@@ -3979,6 +4153,10 @@ class $FormPhotosTable extends FormPhotos
       formId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}form_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
       )!,
       bytes: attachedDatabase.typeMapping.read(
         DriftSqlType.blob,
@@ -4003,11 +4181,13 @@ class $FormPhotosTable extends FormPhotos
 
 class FormPhotoRow extends DataClass implements Insertable<FormPhotoRow> {
   final String formId;
+  final String kind;
   final Uint8List bytes;
   final DateTime takenAt;
   final bool uploaded;
   const FormPhotoRow({
     required this.formId,
+    required this.kind,
     required this.bytes,
     required this.takenAt,
     required this.uploaded,
@@ -4016,6 +4196,7 @@ class FormPhotoRow extends DataClass implements Insertable<FormPhotoRow> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['form_id'] = Variable<String>(formId);
+    map['kind'] = Variable<String>(kind);
     map['bytes'] = Variable<Uint8List>(bytes);
     map['taken_at'] = Variable<DateTime>(takenAt);
     map['uploaded'] = Variable<bool>(uploaded);
@@ -4025,6 +4206,7 @@ class FormPhotoRow extends DataClass implements Insertable<FormPhotoRow> {
   FormPhotosCompanion toCompanion(bool nullToAbsent) {
     return FormPhotosCompanion(
       formId: Value(formId),
+      kind: Value(kind),
       bytes: Value(bytes),
       takenAt: Value(takenAt),
       uploaded: Value(uploaded),
@@ -4038,6 +4220,7 @@ class FormPhotoRow extends DataClass implements Insertable<FormPhotoRow> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return FormPhotoRow(
       formId: serializer.fromJson<String>(json['formId']),
+      kind: serializer.fromJson<String>(json['kind']),
       bytes: serializer.fromJson<Uint8List>(json['bytes']),
       takenAt: serializer.fromJson<DateTime>(json['takenAt']),
       uploaded: serializer.fromJson<bool>(json['uploaded']),
@@ -4048,6 +4231,7 @@ class FormPhotoRow extends DataClass implements Insertable<FormPhotoRow> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'formId': serializer.toJson<String>(formId),
+      'kind': serializer.toJson<String>(kind),
       'bytes': serializer.toJson<Uint8List>(bytes),
       'takenAt': serializer.toJson<DateTime>(takenAt),
       'uploaded': serializer.toJson<bool>(uploaded),
@@ -4056,11 +4240,13 @@ class FormPhotoRow extends DataClass implements Insertable<FormPhotoRow> {
 
   FormPhotoRow copyWith({
     String? formId,
+    String? kind,
     Uint8List? bytes,
     DateTime? takenAt,
     bool? uploaded,
   }) => FormPhotoRow(
     formId: formId ?? this.formId,
+    kind: kind ?? this.kind,
     bytes: bytes ?? this.bytes,
     takenAt: takenAt ?? this.takenAt,
     uploaded: uploaded ?? this.uploaded,
@@ -4068,6 +4254,7 @@ class FormPhotoRow extends DataClass implements Insertable<FormPhotoRow> {
   FormPhotoRow copyWithCompanion(FormPhotosCompanion data) {
     return FormPhotoRow(
       formId: data.formId.present ? data.formId.value : this.formId,
+      kind: data.kind.present ? data.kind.value : this.kind,
       bytes: data.bytes.present ? data.bytes.value : this.bytes,
       takenAt: data.takenAt.present ? data.takenAt.value : this.takenAt,
       uploaded: data.uploaded.present ? data.uploaded.value : this.uploaded,
@@ -4078,6 +4265,7 @@ class FormPhotoRow extends DataClass implements Insertable<FormPhotoRow> {
   String toString() {
     return (StringBuffer('FormPhotoRow(')
           ..write('formId: $formId, ')
+          ..write('kind: $kind, ')
           ..write('bytes: $bytes, ')
           ..write('takenAt: $takenAt, ')
           ..write('uploaded: $uploaded')
@@ -4086,13 +4274,19 @@ class FormPhotoRow extends DataClass implements Insertable<FormPhotoRow> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(formId, $driftBlobEquality.hash(bytes), takenAt, uploaded);
+  int get hashCode => Object.hash(
+    formId,
+    kind,
+    $driftBlobEquality.hash(bytes),
+    takenAt,
+    uploaded,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is FormPhotoRow &&
           other.formId == this.formId &&
+          other.kind == this.kind &&
           $driftBlobEquality.equals(other.bytes, this.bytes) &&
           other.takenAt == this.takenAt &&
           other.uploaded == this.uploaded);
@@ -4100,12 +4294,14 @@ class FormPhotoRow extends DataClass implements Insertable<FormPhotoRow> {
 
 class FormPhotosCompanion extends UpdateCompanion<FormPhotoRow> {
   final Value<String> formId;
+  final Value<String> kind;
   final Value<Uint8List> bytes;
   final Value<DateTime> takenAt;
   final Value<bool> uploaded;
   final Value<int> rowid;
   const FormPhotosCompanion({
     this.formId = const Value.absent(),
+    this.kind = const Value.absent(),
     this.bytes = const Value.absent(),
     this.takenAt = const Value.absent(),
     this.uploaded = const Value.absent(),
@@ -4113,6 +4309,7 @@ class FormPhotosCompanion extends UpdateCompanion<FormPhotoRow> {
   });
   FormPhotosCompanion.insert({
     required String formId,
+    this.kind = const Value.absent(),
     required Uint8List bytes,
     required DateTime takenAt,
     this.uploaded = const Value.absent(),
@@ -4122,6 +4319,7 @@ class FormPhotosCompanion extends UpdateCompanion<FormPhotoRow> {
        takenAt = Value(takenAt);
   static Insertable<FormPhotoRow> custom({
     Expression<String>? formId,
+    Expression<String>? kind,
     Expression<Uint8List>? bytes,
     Expression<DateTime>? takenAt,
     Expression<bool>? uploaded,
@@ -4129,6 +4327,7 @@ class FormPhotosCompanion extends UpdateCompanion<FormPhotoRow> {
   }) {
     return RawValuesInsertable({
       if (formId != null) 'form_id': formId,
+      if (kind != null) 'kind': kind,
       if (bytes != null) 'bytes': bytes,
       if (takenAt != null) 'taken_at': takenAt,
       if (uploaded != null) 'uploaded': uploaded,
@@ -4138,6 +4337,7 @@ class FormPhotosCompanion extends UpdateCompanion<FormPhotoRow> {
 
   FormPhotosCompanion copyWith({
     Value<String>? formId,
+    Value<String>? kind,
     Value<Uint8List>? bytes,
     Value<DateTime>? takenAt,
     Value<bool>? uploaded,
@@ -4145,6 +4345,7 @@ class FormPhotosCompanion extends UpdateCompanion<FormPhotoRow> {
   }) {
     return FormPhotosCompanion(
       formId: formId ?? this.formId,
+      kind: kind ?? this.kind,
       bytes: bytes ?? this.bytes,
       takenAt: takenAt ?? this.takenAt,
       uploaded: uploaded ?? this.uploaded,
@@ -4157,6 +4358,9 @@ class FormPhotosCompanion extends UpdateCompanion<FormPhotoRow> {
     final map = <String, Expression>{};
     if (formId.present) {
       map['form_id'] = Variable<String>(formId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
     }
     if (bytes.present) {
       map['bytes'] = Variable<Uint8List>(bytes.value);
@@ -4177,6 +4381,7 @@ class FormPhotosCompanion extends UpdateCompanion<FormPhotoRow> {
   String toString() {
     return (StringBuffer('FormPhotosCompanion(')
           ..write('formId: $formId, ')
+          ..write('kind: $kind, ')
           ..write('bytes: $bytes, ')
           ..write('takenAt: $takenAt, ')
           ..write('uploaded: $uploaded, ')
@@ -6355,6 +6560,9 @@ typedef $$FormsTableCreateCompanionBuilder = FormsCompanion Function({
   required String currentStatus,
   required DateTime updatedAt,
   Value<bool> hasPhoto,
+  Value<bool> hasEci,
+  Value<String?> eciStatus,
+  Value<String?> eciReferenceNo,
   Value<bool> pending,
   Value<int> rowid,
 });
@@ -6369,6 +6577,9 @@ typedef $$FormsTableUpdateCompanionBuilder = FormsCompanion Function({
   Value<String> currentStatus,
   Value<DateTime> updatedAt,
   Value<bool> hasPhoto,
+  Value<bool> hasEci,
+  Value<String?> eciStatus,
+  Value<String?> eciReferenceNo,
   Value<bool> pending,
   Value<int> rowid,
 });
@@ -6428,6 +6639,21 @@ class $$FormsTableFilterComposer extends Composer<_$LocalDb, $FormsTable> {
 
   ColumnFilters<bool> get hasPhoto => $composableBuilder(
     column: $table.hasPhoto,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get hasEci => $composableBuilder(
+    column: $table.hasEci,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get eciStatus => $composableBuilder(
+    column: $table.eciStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get eciReferenceNo => $composableBuilder(
+    column: $table.eciReferenceNo,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6495,6 +6721,21 @@ class $$FormsTableOrderingComposer extends Composer<_$LocalDb, $FormsTable> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get hasEci => $composableBuilder(
+    column: $table.hasEci,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get eciStatus => $composableBuilder(
+    column: $table.eciStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get eciReferenceNo => $composableBuilder(
+    column: $table.eciReferenceNo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get pending => $composableBuilder(
     column: $table.pending,
     builder: (column) => ColumnOrderings(column),
@@ -6543,6 +6784,17 @@ class $$FormsTableAnnotationComposer extends Composer<_$LocalDb, $FormsTable> {
   GeneratedColumn<bool> get hasPhoto =>
       $composableBuilder(column: $table.hasPhoto, builder: (column) => column);
 
+  GeneratedColumn<bool> get hasEci =>
+      $composableBuilder(column: $table.hasEci, builder: (column) => column);
+
+  GeneratedColumn<String> get eciStatus =>
+      $composableBuilder(column: $table.eciStatus, builder: (column) => column);
+
+  GeneratedColumn<String> get eciReferenceNo => $composableBuilder(
+    column: $table.eciReferenceNo,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get pending =>
       $composableBuilder(column: $table.pending, builder: (column) => column);
 }
@@ -6585,6 +6837,9 @@ class $$FormsTableTableManager
                 Value<String> currentStatus = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<bool> hasPhoto = const Value.absent(),
+                Value<bool> hasEci = const Value.absent(),
+                Value<String?> eciStatus = const Value.absent(),
+                Value<String?> eciReferenceNo = const Value.absent(),
                 Value<bool> pending = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FormsCompanion(
@@ -6598,6 +6853,9 @@ class $$FormsTableTableManager
                 currentStatus: currentStatus,
                 updatedAt: updatedAt,
                 hasPhoto: hasPhoto,
+                hasEci: hasEci,
+                eciStatus: eciStatus,
+                eciReferenceNo: eciReferenceNo,
                 pending: pending,
                 rowid: rowid,
               ),
@@ -6613,6 +6871,9 @@ class $$FormsTableTableManager
                 required String currentStatus,
                 required DateTime updatedAt,
                 Value<bool> hasPhoto = const Value.absent(),
+                Value<bool> hasEci = const Value.absent(),
+                Value<String?> eciStatus = const Value.absent(),
+                Value<String?> eciReferenceNo = const Value.absent(),
                 Value<bool> pending = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FormsCompanion.insert(
@@ -6626,6 +6887,9 @@ class $$FormsTableTableManager
                 currentStatus: currentStatus,
                 updatedAt: updatedAt,
                 hasPhoto: hasPhoto,
+                hasEci: hasEci,
+                eciStatus: eciStatus,
+                eciReferenceNo: eciReferenceNo,
                 pending: pending,
                 rowid: rowid,
               ),
@@ -6881,6 +7145,7 @@ typedef $$FormEventsTableProcessedTableManager =
     >;
 typedef $$FormPhotosTableCreateCompanionBuilder = FormPhotosCompanion Function({
   required String formId,
+  Value<String> kind,
   required Uint8List bytes,
   required DateTime takenAt,
   Value<bool> uploaded,
@@ -6888,6 +7153,7 @@ typedef $$FormPhotosTableCreateCompanionBuilder = FormPhotosCompanion Function({
 });
 typedef $$FormPhotosTableUpdateCompanionBuilder = FormPhotosCompanion Function({
   Value<String> formId,
+  Value<String> kind,
   Value<Uint8List> bytes,
   Value<DateTime> takenAt,
   Value<bool> uploaded,
@@ -6905,6 +7171,11 @@ class $$FormPhotosTableFilterComposer
   });
   ColumnFilters<String> get formId => $composableBuilder(
     column: $table.formId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6938,6 +7209,11 @@ class $$FormPhotosTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<Uint8List> get bytes => $composableBuilder(
     column: $table.bytes,
     builder: (column) => ColumnOrderings(column),
@@ -6965,6 +7241,9 @@ class $$FormPhotosTableAnnotationComposer
   });
   GeneratedColumn<String> get formId =>
       $composableBuilder(column: $table.formId, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
 
   GeneratedColumn<Uint8List> get bytes =>
       $composableBuilder(column: $table.bytes, builder: (column) => column);
@@ -7008,12 +7287,14 @@ class $$FormPhotosTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> formId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
                 Value<Uint8List> bytes = const Value.absent(),
                 Value<DateTime> takenAt = const Value.absent(),
                 Value<bool> uploaded = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FormPhotosCompanion(
                 formId: formId,
+                kind: kind,
                 bytes: bytes,
                 takenAt: takenAt,
                 uploaded: uploaded,
@@ -7022,12 +7303,14 @@ class $$FormPhotosTableTableManager
           createCompanionCallback:
               ({
                 required String formId,
+                Value<String> kind = const Value.absent(),
                 required Uint8List bytes,
                 required DateTime takenAt,
                 Value<bool> uploaded = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FormPhotosCompanion.insert(
                 formId: formId,
+                kind: kind,
                 bytes: bytes,
                 takenAt: takenAt,
                 uploaded: uploaded,

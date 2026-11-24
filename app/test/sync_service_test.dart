@@ -20,11 +20,20 @@ class FakeApi implements SyncApi {
   Map<String, dynamic> Function() snapshot = sampleSnapshot;
 
   @override
-  Future<bool> uploadPhoto(String formId, Uint8List jpeg) async {
+  Future<bool> uploadPhoto(
+    String formId,
+    Uint8List jpeg, {
+    String kind = 'face',
+  }) async {
     if (failWith != null) throw failWith!;
-    uploads[formId] = jpeg;
+    uploads[kind == 'eci' ? '$formId-eci' : formId] = jpeg;
     return true;
   }
+
+  final eciReads = <String>[];
+
+  @override
+  Future<void> readEci(List<String> formIds) async => eciReads.addAll(formIds);
 
   @override
   Future<List<({bool ok, String? code, String? messageHi})>> push(
@@ -196,12 +205,122 @@ void main() {
     final photoItem = api.pushed
         .expand((batch) => batch)
         .singleWhere((i) => i['entity'] == 'form_photo');
-    expect(photoItem['data'], {'form_id': formId});
+    expect(photoItem['data'], {'form_id': formId, 'kind': 'face'});
     expect(photoItem['uuid'], isNot(formId));
     expect(store.data.form(formId)!.hasPhoto, isTrue);
     expect(store.data.localPhotos, isEmpty, reason: 'the server has it now');
     expect(store.data.outbox, isEmpty);
+    expect(api.eciReads, isEmpty, reason: 'no screenshot to read');
   });
+
+  test('an ECI screenshot goes up, is read, and leaves the phone', () async {
+    final face = Uint8List.fromList([0xFF, 0xD8, 1, 0xFF, 0xD9]);
+    final eci = Uint8List.fromList([0xFF, 0xD8, 2, 0xFF, 0xD9]);
+    // The server lists the form with both images once they are recorded,
+    // and with the reference number once the screenshot has been read.
+    api.snapshot = () => sampleSnapshot(
+      forms: [
+        for (final id in api.uploads.keys.where((k) => !k.endsWith('-eci')))
+          {
+            'id': id,
+            'voter_id': 'v1',
+            'form_type': '6',
+            'route': 'ONLINE',
+            'reference_no': 'F6-1',
+            'filed_on': null,
+            'by_me': true,
+            'current_status': api.eciReads.contains(id)
+                ? 'SUBMITTED'
+                : 'FILLED',
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+            'has_photo': true,
+            'has_eci': api.uploads.containsKey('$id-eci'),
+            'eci_status': api.eciReads.contains(id) ? 'READ' : 'PENDING',
+            'eci_reference_no': api.eciReads.contains(id) ? 'F6-1' : null,
+          },
+      ],
+    );
+    sync.start('me');
+    await settle();
+
+    final formId = (await store.saveVisit(
+      VisitDraft(
+        familyId: 'f1',
+        nobodyHome: false,
+        members: [
+          MemberEntry(
+            voterId: 'v1',
+            outcome: Outcome.eligible,
+            formType: '6',
+            photo: face,
+            eci: eci,
+          ),
+        ],
+      ),
+    )).single;
+    expect(store.data.localPhotos, {formId});
+    expect(store.data.localEci, {formId});
+    expect(store.data.formHasEci(formId), isTrue);
+    await settle();
+
+    expect(api.uploads[formId], face);
+    expect(api.uploads['$formId-eci'], eci);
+    final kinds = [
+      for (final i in api.pushed.expand((batch) => batch))
+        if (i['entity'] == 'form_photo') i['data']['kind'],
+    ];
+    expect(kinds, unorderedEquals(['face', 'eci']));
+    expect(api.eciReads, [formId]);
+    final form = store.data.form(formId)!;
+    expect(form.hasEci, isTrue);
+    expect(form.eciStatus, EciStatus.read);
+    expect(form.eciReferenceNo, 'F6-1');
+    expect(store.data.localEci, isEmpty, reason: 'the server has it now');
+    expect(store.data.localPhotos, isEmpty);
+  });
+
+  test(
+    'a new screenshot for a form already started goes on that form',
+    () async {
+      sync.start('me');
+      await settle();
+      api.failWith = const SyncNetworkException();
+      final first = (await store.saveVisit(
+        VisitDraft(
+          familyId: 'f1',
+          nobodyHome: false,
+          members: [
+            MemberEntry(
+              voterId: 'v1',
+              outcome: Outcome.eligible,
+              formType: '6',
+            ),
+          ],
+        ),
+      )).single;
+      final again = (await store.saveVisit(
+        VisitDraft(
+          familyId: 'f1',
+          nobodyHome: false,
+          members: [
+            MemberEntry(
+              voterId: 'v1',
+              outcome: Outcome.eligible,
+              formType: '6',
+              eci: Uint8List.fromList([7]),
+            ),
+          ],
+        ),
+      )).single;
+      expect(again, first);
+      expect(
+        store.data.formsOf('v1').where((f) => f.formType == '6'),
+        hasLength(1),
+      );
+      expect(await store.photoOf(first, kind: PhotoKind.eci), [7]);
+      expect(await store.photoOf(first), isNull, reason: 'no face photo taken');
+    },
+  );
 
   test('offline, the photo stays on the phone', () async {
     sync.start('me');

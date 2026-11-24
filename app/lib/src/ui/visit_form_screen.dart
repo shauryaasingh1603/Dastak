@@ -7,31 +7,26 @@ import '../data/field_store.dart';
 import '../data/models.dart';
 import '../location.dart';
 import 'dates.dart';
+import 'eci_shot.dart';
 import 'face_photo.dart';
 import 'field_scope.dart';
-import 'form_detail_screen.dart';
 import 'labels.dart';
 import 'location_gate.dart';
-import 'search_screen.dart';
 import 'widgets.dart';
 
-class _MemberState {
-  _MemberState(this.voter)
-    : outcome = voter.alreadyOnRoll ? Outcome.alreadyOnRoll : null;
+/// The three things that can happen at the door.
+enum VisitChoice { notMet, form6, other }
 
-  final Voter voter;
-  String? outcome;
-  String? formType; // '6', '8', or 'none'
-  final docs = <String>{};
-  final mobile = TextEditingController();
-  bool consent = false;
-  Uint8List? photo;
-}
-
-/// "भेंट फॉर्म": one door visit, opened from one listed person. The
-/// volunteer confirms who else on the list lives at this house, records who
-/// answered the door with their number (or that they refused), and an
-/// outcome for each listed person. Saves on the phone at once.
+/// "भेंट दर्ज करें": one visit to one listed person, in three choices:
+///
+/// * कोई नहीं मिला: pick when to come back.
+/// * नाम कट गया है, फ़ॉर्म 6 भरना है: the volunteer files Form 6 in the ECI
+///   app first (a reminder says so), then adds the screenshot of its "Track
+///   application status" page, which is required. The server reads the
+///   reference number from it.
+/// * अन्य कारण: what it was, in a few taps or in words.
+///
+/// Saves on the phone at once, with the location taken when save is pressed.
 class VisitFormScreen extends StatefulWidget {
   const VisitFormScreen({super.key, required this.voterId});
 
@@ -42,109 +37,58 @@ class VisitFormScreen extends StatefulWidget {
 }
 
 class _VisitFormScreenState extends State<VisitFormScreen> {
-  final _remarks = TextEditingController();
-  final _contactName = TextEditingController();
-  final _contactMobile = TextEditingController();
-  final _states = <String, _MemberState>{};
-  final _alsoHere = <String>{};
-  late Voter _lead;
-  List<Voter> _candidates = const [];
-  bool _initialised = false;
+  final _reason = TextEditingController();
+  final _mobile = TextEditingController();
 
-  bool _nobodyHome = false;
-  String? _contactRelation;
-  bool _contactConsent = false;
-  bool _contactRefused = false;
-  String? _revisitOn;
+  VisitChoice? _choice;
+  String _revisitOn = Ist.addDays(Ist.today(), 1);
+  String? _otherOutcome; // an Outcome code, for "अन्य कारण"
+  Uint8List? _eci;
+  Uint8List? _photo;
+  bool _consent = false;
+
   String? _error;
   bool _saving = false;
   bool _locating = false;
   LocationAccess? _locationProblem;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_initialised) return;
-    final data = FieldScope.of(context).store.data;
-    _lead = data.voter(widget.voterId)!;
-    _candidates = data.sameHouseCandidates(widget.voterId);
-    _initialised = true;
-  }
-
-  @override
   void dispose() {
-    _remarks.dispose();
-    _contactName.dispose();
-    _contactMobile.dispose();
-    for (final m in _states.values) {
-      m.mobile.dispose();
-    }
+    _reason.dispose();
+    _mobile.dispose();
     super.dispose();
   }
 
-  /// The family names someone at the door gives: find each on the list and
-  /// count them in this visit, as one household.
-  Future<void> _addBySearch() async {
-    final picked = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (_) =>
-            PersonSearchScreen(pick: true, exclude: {_lead.id, ..._alsoHere}),
-      ),
-    );
-    if (picked == null || !mounted) return;
-    final voter = FieldScope.of(context).store.data.voter(picked);
-    if (voter == null) return;
+  Future<void> _choose(VisitChoice choice) async {
     setState(() {
-      if (!_candidates.any((v) => v.id == picked)) {
-        _candidates = [..._candidates, voter];
-      }
-      _alsoHere.add(picked);
+      _choice = choice;
       _error = null;
     });
+    // Form 6 is filed in the ECI app first: say so every time.
+    if (choice == VisitChoice.form6) await showEciReminder(context);
   }
 
-  _MemberState _state(Voter voter) =>
-      _states.putIfAbsent(voter.id, () => _MemberState(voter));
-
-  /// The person the visit was opened from, then those confirmed at the door.
-  List<_MemberState> get _covered => [
-    _state(_lead),
-    for (final v in _candidates)
-      if (_alsoHere.contains(v.id)) _state(v),
-  ];
-
   String? _validate(AppLocalizations l10n) {
-    if (_nobodyHome) {
-      return _revisitOn == null ? l10n.errRevisitRequired : null; // R3
+    switch (_choice) {
+      case null:
+        return l10n.errChooseOption;
+      case VisitChoice.notMet:
+        return null;
+      case VisitChoice.form6:
+        if (_eci == null) return l10n.errEciRequired;
+        final mobile = _mobile.text.trim();
+        if (mobile.isNotEmpty) {
+          if (normalizeMobile(mobile) == null) return l10n.errMobileInvalid;
+          if (!_consent) return l10n.errConsentRequired;
+        }
+        return null;
+      case VisitChoice.other:
+        if (_otherOutcome == null) return l10n.errOtherReason;
+        if (_otherOutcome == Outcome.other && _reason.text.trim().isEmpty) {
+          return l10n.errOtherReason;
+        }
+        return null;
     }
-    if (_contactName.text.trim().isEmpty) return l10n.errContactName;
-    final contactMobile = _contactMobile.text.trim();
-    if (contactMobile.isEmpty && !_contactRefused) {
-      return l10n.errContactRequired;
-    }
-    if (contactMobile.isNotEmpty) {
-      if (normalizeMobile(contactMobile) == null) {
-        return l10n.errMobileInvalid; // R7
-      }
-      if (!_contactConsent) return l10n.errConsentRequired;
-    }
-    for (final m in _covered) {
-      if (m.outcome == null) return l10n.errOutcomeRequired;
-      if (Outcome.needsForm(m.outcome!) && m.formType == null) {
-        return l10n.errFormRequired;
-      }
-      final mobile = m.mobile.text.trim();
-      if (mobile.isNotEmpty) {
-        if (normalizeMobile(mobile) == null) return l10n.errMobileInvalid;
-        if (!m.consent) return l10n.errConsentRequired;
-      }
-    }
-    // Nobody on the list was met: the visit needs a revisit date (R3).
-    if (_covered.every((m) => m.outcome == Outcome.notMet) &&
-        _revisitOn == null) {
-      return l10n.errRevisitRequired;
-    }
-    return null;
   }
 
   Future<void> _save() async {
@@ -178,44 +122,41 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
     setState(() => _locating = false);
 
     final store = FieldScope.of(context).store;
-    final contactMobile = normalizeMobile(_contactMobile.text);
-    final formIds = await store.saveVisit(
+    final voter = store.data.voter(widget.voterId)!;
+    final choice = _choice!;
+    final mobile = choice == VisitChoice.form6
+        ? normalizeMobile(_mobile.text)
+        : null;
+    final MemberEntry member = switch (choice) {
+      VisitChoice.notMet => MemberEntry(
+        voterId: voter.id,
+        outcome: Outcome.notMet,
+      ),
+      VisitChoice.form6 => MemberEntry(
+        voterId: voter.id,
+        outcome: Outcome.eligible,
+        formType: '6',
+        mobile: mobile,
+        mobileConsent: mobile != null && _consent,
+        photo: _photo,
+        eci: _eci,
+      ),
+      VisitChoice.other => MemberEntry(
+        voterId: voter.id,
+        outcome: _otherOutcome!,
+      ),
+    };
+    await store.saveVisit(
       VisitDraft(
-        familyId: _lead.familyId,
-        nobodyHome: _nobodyHome,
-        metPerson: _nobodyHome ? null : _contactName.text,
-        members: [
-          for (final m in _covered)
-            _nobodyHome
-                ? MemberEntry(voterId: m.voter.id, outcome: Outcome.notMet)
-                : MemberEntry(
-                    voterId: m.voter.id,
-                    outcome: m.outcome!,
-                    formType:
-                        Outcome.needsForm(m.outcome!) && m.formType != 'none'
-                        ? m.formType
-                        : null,
-                    docs: m.outcome == Outcome.notMet
-                        ? const []
-                        : m.docs.toList(),
-                    mobile: m.outcome == Outcome.notMet
-                        ? null
-                        : normalizeMobile(m.mobile.text),
-                    mobileConsent: m.consent,
-                    photo: m.photo,
-                  ),
-        ],
-        remarks: _remarks.text,
-        revisitOn: _revisitOn,
+        familyId: voter.familyId,
+        nobodyHome: choice == VisitChoice.notMet,
+        members: [member],
+        remarks: choice == VisitChoice.other ? _reason.text : null,
+        revisitOn: choice == VisitChoice.notMet ? _revisitOn : null,
         gpsLat: fix.lat,
         gpsLng: fix.lng,
         gpsAccuracy: fix.accuracy,
         gpsFlag: fix.flag,
-        contactName: _contactName.text,
-        contactRelation: _contactRelation,
-        contactMobile: contactMobile,
-        contactConsent: contactMobile != null && _contactConsent,
-        contactRefused: contactMobile == null && _contactRefused,
       ),
     );
     if (!mounted) return;
@@ -227,34 +168,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
         : l10n.visitSavedWithGps(metres ?? 0);
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
-    if (formIds.isEmpty) {
-      Navigator.of(context).pop();
-    } else {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(
-          builder: (_) => FormDetailScreen(formId: formIds.first),
-        ),
-      );
-    }
-  }
-
-  Future<void> _pickRevisit() async {
-    final settings = FieldScope.of(context).store.data.settings;
-    final today = DateTime.parse(Ist.today());
-    // R3: nobody home means come back within three days.
-    final last = _nobodyHome
-        ? today.add(const Duration(days: 3))
-        : DateTime.parse(Ist.day(settings.claimsCloseAt));
-    final first = today.add(const Duration(days: 1));
-    final picked = await showDatePicker(
-      context: context,
-      firstDate: today,
-      lastDate: last.isBefore(today) ? today : last,
-      initialDate: _revisitOn != null
-          ? DateTime.parse(_revisitOn!)
-          : (first.isAfter(last) ? today : first),
-    );
-    if (picked != null) setState(() => _revisitOn = dayOf(picked));
+    Navigator.of(context).pop();
   }
 
   @override
@@ -262,20 +176,183 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final data = FieldScope.of(context).store.data;
-    final family = data.family(_lead.familyId);
+    final voter = data.voter(widget.voterId)!;
+    final family = data.family(voter.familyId);
     final muted = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.visitTitle)),
+      appBar: AppBar(title: Text(l10n.visitAdd)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
-          Text(_lead.nameHi, style: theme.textTheme.titleMedium),
-          if (family?.houseNo != null && family!.houseNo!.isNotEmpty)
-            Text(l10n.houseNo(family.houseNo!), style: muted),
-          const SizedBox(height: 6),
+          Text(voter.nameHi, style: theme.textTheme.titleMedium),
+          Text(
+            [
+              if (voter.relativeNameHi != null)
+                '${relationLabel(l10n, voter.relationType)}: ${voter.relativeNameHi}',
+              if (voter.age != null) l10n.ageYears(voter.age!),
+              if (family?.houseNo != null && family!.houseNo!.isNotEmpty)
+                l10n.houseNo(family.houseNo!),
+            ].join(' · '),
+            style: muted,
+          ),
+          SectionTitle(l10n.visitChoose),
+          _ChoiceCard(
+            icon: Icons.person_off_outlined,
+            color: const Color(0xFFB4441F),
+            title: l10n.visitNobodyHome,
+            hint: l10n.visitOptNotMetHint,
+            selected: _choice == VisitChoice.notMet,
+            onTap: () => _choose(VisitChoice.notMet),
+          ),
+          _ChoiceCard(
+            icon: Icons.how_to_reg,
+            color: const Color(0xFF1F7A4D),
+            title: l10n.visitOptForm6,
+            hint: l10n.visitOptForm6Hint,
+            selected: _choice == VisitChoice.form6,
+            onTap: () => _choose(VisitChoice.form6),
+          ),
+          _ChoiceCard(
+            icon: Icons.notes,
+            color: const Color(0xFF5F5F5F),
+            title: l10n.visitOptOther,
+            hint: l10n.visitOptOtherHint,
+            selected: _choice == VisitChoice.other,
+            onTap: () => _choose(VisitChoice.other),
+          ),
+
+          if (_choice == VisitChoice.notMet) ...[
+            SectionTitle(l10n.visitRevisit),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final (days, text) in [
+                  (1, l10n.revisitTomorrow),
+                  (2, l10n.revisitDayAfter),
+                  (3, l10n.revisitIn3Days),
+                ])
+                  () {
+                    final day = Ist.addDays(Ist.today(), days);
+                    return ChoiceChip(
+                      label: Text('$text (${formatDay(day)})'),
+                      selected: _revisitOn == day,
+                      onSelected: (_) => setState(() => _revisitOn = day),
+                    );
+                  }(),
+              ],
+            ),
+          ],
+
+          if (_choice == VisitChoice.form6) ...[
+            const SizedBox(height: 12),
+            if (data.hasOpenForm(voter.id, '6'))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: InfoBanner(
+                  icon: Icons.info_outline,
+                  text: l10n.form6AlreadyOpen,
+                ),
+              ),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    EciShotField(
+                      shot: _eci,
+                      onChanged: (bytes) => setState(() {
+                        _eci = bytes;
+                        _error = null;
+                      }),
+                    ),
+                    const Divider(height: 28),
+                    FacePhotoField(
+                      photo: _photo,
+                      onChanged: (bytes) => setState(() => _photo = bytes),
+                    ),
+                    const Divider(height: 28),
+                    TextField(
+                      controller: _mobile,
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10),
+                      ],
+                      decoration: InputDecoration(
+                        labelText: l10n.visitMobile,
+                        prefixText: '+91 ',
+                      ),
+                      onChanged: (_) => setState(() => _error = null),
+                    ),
+                    if (_mobile.text.isNotEmpty)
+                      CheckboxListTile(
+                        contentPadding: EdgeInsets.zero,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        value: _consent,
+                        onChanged: (v) => setState(() {
+                          _consent = v ?? false;
+                          _error = null;
+                        }),
+                        title: Text(l10n.visitConsentLabel),
+                        subtitle: Text('“${l10n.visitConsent}”'),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            // R9: Form 6 needs age 18 on 1 Jan 2027. A warning only.
+            if (voter.age != null && voter.age! < 18)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: InfoBanner(
+                  icon: Icons.warning_amber,
+                  text: l10n.ageUnder18,
+                ),
+              ),
+          ],
+
+          if (_choice == VisitChoice.other) ...[
+            SectionTitle(l10n.otherWhat),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final (code, text) in [
+                  (Outcome.alreadyOnRoll, l10n.otherOnRoll),
+                  (Outcome.dead, l10n.otherDead),
+                  (Outcome.shifted, l10n.otherShifted),
+                  (Outcome.other, l10n.otherSomething),
+                ])
+                  ChoiceChip(
+                    label: Text(text),
+                    selected: _otherOutcome == code,
+                    onSelected: (_) => setState(() {
+                      _otherOutcome = code;
+                      _error = null;
+                    }),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _reason,
+              maxLines: 2,
+              maxLength: 500,
+              decoration: InputDecoration(
+                labelText: _otherOutcome == Outcome.other
+                    ? l10n.otherReason
+                    : l10n.otherReasonOptional,
+              ),
+              onChanged: (_) => setState(() => _error = null),
+            ),
+          ],
+
+          const SizedBox(height: 12),
           Row(
             children: [
               Icon(
@@ -284,164 +361,9 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                 color: theme.colorScheme.primary,
               ),
               const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  l10n.visitLocationNote,
-                  style: theme.textTheme.bodySmall,
-                ),
-              ),
+              Expanded(child: Text(l10n.visitLocationNote, style: muted)),
             ],
           ),
-          const SizedBox(height: 12),
-          Card(
-            child: SwitchListTile(
-              value: _nobodyHome,
-              onChanged: (v) => setState(() {
-                _nobodyHome = v;
-                _revisitOn = null;
-                _error = null;
-              }),
-              secondary: Icon(
-                Icons.person_off_outlined,
-                color: outcomeLabel(l10n, Outcome.notMet).color,
-              ),
-              title: Text(
-                l10n.visitNobodyHome,
-                style: theme.textTheme.titleMedium,
-              ),
-              subtitle: _nobodyHome ? Text(l10n.visitNobodyHomeHint) : null,
-            ),
-          ),
-          SectionTitle(l10n.visitSameHouse),
-          if (_candidates.isEmpty)
-            Text(l10n.visitNoSuggestions, style: muted)
-          else ...[
-            Text(l10n.visitSameHouseHint, style: muted),
-            const SizedBox(height: 4),
-            for (final v in _candidates)
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-                value: _alsoHere.contains(v.id),
-                onChanged: (on) => setState(() {
-                  on == true ? _alsoHere.add(v.id) : _alsoHere.remove(v.id);
-                  _error = null;
-                }),
-                title: Text(v.nameHi),
-                subtitle: Text(
-                  [
-                    if (v.relativeNameHi != null)
-                      '${relationLabel(l10n, v.relationType)}: ${v.relativeNameHi}',
-                    if (v.age != null) l10n.ageYears(v.age!),
-                  ].join(' · '),
-                ),
-              ),
-          ],
-          const SizedBox(height: 6),
-          Text(l10n.visitAddBySearchHint, style: muted),
-          const SizedBox(height: 6),
-          OutlinedButton.icon(
-            onPressed: _addBySearch,
-            icon: const Icon(Icons.person_search_outlined),
-            label: Text(l10n.visitAddBySearch),
-          ),
-          if (!_nobodyHome) ...[
-            SectionTitle(l10n.contactTitle),
-            TextField(
-              controller: _contactName,
-              decoration: InputDecoration(labelText: l10n.contactName),
-              onChanged: (_) => setState(() => _error = null),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              l10n.contactRelation,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              children: [
-                for (final code in ContactRelation.all)
-                  ChoiceChip(
-                    label: Text(contactRelationLabel(l10n, code)),
-                    selected: _contactRelation == code,
-                    onSelected: (s) =>
-                        setState(() => _contactRelation = s ? code : null),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _contactMobile,
-              enabled: !_contactRefused,
-              keyboardType: TextInputType.phone,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(10),
-              ],
-              decoration: InputDecoration(
-                labelText: l10n.contactMobile,
-                prefixText: '+91 ',
-              ),
-              onChanged: (_) => setState(() => _error = null),
-            ),
-            if (_contactMobile.text.isNotEmpty && !_contactRefused)
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-                value: _contactConsent,
-                onChanged: (v) => setState(() {
-                  _contactConsent = v ?? false;
-                  _error = null;
-                }),
-                title: Text(l10n.visitConsentLabel),
-                subtitle: Text('“${l10n.visitConsent}”'),
-              ),
-            CheckboxListTile(
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-              value: _contactRefused,
-              onChanged: (v) => setState(() {
-                _contactRefused = v ?? false;
-                if (_contactRefused) {
-                  _contactMobile.clear();
-                  _contactConsent = false;
-                }
-                _error = null;
-              }),
-              title: Text(l10n.contactRefused),
-            ),
-            SectionTitle(l10n.visitMembers),
-            for (final m in _covered) ...[
-              _MemberEditor(
-                state: m,
-                data: data,
-                onChanged: () => setState(() => _error = null),
-              ),
-              const SizedBox(height: 10),
-            ],
-          ],
-          SectionTitle(l10n.visitRevisit),
-          OutlinedButton.icon(
-            onPressed: _pickRevisit,
-            icon: const Icon(Icons.event),
-            label: Text(
-              _revisitOn == null ? l10n.visitPickDate : formatDay(_revisitOn!),
-            ),
-          ),
-          if (_revisitOn != null && !_nobodyHome)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: () => setState(() => _revisitOn = null),
-                child: Text(l10n.cancel),
-              ),
-            ),
-          SectionTitle(l10n.visitRemarks),
-          TextField(controller: _remarks, maxLines: 2, maxLength: 500),
           if (_error != null) ...[
             const SizedBox(height: 8),
             InfoBanner(icon: Icons.error_outline, text: _error!, error: true),
@@ -472,181 +394,71 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
   }
 }
 
-class _MemberEditor extends StatefulWidget {
-  const _MemberEditor({
-    required this.state,
-    required this.data,
-    required this.onChanged,
+/// One of the three big choices.
+class _ChoiceCard extends StatelessWidget {
+  const _ChoiceCard({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.hint,
+    required this.selected,
+    required this.onTap,
   });
 
-  final _MemberState state;
-  final FieldData data;
-  final VoidCallback onChanged;
-
-  @override
-  State<_MemberEditor> createState() => _MemberEditorState();
-}
-
-class _MemberEditorState extends State<_MemberEditor> {
-  void _update(VoidCallback change) {
-    setState(change);
-    widget.onChanged();
-  }
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String hint;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final m = widget.state;
-    final voter = m.voter;
-    final met = m.outcome != null && m.outcome != Outcome.notMet;
-
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(voter.nameHi, style: theme.textTheme.titleMedium),
-            Text(
-              [
-                if (voter.age != null) l10n.ageYears(voter.age!),
-                if (voter.relativeNameHi != null)
-                  '${relationLabel(l10n, voter.relationType)}: ${voter.relativeNameHi}',
-              ].join(' · '),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final code in Outcome.all)
-                  () {
-                    final label = outcomeLabel(l10n, code);
-                    final selected = m.outcome == code;
-                    return ChoiceChip(
-                      avatar: Icon(
-                        label.icon,
-                        size: 18,
-                        color: selected ? Colors.white : label.color,
-                      ),
-                      label: Text(label.text),
-                      selected: selected,
-                      showCheckmark: false,
-                      selectedColor: label.color,
-                      labelStyle: TextStyle(
-                        color: selected ? Colors.white : null,
-                      ),
-                      onSelected: (_) => _update(() {
-                        m.outcome = code;
-                        if (!Outcome.needsForm(code)) m.formType = null;
-                      }),
-                    );
-                  }(),
-              ],
-            ),
-            if (m.outcome != null && Outcome.needsForm(m.outcome!)) ...[
-              const SizedBox(height: 10),
-              Text(
-                l10n.visitWhichForm,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Wrap(
-                spacing: 8,
-                children: [
-                  for (final type in ['6', '8'])
-                    ChoiceChip(
-                      label: Text(l10n.formType(type)),
-                      selected: m.formType == type,
-                      onSelected: widget.data.hasOpenForm(voter.id, type)
-                          ? null
-                          : (_) => _update(() => m.formType = type),
-                    ),
-                  ChoiceChip(
-                    label: Text(l10n.formNone),
-                    selected: m.formType == 'none',
-                    onSelected: (_) => _update(() => m.formType = 'none'),
-                  ),
-                ],
-              ),
-              for (final type in ['6', '8'])
-                if (widget.data.hasOpenForm(voter.id, type))
-                  Text(
-                    l10n.formAlreadyOpen(type),
-                    style: theme.textTheme.bodySmall,
-                  ),
-              // Right after the form is chosen: the applicant's face photo.
-              if (m.formType == '6' || m.formType == '8') ...[
-                const SizedBox(height: 10),
-                FacePhotoField(
-                  photo: m.photo,
-                  onChanged: (bytes) => _update(() => m.photo = bytes),
-                ),
-              ],
-              // R9: Form 6 needs age 18 on 1 Jan 2027. A warning only.
-              if (m.formType == '6' && voter.age != null && voter.age! < 18)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: InfoBanner(
-                    icon: Icons.warning_amber,
-                    text: l10n.ageUnder18,
-                  ),
-                ),
-            ],
-            if (met) ...[
-              const SizedBox(height: 10),
-              Text(
-                l10n.visitDocs,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: [
-                  for (final doc in Doc.all)
-                    FilterChip(
-                      label: Text(docLabel(l10n, doc)),
-                      selected: m.docs.contains(doc),
-                      onSelected: (s) => _update(
-                        () => s ? m.docs.add(doc) : m.docs.remove(doc),
+      margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: selected ? color : theme.colorScheme.outlineVariant,
+          width: selected ? 2 : 1,
+        ),
+      ),
+      color: selected ? color.withValues(alpha: 0.08) : null,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: m.mobile,
-                keyboardType: TextInputType.phone,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(10),
-                ],
-                decoration: InputDecoration(
-                  labelText: l10n.memberMobile,
-                  prefixText: '+91 ',
+                    Text(
+                      hint,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                onChanged: (_) => _update(() {}),
               ),
-              if (m.mobile.text.isNotEmpty)
-                CheckboxListTile(
-                  contentPadding: EdgeInsets.zero,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  value: m.consent,
-                  onChanged: (v) => _update(() => m.consent = v ?? false),
-                  title: Text(l10n.visitConsentLabel),
-                  subtitle: Text('“${l10n.visitConsent}”'),
-                ),
+              Icon(
+                selected ? Icons.radio_button_checked : Icons.radio_button_off,
+                color: selected ? color : theme.colorScheme.outline,
+              ),
             ],
-          ],
+          ),
         ),
       ),
     );

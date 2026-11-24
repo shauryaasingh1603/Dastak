@@ -510,9 +510,9 @@
       }
     }
   },
-  "photoTitle": "चेहरे की फ़ोटो / ECI स्क्रीनशॉट",
-  "photoHint": "व्यक्ति से पूछकर चेहरे की फ़ोटो लें (सामने से, अच्छी रोशनी में), या ECI वेबसाइट का स्क्रीनशॉट अपलोड करें।",
-  "photoTake": "फ़ोटो लें / ECI अपलोड करें",
+  "photoTitle": "चेहरे की फ़ोटो",
+  "photoHint": "व्यक्ति से पूछकर सामने से, अच्छी रोशनी में फ़ोटो लें।",
+  "photoTake": "फ़ोटो लें",
   "photoRetake": "बदलें",
   "photoRemove": "हटाएँ",
   "photoOnServer": "फ़ोटो भेजी जा चुकी है",
@@ -552,5 +552,49 @@
         "type": "String"
       }
     }
-  }
+  },
+  "outcomeOther": "अन्य कारण",
+  "visitChoose": "क्या हुआ?",
+  "visitOptNotMetHint": "घर पर कोई नहीं था, या यह व्यक्ति नहीं मिला",
+  "visitOptForm6": "नाम कट गया है, फ़ॉर्म 6 भरना है",
+  "visitOptForm6Hint": "ECI ऐप में फ़ॉर्म 6 भरें, फिर उसका स्क्रीनशॉट यहाँ लगाएँ",
+  "visitOptOther": "अन्य कारण",
+  "visitOptOtherHint": "कोई और बात, जैसे नाम सूची में है या मृत्यु हो गई",
+  "revisitTomorrow": "कल",
+  "revisitDayAfter": "परसों",
+  "revisitIn3Days": "3 दिन बाद",
+  "eciReminderTitle": "पहले ECI ऐप में फ़ॉर्म 6 भरें",
+  "eciReminderBody": "1. ECI ऐप (Voter Helpline) में इस व्यक्ति का फ़ॉर्म 6 भरकर जमा करें।\n2. फिर ऐप में “Track application status” खोलें और उस पेज का स्क्रीनशॉट लें। ऐप की भाषा अंग्रेज़ी (English) रखें।\n3. वह स्क्रीनशॉट यहाँ लगाएँ। उसके बिना भेंट सेव नहीं होगी।",
+  "eciReminderOk": "ठीक है",
+  "eciExample": "उदाहरण देखें",
+  "eciExampleTitle": "ऐसा स्क्रीनशॉट लगाएँ",
+  "eciExampleNote": "Reference Number, नाम (First Name) और Form Type साफ़ दिखने चाहिए। इस उदाहरण में वे छिपाए गए हैं।",
+  "eciTitle": "ECI स्क्रीनशॉट (ज़रूरी)",
+  "eciHint": "ECI ऐप के “Track application status” पेज का स्क्रीनशॉट, अंग्रेज़ी में",
+  "eciAdd": "स्क्रीनशॉट लगाएँ",
+  "eciOnServer": "स्क्रीनशॉट भेजा जा चुका है",
+  "eciWaiting": "स्क्रीनशॉट फ़ोन पर है, नेटवर्क मिलते ही भेजा जाएगा",
+  "eciMissing": "ECI स्क्रीनशॉट नहीं लगा है। इसे लगाएँ।",
+  "eciReadPending": "स्क्रीनशॉट पढ़ा जा रहा है…",
+  "eciReadOk": "ECI से पढ़ा गया: {reference}",
+  "@eciReadOk": {
+    "placeholders": {
+      "reference": {
+        "type": "String"
+      }
+    }
+  },
+  "eciReadFailed": "स्क्रीनशॉट पढ़ा नहीं जा सका। साफ़ स्क्रीनशॉट दोबारा लगाएँ।",
+  "eciNotEci": "यह ECI का स्क्रीनशॉट नहीं लगता। सही स्क्रीनशॉट लगाएँ।",
+  "errEciRequired": "ECI ऐप का स्क्रीनशॉट लगाएँ",
+  "errChooseOption": "ऊपर तीन में से एक चुनें",
+  "otherWhat": "क्या कारण है?",
+  "otherOnRoll": "नाम सूची में है",
+  "otherDead": "मृत्यु हो गई",
+  "otherShifted": "हमेशा के लिए कहीं और चले गए",
+  "otherSomething": "कुछ और",
+  "otherReason": "कारण लिखें",
+  "otherReasonOptional": "कुछ और बताना हो तो लिखें",
+  "errOtherReason": "कारण लिखें",
+  "form6AlreadyOpen": "इस व्यक्ति का फ़ॉर्म 6 पहले से खुला है। स्क्रीनशॉट उसी में जुड़ेगा।"
 }

@@ -47,7 +47,14 @@ class OfflineApi implements SyncApi {
       throw const SyncNetworkException();
 
   @override
-  Future<bool> uploadPhoto(String formId, Uint8List jpeg) async =>
+  Future<bool> uploadPhoto(
+    String formId,
+    Uint8List jpeg, {
+    String kind = 'face',
+  }) async => throw const SyncNetworkException();
+
+  @override
+  Future<void> readEci(List<String> formIds) async =>
       throw const SyncNetworkException();
 }
 

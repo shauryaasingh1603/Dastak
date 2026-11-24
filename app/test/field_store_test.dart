@@ -111,7 +111,7 @@ void main() {
         ),
       );
       data = store.data;
-      expect(again, isEmpty);
+      expect(again, forms, reason: 'the open form is used again');
       expect(data.formsOf('v1').length, 1);
     },
   );

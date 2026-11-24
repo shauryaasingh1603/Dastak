@@ -12,6 +12,7 @@ import 'package:dastak/src/ui/new_voter_screen.dart';
 import 'package:dastak/src/ui/person_screen.dart';
 import 'package:dastak/src/ui/search_screen.dart';
 import 'package:dastak/src/ui/sync_screen.dart';
+import 'package:dastak/src/ui/eci_shot.dart';
 import 'package:dastak/src/ui/visit_form_screen.dart';
 import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter_test/flutter_test.dart';
@@ -19,6 +20,19 @@ import 'package:geolocator_platform_interface/geolocator_platform_interface.dart
 import 'package:material_ui/material_ui.dart';
 
 import 'support/harness.dart';
+
+// A tiny valid JPEG, and another standing in for an ECI screenshot.
+final _jpeg = Uint8List.fromList(const [
+  255, 216, 255, 224, 0, 16, 74, 70, 73, 70, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, //
+  255, 219, 0, 67, 0, 13, 9, 10, 11, 10, 8, 13, 11, 10, 11, 14, 14, 13, 15,
+  19, 32, 21, 19, 18, 18, 19, 39, 28, 30, 23, 32, 46, 41, 49, 3, 17, 0, 63, 0,
+  146, 138, 40, 174, 19, 210, 63, 255, 217,
+]);
+final _screenshot = Uint8List.fromList([
+  ..._jpeg.sublist(0, 20),
+  1,
+  ..._jpeg.sublist(20),
+]);
 
 void main() {
   late Harness h;
@@ -31,6 +45,12 @@ void main() {
     tester.view.physicalSize = const Size(1080, 9000);
     tester.view.devicePixelRatio = 2.5;
     addTearDown(tester.view.reset);
+    FacePhotoField.take = () async => _jpeg;
+    EciShotField.pick = () async => _screenshot;
+    addTearDown(() {
+      FacePhotoField.take = takeWithCamera;
+      EciShotField.pick = pickScreenshot;
+    });
   }
 
   Future<void> settle(WidgetTester tester) async {
@@ -49,16 +69,6 @@ void main() {
 
   Future<void> save(WidgetTester tester) =>
       tapAndSettle(tester, find.text('सेव करें'));
-
-  /// Fills the household contact with a refusal to give a number.
-  Future<void> contactRefused(WidgetTester tester) async {
-    await tester.enterText(find.widgetWithText(TextField, 'नाम'), 'कमला देवी');
-    await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'माता'));
-    await tapAndSettle(
-      tester,
-      find.widgetWithText(CheckboxListTile, 'नंबर देने से मना किया'),
-    );
-  }
 
   tearDown(() => h.dispose());
 
@@ -106,156 +116,142 @@ void main() {
     expect(find.text('अभी कोई भेंट नहीं'), findsOneWidget);
   });
 
-  testWidgets(
-    'nobody home: revisit date needed (R3); covers the people ticked',
-    (tester) async {
-      await setUpHarness(tester);
-      await tester.pumpWidget(h.wrap(const VisitFormScreen(voterId: 'v4')));
-      await tester.pumpAndSettle();
-      await tapAndSettle(tester, find.byType(Switch));
-      await save(tester);
-      expect(find.text('दोबारा जाने की तारीख़ चुनें'), findsOneWidget);
-      expect(h.store.data.outbox, isEmpty);
-    },
-  );
-
-  testWidgets(
-    'someone met: contact needed, then an outcome per person, then the form',
-    (tester) async {
-      await setUpHarness(tester);
-      await tester.pumpWidget(h.wrap(const VisitFormScreen(voterId: 'v1')));
-      await tester.pumpAndSettle();
-
-      // Suggestions: same record and same house nearby on the roll.
-      for (final name in ['सीता यादव', 'पूजा यादव', 'अजय यादव']) {
-        expect(find.widgetWithText(CheckboxListTile, name), findsOneWidget);
-      }
-
-      await save(tester);
-      expect(find.text('घर पर मिले व्यक्ति का नाम डालें'), findsOneWidget);
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'नाम'),
-        'कमला देवी',
-      );
-      await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'माता'));
-      await save(tester);
-      expect(
-        find.text(
-          'घर पर मिले व्यक्ति का मोबाइल नंबर डालें या “नंबर देने से मना किया” चुनें',
-        ),
-        findsOneWidget,
-      );
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'मोबाइल नंबर'),
-        '9876543210',
-      );
-      await tester.pump();
-      await save(tester);
-      expect(find.text('मोबाइल नंबर के लिए सहमति ज़रूरी है'), findsOneWidget);
-      await tapAndSettle(
-        tester,
-        find.widgetWithText(
-          CheckboxListTile,
-          'मतदाता को पढ़कर सुनाया और सहमति ली',
-        ),
-      );
-
-      await save(tester);
-      expect(find.text('हर सदस्य का परिणाम चुनें'), findsOneWidget);
-
-      // The family confirms Pooja lives here too.
-      await tapAndSettle(
-        tester,
-        find.widgetWithText(CheckboxListTile, 'पूजा यादव'),
-      );
-      final eligible = find.widgetWithText(
-        ChoiceChip,
-        'पात्र – फॉर्म भराना है',
-      );
-      final shifted = find.widgetWithText(ChoiceChip, 'स्थानांतरित');
-      await tapAndSettle(tester, eligible.at(0));
-      await tapAndSettle(tester, shifted.at(1));
-      await save(tester);
-      expect(find.text('कौन सा फॉर्म भरना है, चुनें'), findsOneWidget);
-
-      await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'फॉर्म 6'));
-      await save(tester);
-      await settle(tester);
-
-      final data = h.store.data;
-      expect(data.outbox.map((e) => e.entity), ['visit', 'form', 'form_event']);
-      final visit = data.outbox.first.payload;
-      expect(visit['family_id'], 'f1');
-      expect((visit['voters'] as List).map((m) => (m as Map)['voter_id']), [
-        'v1',
-        'v6',
-      ]);
-      expect(visit['contact_name'], 'कमला देवी');
-      expect(visit['contact_relation'], 'MOTHER');
-      expect(visit['contact_mobile'], '9876543210');
-      expect(visit['contact_consent'], isTrue);
-      expect(
-        data.personStatus('v6'),
-        FamilyStatus.done,
-        reason: 'covered by the visit',
-      );
-      expect(
-        data.personStatus('v2'),
-        FamilyStatus.pending,
-        reason: 'not ticked',
-      );
-      expect(
-        find.text('फॉर्म विवरण'),
-        findsOneWidget,
-        reason: 'goes on to the form',
-      );
-    },
-  );
-
-  testWidgets('everyone listed not met: a revisit date is needed', (
+  testWidgets('a visit is one of three choices; one must be picked', (
     tester,
   ) async {
     await setUpHarness(tester);
     await tester.pumpWidget(h.wrap(const VisitFormScreen(voterId: 'v4')));
     await tester.pumpAndSettle();
-    await contactRefused(tester);
-    await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'नहीं मिले'));
+    expect(find.text('कोई नहीं मिला'), findsOneWidget);
+    expect(find.text('नाम कट गया है, फ़ॉर्म 6 भरना है'), findsOneWidget);
+    expect(find.text('अन्य कारण'), findsOneWidget);
     await save(tester);
-    expect(find.text('दोबारा जाने की तारीख़ चुनें'), findsOneWidget);
+    expect(find.text('ऊपर तीन में से एक चुनें'), findsOneWidget);
     expect(h.store.data.outbox, isEmpty);
   });
 
-  testWidgets(
-    'the location reading is taken when save is pressed, not before',
-    (tester) async {
-      await setUpHarness(tester);
-      await tester.pumpWidget(h.wrap(const VisitFormScreen(voterId: 'v4')));
-      await tester.pumpAndSettle();
-      expect(
-        Harness.gps.fixRequests,
-        isEmpty,
-        reason: 'opening the form takes no reading',
-      );
+  testWidgets('nobody met: comes back tomorrow unless another day is picked', (
+    tester,
+  ) async {
+    await setUpHarness(tester);
+    await tester.pumpWidget(h.wrap(const VisitFormScreen(voterId: 'v4')));
+    await tester.pumpAndSettle();
+    expect(
+      Harness.gps.fixRequests,
+      isEmpty,
+      reason: 'opening the form takes no reading',
+    );
+    await tapAndSettle(tester, find.text('कोई नहीं मिला'));
+    await tapAndSettle(tester, find.textContaining('परसों'));
+    await save(tester);
+    await settle(tester);
 
-      await contactRefused(tester);
-      await tapAndSettle(
-        tester,
-        find.widgetWithText(ChoiceChip, 'स्थानांतरित'),
-      );
-      await save(tester);
-      await settle(tester);
+    expect(Harness.gps.fixRequests, hasLength(1));
+    final visit = h.store.data.outbox.single.payload;
+    expect(visit['outcome'], Outcome.notMet);
+    expect(visit['revisit_on'], Ist.addDays(Ist.today(), 2));
+    expect(visit['voters'], [containsPair('voter_id', 'v4')]);
+    expect(visit['gps_lat'], 25.7612);
+    expect(visit['gps_accuracy_m'], 8);
+    expect(visit['flags'], isEmpty);
+    expect(find.byType(VisitFormScreen), findsNothing, reason: 'closed');
+  });
 
-      expect(Harness.gps.fixRequests, hasLength(1));
-      final visit = h.store.data.outbox.single.payload;
-      expect(visit['gps_lat'], 25.7612);
-      expect(visit['gps_accuracy_m'], 8);
-      expect(visit['flags'], isEmpty);
-      expect(visit['contact_refused'], isTrue);
-      expect(visit['contact_mobile'], isNull);
-    },
-  );
+  testWidgets('form 6: a reminder first, then the ECI screenshot is required', (
+    tester,
+  ) async {
+    await setUpHarness(tester);
+    await tester.pumpWidget(h.wrap(const VisitFormScreen(voterId: 'v4')));
+    await tester.pumpAndSettle();
+
+    await tapAndSettle(tester, find.text('नाम कट गया है, फ़ॉर्म 6 भरना है'));
+    expect(find.text('पहले ECI ऐप में फ़ॉर्म 6 भरें'), findsOneWidget);
+    // The example screenshot can be opened from the reminder.
+    await tapAndSettle(tester, find.text('उदाहरण देखें').last);
+    expect(find.text('ऐसा स्क्रीनशॉट लगाएँ'), findsOneWidget);
+    expect(find.byType(Image), findsWidgets);
+    await tapAndSettle(tester, find.text('ठीक है').last);
+    await tapAndSettle(tester, find.text('ठीक है'));
+    expect(find.text('पहले ECI ऐप में फ़ॉर्म 6 भरें'), findsNothing);
+
+    await save(tester);
+    expect(find.text('ECI ऐप का स्क्रीनशॉट लगाएँ'), findsOneWidget);
+    expect(h.store.data.outbox, isEmpty);
+
+    await tapAndSettle(tester, find.text('स्क्रीनशॉट लगाएँ'));
+    await tapAndSettle(tester, find.text('फ़ोटो लें'));
+    await tester.enterText(
+      find.widgetWithText(TextField, 'मोबाइल नंबर (अगर दें)'),
+      '9876543210',
+    );
+    await tester.pump();
+    await save(tester);
+    expect(find.text('मोबाइल नंबर के लिए सहमति ज़रूरी है'), findsOneWidget);
+    await tapAndSettle(tester, find.byType(Checkbox));
+    await save(tester);
+    await settle(tester);
+
+    final data = h.store.data;
+    expect(data.outbox.map((e) => e.entity), ['visit', 'form', 'form_event']);
+    final visit = data.outbox.first.payload;
+    expect(visit['outcome'], Outcome.eligible);
+    expect(visit['contact_name'], isNull);
+    expect(
+      (visit['voters'] as List).single,
+      allOf(
+        containsPair('voter_id', 'v4'),
+        containsPair('mobile', '9876543210'),
+        containsPair('mobile_consent', true),
+      ),
+    );
+    final form = data.forms.single;
+    expect(form.formType, '6');
+    expect(data.localEci, {form.id});
+    expect(data.localPhotos, {form.id});
+    expect(
+      await tester.runAsync(() => h.store.photoOf(form.id, kind: 'eci')),
+      _screenshot,
+    );
+    expect(await tester.runAsync(() => h.store.photoOf(form.id)), _jpeg);
+  });
+
+  testWidgets('another reason: a quick choice, or words for "something else"', (
+    tester,
+  ) async {
+    await setUpHarness(tester);
+    await tester.pumpWidget(h.wrap(const VisitFormScreen(voterId: 'v4')));
+    await tester.pumpAndSettle();
+    await tapAndSettle(tester, find.text('अन्य कारण'));
+    await save(tester);
+    expect(find.text('कारण लिखें'), findsWidgets);
+
+    await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'कुछ और'));
+    await save(tester);
+    expect(h.store.data.outbox, isEmpty, reason: 'needs the reason in words');
+    await tester.enterText(
+      find.widgetWithText(TextField, 'कारण लिखें'),
+      'परिवार ने बात करने से मना किया',
+    );
+    await save(tester);
+    await settle(tester);
+    final visit = h.store.data.outbox.single.payload;
+    expect(visit['outcome'], Outcome.other);
+    expect(visit['remarks'], 'परिवार ने बात करने से मना किया');
+    expect(visit['revisit_on'], isNull);
+  });
+
+  testWidgets('another reason: "died" is recorded as such', (tester) async {
+    await setUpHarness(tester);
+    await tester.pumpWidget(h.wrap(const VisitFormScreen(voterId: 'v1')));
+    await tester.pumpAndSettle();
+    await tapAndSettle(tester, find.text('अन्य कारण'));
+    await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'मृत्यु हो गई'));
+    await save(tester);
+    await settle(tester);
+    final visit = h.store.data.outbox.single.payload;
+    expect(visit['outcome'], Outcome.dead);
+    expect(visit['voters'], [containsPair('voter_outcome', Outcome.dead)]);
+  });
 
   testWidgets('saving with location refused asks again and does not save', (
     tester,
@@ -266,8 +262,7 @@ void main() {
       ..answer = LocationPermission.denied;
     await tester.pumpWidget(h.wrap(const VisitFormScreen(voterId: 'v4')));
     await tester.pumpAndSettle();
-    await contactRefused(tester);
-    await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'स्थानांतरित'));
+    await tapAndSettle(tester, find.text('कोई नहीं मिला'));
     await save(tester);
 
     expect(Harness.gps.prompts, 1);
@@ -285,8 +280,7 @@ void main() {
     Harness.gps.timesOut = true;
     await tester.pumpWidget(h.wrap(const VisitFormScreen(voterId: 'v4')));
     await tester.pumpAndSettle();
-    await contactRefused(tester);
-    await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'स्थानांतरित'));
+    await tapAndSettle(tester, find.text('कोई नहीं मिला'));
     await save(tester);
     await settle(tester);
     final visit = h.store.data.outbox.single.payload;
@@ -405,6 +399,9 @@ void main() {
 
     await tapAndSettle(tester, find.byType(Checkbox));
     await save(tester);
+    expect(find.text('ECI ऐप का स्क्रीनशॉट लगाएँ'), findsOneWidget);
+    await tapAndSettle(tester, find.text('स्क्रीनशॉट लगाएँ'));
+    await save(tester);
     await settle(tester);
 
     final voterItem = h.store.data.outbox.firstWhere(
@@ -518,40 +515,6 @@ void main() {
     expect(find.text('4 लोग मिले'), findsOneWidget);
   });
 
-  testWidgets('family members named at the door are added by search', (
-    tester,
-  ) async {
-    await setUpHarness(tester);
-    await tester.pumpWidget(h.wrap(const VisitFormScreen(voterId: 'v4')));
-    await tester.pumpAndSettle();
-
-    await tapAndSettle(tester, find.text('परिवार के और सदस्य खोजकर जोड़ें'));
-    await tester.enterText(find.byType(TextField), 'sita');
-    await settle(tester);
-    await tapAndSettle(tester, find.text('सीता यादव'));
-
-    // Back on the visit form, she is counted in this household.
-    final added = tester.widget<CheckboxListTile>(
-      find.widgetWithText(CheckboxListTile, 'सीता यादव'),
-    );
-    expect(added.value, isTrue);
-
-    await contactRefused(tester);
-    final shifted = find.widgetWithText(ChoiceChip, 'स्थानांतरित');
-    expect(shifted, findsNWidgets(2));
-    await tapAndSettle(tester, shifted.first);
-    await tapAndSettle(tester, shifted.last);
-    await save(tester);
-    await settle(tester);
-
-    final visit = h.store.data.outbox.single.payload;
-    expect(
-      {for (final m in visit['voters'] as List) (m as Map)['voter_id']},
-      {'v4', 'v2'},
-    );
-    expect(h.store.data.householdOf('v4').map((v) => v.id), ['v2']);
-  });
-
   testWidgets('someone who turned 18, at a house nobody listed lives in', (
     tester,
   ) async {
@@ -581,6 +544,7 @@ void main() {
     );
 
     await tester.enterText(fields.at(3), '18');
+    await tapAndSettle(tester, find.text('स्क्रीनशॉट लगाएँ'));
     await save(tester);
     await settle(tester);
 
@@ -601,662 +565,36 @@ void main() {
     );
   });
 
-  testWidgets('a face photo is taken once a form is chosen', (tester) async {
+  testWidgets('form detail: the ECI screenshot and what was read from it', (
+    tester,
+  ) async {
     await setUpHarness(tester);
-    final jpeg = Uint8List.fromList(const [
-      255,
-      216,
-      255,
-      224,
-      0,
-      16,
-      74,
-      70,
-      73,
-      70,
-      0,
-      1,
-      1,
-      0,
-      0,
-      1,
-      0,
-      1,
-      0,
-      0,
-      255,
-      219,
-      0,
-      67,
-      0,
-      13,
-      9,
-      10,
-      11,
-      10,
-      8,
-      13,
-      11,
-      10,
-      11,
-      14,
-      14,
-      13,
-      15,
-      19,
-      32,
-      21,
-      19,
-      18,
-      18,
-      19,
-      39,
-      28,
-      30,
-      23,
-      32,
-      46,
-      41,
-      49,
-      48,
-      46,
-      41,
-      45,
-      44,
-      51,
-      58,
-      74,
-      62,
-      51,
-      54,
-      70,
-      55,
-      44,
-      45,
-      64,
-      87,
-      65,
-      70,
-      76,
-      78,
-      82,
-      83,
-      82,
-      50,
-      62,
-      90,
-      97,
-      90,
-      80,
-      96,
-      74,
-      81,
-      82,
-      79,
-      255,
-      219,
-      0,
-      67,
-      1,
-      14,
-      14,
-      14,
-      19,
-      17,
-      19,
-      38,
-      21,
-      21,
-      38,
-      79,
-      53,
-      45,
-      53,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      79,
-      255,
-      192,
-      0,
-      17,
-      8,
-      0,
-      8,
-      0,
-      8,
-      3,
-      1,
-      34,
-      0,
-      2,
-      17,
-      1,
-      3,
-      17,
-      1,
-      255,
-      196,
-      0,
-      31,
-      0,
-      0,
-      1,
-      5,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      255,
-      196,
-      0,
-      181,
-      16,
-      0,
-      2,
-      1,
-      3,
-      3,
-      2,
-      4,
-      3,
-      5,
-      5,
-      4,
-      4,
-      0,
-      0,
-      1,
-      125,
-      1,
-      2,
-      3,
-      0,
-      4,
-      17,
-      5,
-      18,
-      33,
-      49,
-      65,
-      6,
-      19,
-      81,
-      97,
-      7,
-      34,
-      113,
-      20,
-      50,
-      129,
-      145,
-      161,
-      8,
-      35,
-      66,
-      177,
-      193,
-      21,
-      82,
-      209,
-      240,
-      36,
-      51,
-      98,
-      114,
-      130,
-      9,
-      10,
-      22,
-      23,
-      24,
-      25,
-      26,
-      37,
-      38,
-      39,
-      40,
-      41,
-      42,
-      52,
-      53,
-      54,
-      55,
-      56,
-      57,
-      58,
-      67,
-      68,
-      69,
-      70,
-      71,
-      72,
-      73,
-      74,
-      83,
-      84,
-      85,
-      86,
-      87,
-      88,
-      89,
-      90,
-      99,
-      100,
-      101,
-      102,
-      103,
-      104,
-      105,
-      106,
-      115,
-      116,
-      117,
-      118,
-      119,
-      120,
-      121,
-      122,
-      131,
-      132,
-      133,
-      134,
-      135,
-      136,
-      137,
-      138,
-      146,
-      147,
-      148,
-      149,
-      150,
-      151,
-      152,
-      153,
-      154,
-      162,
-      163,
-      164,
-      165,
-      166,
-      167,
-      168,
-      169,
-      170,
-      178,
-      179,
-      180,
-      181,
-      182,
-      183,
-      184,
-      185,
-      186,
-      194,
-      195,
-      196,
-      197,
-      198,
-      199,
-      200,
-      201,
-      202,
-      210,
-      211,
-      212,
-      213,
-      214,
-      215,
-      216,
-      217,
-      218,
-      225,
-      226,
-      227,
-      228,
-      229,
-      230,
-      231,
-      232,
-      233,
-      234,
-      241,
-      242,
-      243,
-      244,
-      245,
-      246,
-      247,
-      248,
-      249,
-      250,
-      255,
-      196,
-      0,
-      31,
-      1,
-      0,
-      3,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      255,
-      196,
-      0,
-      181,
-      17,
-      0,
-      2,
-      1,
-      2,
-      4,
-      4,
-      3,
-      4,
-      7,
-      5,
-      4,
-      4,
-      0,
-      1,
-      2,
-      119,
-      0,
-      1,
-      2,
-      3,
-      17,
-      4,
-      5,
-      33,
-      49,
-      6,
-      18,
-      65,
-      81,
-      7,
-      97,
-      113,
-      19,
-      34,
-      50,
-      129,
-      8,
-      20,
-      66,
-      145,
-      161,
-      177,
-      193,
-      9,
-      35,
-      51,
-      82,
-      240,
-      21,
-      98,
-      114,
-      209,
-      10,
-      22,
-      36,
-      52,
-      225,
-      37,
-      241,
-      23,
-      24,
-      25,
-      26,
-      38,
-      39,
-      40,
-      41,
-      42,
-      53,
-      54,
-      55,
-      56,
-      57,
-      58,
-      67,
-      68,
-      69,
-      70,
-      71,
-      72,
-      73,
-      74,
-      83,
-      84,
-      85,
-      86,
-      87,
-      88,
-      89,
-      90,
-      99,
-      100,
-      101,
-      102,
-      103,
-      104,
-      105,
-      106,
-      115,
-      116,
-      117,
-      118,
-      119,
-      120,
-      121,
-      122,
-      130,
-      131,
-      132,
-      133,
-      134,
-      135,
-      136,
-      137,
-      138,
-      146,
-      147,
-      148,
-      149,
-      150,
-      151,
-      152,
-      153,
-      154,
-      162,
-      163,
-      164,
-      165,
-      166,
-      167,
-      168,
-      169,
-      170,
-      178,
-      179,
-      180,
-      181,
-      182,
-      183,
-      184,
-      185,
-      186,
-      194,
-      195,
-      196,
-      197,
-      198,
-      199,
-      200,
-      201,
-      202,
-      210,
-      211,
-      212,
-      213,
-      214,
-      215,
-      216,
-      217,
-      218,
-      226,
-      227,
-      228,
-      229,
-      230,
-      231,
-      232,
-      233,
-      234,
-      242,
-      243,
-      244,
-      245,
-      246,
-      247,
-      248,
-      249,
-      250,
-      255,
-      218,
-      0,
-      12,
-      3,
-      1,
-      0,
-      2,
-      17,
-      3,
-      17,
-      0,
-      63,
-      0,
-      146,
-      138,
-      40,
-      174,
-      19,
-      210,
-      63,
-      255,
-      217,
-    ]);
-    FacePhotoField.take = () async => jpeg;
-    addTearDown(() => FacePhotoField.take = takeWithCamera);
-    await tester.pumpWidget(h.wrap(const VisitFormScreen(voterId: 'v4')));
+    late String formId;
+    await tester.runAsync(() async {
+      formId = (await h.store.saveVisit(
+        const VisitDraft(
+          familyId: 'f1',
+          nobodyHome: false,
+          members: [
+            MemberEntry(
+              voterId: 'v1',
+              outcome: Outcome.eligible,
+              formType: '6',
+            ),
+          ],
+        ),
+      )).single;
+    });
+    await tester.pumpWidget(h.wrap(FormDetailScreen(formId: formId)));
     await tester.pumpAndSettle();
-    expect(find.text('चेहरे की फ़ोटो / ECI स्क्रीनशॉट'), findsNothing);
+    expect(find.text('ECI स्क्रीनशॉट नहीं लगा है। इसे लगाएँ।'), findsOneWidget);
 
-    await contactRefused(tester);
-    await tapAndSettle(
-      tester,
-      find.widgetWithText(ChoiceChip, 'पात्र – फॉर्म भराना है'),
-    );
-    await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'फॉर्म 6'));
-    expect(find.text('चेहरे की फ़ोटो / ECI स्क्रीनशॉट'), findsOneWidget);
-    await tapAndSettle(tester, find.text('फ़ोटो लें / ECI अपलोड करें'));
-    expect(find.text('बदलें'), findsOneWidget);
-    await save(tester);
+    await tapAndSettle(tester, find.text('स्क्रीनशॉट लगाएँ'));
     await settle(tester);
-
-    final form = h.store.data.forms.single;
-    expect(h.store.data.localPhotos, {form.id});
-    expect(await tester.runAsync(() => h.store.photoOf(form.id)), jpeg);
+    expect(h.store.data.localEci, {formId});
+    expect(
+      find.text('स्क्रीनशॉट फ़ोन पर है, नेटवर्क मिलते ही भेजा जाएगा'),
+      findsOneWidget,
+    );
   });
 }

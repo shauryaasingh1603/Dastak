@@ -919,14 +919,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get personHousehold => 'भेंट में इसी घर के बताए गए लोग';
 
   @override
-  String get photoTitle => 'चेहरे की फ़ोटो / ECI स्क्रीनशॉट';
+  String get photoTitle => 'चेहरे की फ़ोटो';
 
   @override
   String get photoHint =>
-      'व्यक्ति से पूछकर चेहरे की फ़ोटो लें (सामने से, अच्छी रोशनी में), या ECI वेबसाइट का स्क्रीनशॉट अपलोड करें।';
+      'व्यक्ति से पूछकर सामने से, अच्छी रोशनी में फ़ोटो लें।';
 
   @override
-  String get photoTake => 'फ़ोटो लें / ECI अपलोड करें';
+  String get photoTake => 'फ़ोटो लें';
 
   @override
   String get photoRetake => 'बदलें';
@@ -1004,4 +1004,125 @@ class AppLocalizationsHi extends AppLocalizations {
   String draftPartSectionLine(int part, String section) {
     return '2027 ड्राफ्ट सूची: भाग $part, सेक्शन $section';
   }
+
+  @override
+  String get outcomeOther => 'अन्य कारण';
+
+  @override
+  String get visitChoose => 'क्या हुआ?';
+
+  @override
+  String get visitOptNotMetHint => 'घर पर कोई नहीं था, या यह व्यक्ति नहीं मिला';
+
+  @override
+  String get visitOptForm6 => 'नाम कट गया है, फ़ॉर्म 6 भरना है';
+
+  @override
+  String get visitOptForm6Hint =>
+      'ECI ऐप में फ़ॉर्म 6 भरें, फिर उसका स्क्रीनशॉट यहाँ लगाएँ';
+
+  @override
+  String get visitOptOther => 'अन्य कारण';
+
+  @override
+  String get visitOptOtherHint =>
+      'कोई और बात, जैसे नाम सूची में है या मृत्यु हो गई';
+
+  @override
+  String get revisitTomorrow => 'कल';
+
+  @override
+  String get revisitDayAfter => 'परसों';
+
+  @override
+  String get revisitIn3Days => '3 दिन बाद';
+
+  @override
+  String get eciReminderTitle => 'पहले ECI ऐप में फ़ॉर्म 6 भरें';
+
+  @override
+  String get eciReminderBody =>
+      '1. ECI ऐप (Voter Helpline) में इस व्यक्ति का फ़ॉर्म 6 भरकर जमा करें।\n2. फिर ऐप में “Track application status” खोलें और उस पेज का स्क्रीनशॉट लें। ऐप की भाषा अंग्रेज़ी (English) रखें।\n3. वह स्क्रीनशॉट यहाँ लगाएँ। उसके बिना भेंट सेव नहीं होगी।';
+
+  @override
+  String get eciReminderOk => 'ठीक है';
+
+  @override
+  String get eciExample => 'उदाहरण देखें';
+
+  @override
+  String get eciExampleTitle => 'ऐसा स्क्रीनशॉट लगाएँ';
+
+  @override
+  String get eciExampleNote =>
+      'Reference Number, नाम (First Name) और Form Type साफ़ दिखने चाहिए। इस उदाहरण में वे छिपाए गए हैं।';
+
+  @override
+  String get eciTitle => 'ECI स्क्रीनशॉट (ज़रूरी)';
+
+  @override
+  String get eciHint =>
+      'ECI ऐप के “Track application status” पेज का स्क्रीनशॉट, अंग्रेज़ी में';
+
+  @override
+  String get eciAdd => 'स्क्रीनशॉट लगाएँ';
+
+  @override
+  String get eciOnServer => 'स्क्रीनशॉट भेजा जा चुका है';
+
+  @override
+  String get eciWaiting => 'स्क्रीनशॉट फ़ोन पर है, नेटवर्क मिलते ही भेजा जाएगा';
+
+  @override
+  String get eciMissing => 'ECI स्क्रीनशॉट नहीं लगा है। इसे लगाएँ।';
+
+  @override
+  String get eciReadPending => 'स्क्रीनशॉट पढ़ा जा रहा है…';
+
+  @override
+  String eciReadOk(String reference) {
+    return 'ECI से पढ़ा गया: $reference';
+  }
+
+  @override
+  String get eciReadFailed =>
+      'स्क्रीनशॉट पढ़ा नहीं जा सका। साफ़ स्क्रीनशॉट दोबारा लगाएँ।';
+
+  @override
+  String get eciNotEci =>
+      'यह ECI का स्क्रीनशॉट नहीं लगता। सही स्क्रीनशॉट लगाएँ।';
+
+  @override
+  String get errEciRequired => 'ECI ऐप का स्क्रीनशॉट लगाएँ';
+
+  @override
+  String get errChooseOption => 'ऊपर तीन में से एक चुनें';
+
+  @override
+  String get otherWhat => 'क्या कारण है?';
+
+  @override
+  String get otherOnRoll => 'नाम सूची में है';
+
+  @override
+  String get otherDead => 'मृत्यु हो गई';
+
+  @override
+  String get otherShifted => 'हमेशा के लिए कहीं और चले गए';
+
+  @override
+  String get otherSomething => 'कुछ और';
+
+  @override
+  String get otherReason => 'कारण लिखें';
+
+  @override
+  String get otherReasonOptional => 'कुछ और बताना हो तो लिखें';
+
+  @override
+  String get errOtherReason => 'कारण लिखें';
+
+  @override
+  String get form6AlreadyOpen =>
+      'इस व्यक्ति का फ़ॉर्म 6 पहले से खुला है। स्क्रीनशॉट उसी में जुड़ेगा।';
 }

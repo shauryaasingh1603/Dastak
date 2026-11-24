@@ -17,6 +17,7 @@ class MemberEntry {
     this.mobile,
     this.mobileConsent = false,
     this.photo,
+    this.eci,
   });
 
   final String voterId;
@@ -30,6 +31,9 @@ class MemberEntry {
 
   /// Face photo (JPEG) for the form, if one is started.
   final Uint8List? photo;
+
+  /// Screenshot (JPEG) of the ECI application for the form.
+  final Uint8List? eci;
 }
 
 class VisitDraft {
@@ -98,6 +102,7 @@ class NewVoterDraft {
     this.newReason,
     this.newReasonNote,
     this.photo,
+    this.eci,
   }) : assert(familyId != null || household != null);
 
   /// The listed household the voter joins, or [household] for a new one.
@@ -121,6 +126,9 @@ class NewVoterDraft {
 
   /// Face photo (JPEG) for the form, if one is started.
   final Uint8List? photo;
+
+  /// Screenshot (JPEG) of the ECI application for the form.
+  final Uint8List? eci;
 }
 
 /// The phone's working copy: reads the local database into [data] and
@@ -153,6 +161,7 @@ class FieldStore extends ChangeNotifier {
     final meta = {
       for (final m in await db.select(db.meta).get()) m.key: m.value,
     };
+    final photos = await db.select(db.formPhotos).get();
     final members = <String, List<VisitMember>>{};
     for (final m in await db.select(db.visitVoters).get()) {
       (members[m.visitId] ??= []).add(
@@ -249,11 +258,19 @@ class FieldStore extends ChangeNotifier {
             status: f.currentStatus,
             updatedAt: f.updatedAt,
             hasPhoto: f.hasPhoto,
+            hasEci: f.hasEci,
+            eciStatus: f.eciStatus,
+            eciReferenceNo: f.eciReferenceNo,
             pending: f.pending,
           ),
       ],
       localPhotos: {
-        for (final p in await db.select(db.formPhotos).get()) p.formId,
+        for (final p in photos)
+          if (p.kind == PhotoKind.face) p.formId,
+      },
+      localEci: {
+        for (final p in photos)
+          if (p.kind == PhotoKind.eci) p.formId,
       },
       events: [
         for (final e in await db.select(db.formEvents).get())
@@ -314,7 +331,8 @@ class FieldStore extends ChangeNotifier {
   // Local changes
   // ---------------------------------------------------------------------------
 
-  /// Records a door visit. Returns the ids of any forms it started.
+  /// Records a door visit. Returns the ids of the forms it started, or added
+  /// images to when the person already had that form open.
   Future<List<String>> saveVisit(VisitDraft draft) async {
     final visitId = newId();
     final now = DateTime.now().toUtc();
@@ -385,9 +403,19 @@ class FieldStore extends ChangeNotifier {
 
       for (final m in draft.members) {
         final type = m.formType;
-        if (type == null || _data.hasOpenForm(m.voterId, type)) continue;
+        if (type == null) continue;
+        final open = _data.openForm(m.voterId, type);
+        if (open != null) {
+          // The form was started earlier: the new images go on it.
+          if (m.eci != null) await _putImage(open.id, PhotoKind.eci, m.eci!);
+          if (m.photo != null) {
+            await _putImage(open.id, PhotoKind.face, m.photo!);
+          }
+          createdForms.add(open.id);
+          continue;
+        }
         createdForms.add(
-          await _startForm(m.voterId, type, now, photo: m.photo),
+          await _startForm(m.voterId, type, now, photo: m.photo, eci: m.eci),
         );
       }
     });
@@ -465,6 +493,7 @@ class FieldStore extends ChangeNotifier {
           draft.formType!,
           now,
           photo: draft.photo,
+          eci: draft.eci,
         );
       }
     });
@@ -473,59 +502,78 @@ class FieldStore extends ChangeNotifier {
   }
 
   // ---------------------------------------------------------------------------
-  // Face photos
+  // Images: face photo and ECI screenshot
   // ---------------------------------------------------------------------------
 
-  /// Takes, or replaces, the face photo for a form. Kept on the phone until
-  /// the server has recorded it.
-  Future<void> setFormPhoto(String formId, Uint8List jpeg) async {
-    await db
-        .into(db.formPhotos)
-        .insertOnConflictUpdate(
-          FormPhotosCompanion.insert(
-            formId: formId,
-            bytes: jpeg,
-            takenAt: DateTime.now().toUtc(),
-            uploaded: const Value(false),
-          ),
-        );
+  /// Takes, or replaces, a form's face photo or ([kind] 'eci') its ECI
+  /// screenshot. Kept on the phone until the server has recorded it.
+  Future<void> setFormPhoto(
+    String formId,
+    Uint8List jpeg, {
+    String kind = PhotoKind.face,
+  }) async {
+    await _putImage(formId, kind, jpeg);
     await _afterChange();
   }
 
-  /// Drops a photo taken on this phone (before the server has recorded it).
-  Future<void> removeFormPhoto(String formId) async {
+  Future<void> _putImage(String formId, String kind, Uint8List jpeg) => db
+      .into(db.formPhotos)
+      .insertOnConflictUpdate(
+        FormPhotosCompanion.insert(
+          formId: formId,
+          kind: Value(kind),
+          bytes: jpeg,
+          takenAt: DateTime.now().toUtc(),
+          uploaded: const Value(false),
+        ),
+      );
+
+  /// Drops an image taken on this phone (before the server has recorded it).
+  Future<void> removeFormPhoto(
+    String formId, {
+    String kind = PhotoKind.face,
+  }) async {
     await (db.delete(
       db.formPhotos,
-    )..where((t) => t.formId.equals(formId))).go();
+    )..where((t) => t.formId.equals(formId) & t.kind.equals(kind))).go();
     await reload();
   }
 
-  /// The photo taken on this phone for a form, if it is still here.
-  Future<Uint8List?> photoOf(String formId) async {
-    final row = await (db.select(
-      db.formPhotos,
-    )..where((t) => t.formId.equals(formId))).getSingleOrNull();
+  /// The image taken on this phone for a form, if it is still here.
+  Future<Uint8List?> photoOf(
+    String formId, {
+    String kind = PhotoKind.face,
+  }) async {
+    final row =
+        await (db.select(db.formPhotos)
+              ..where((t) => t.formId.equals(formId) & t.kind.equals(kind)))
+            .getSingleOrNull();
     return row?.bytes;
   }
 
-  /// Photos to upload: not uploaded yet, for forms the server already has.
-  Future<List<({String formId, Uint8List bytes})>> photosToUpload() async {
+  /// Images to upload: not uploaded yet, for forms the server already has.
+  Future<List<({String formId, String kind, Uint8List bytes})>>
+  photosToUpload() async {
     final rows = await (db.select(
       db.formPhotos,
     )..where((t) => t.uploaded.equals(false))).get();
     return [
       for (final r in rows)
         if (_data.form(r.formId) case final form? when !form.pending)
-          (formId: r.formId, bytes: r.bytes),
+          (formId: r.formId, kind: r.kind, bytes: r.bytes),
     ];
   }
 
-  /// The photo is in storage: ask the server to record it on the form.
-  Future<void> markPhotoUploaded(String formId) async {
+  /// The image is in storage: ask the server to record it on the form.
+  Future<void> markPhotoUploaded(
+    String formId, {
+    String kind = PhotoKind.face,
+  }) async {
     await db.transaction(() async {
-      await (db.update(db.formPhotos)..where((t) => t.formId.equals(formId)))
+      await (db.update(db.formPhotos)
+            ..where((t) => t.formId.equals(formId) & t.kind.equals(kind)))
           .write(const FormPhotosCompanion(uploaded: Value(true)));
-      await _enqueue('form_photo', newId(), {'form_id': formId});
+      await _enqueue('form_photo', newId(), {'form_id': formId, 'kind': kind});
     });
     await reload();
   }
@@ -598,19 +646,11 @@ class FieldStore extends ChangeNotifier {
     String formType,
     DateTime now, {
     Uint8List? photo,
+    Uint8List? eci,
   }) async {
     final formId = newId();
-    if (photo != null) {
-      await db
-          .into(db.formPhotos)
-          .insert(
-            FormPhotosCompanion.insert(
-              formId: formId,
-              bytes: photo,
-              takenAt: now,
-            ),
-          );
-    }
+    if (photo != null) await _putImage(formId, PhotoKind.face, photo);
+    if (eci != null) await _putImage(formId, PhotoKind.eci, eci);
     final eventId = newId();
     await db
         .into(db.forms)
@@ -920,6 +960,9 @@ class FieldStore extends ChangeNotifier {
                 currentStatus: r['current_status'] as String,
                 updatedAt: DateTime.parse(r['updated_at'] as String),
                 hasPhoto: Value(r['has_photo'] as bool? ?? false),
+                hasEci: Value(r['has_eci'] as bool? ?? false),
+                eciStatus: Value(r['eci_status'] as String?),
+                eciReferenceNo: Value(r['eci_reference_no'] as String?),
               ),
         ]);
         b.insertAll(db.formEvents, mode: InsertMode.insertOrReplace, [
@@ -956,14 +999,23 @@ class FieldStore extends ChangeNotifier {
         );
       }
 
-      // Photos the server has recorded need not stay on the phone.
-      final recorded = [
-        for (final r in rows('forms'))
-          if (r['has_photo'] == true) r['id'] as String,
-      ];
-      await (db.delete(
-        db.formPhotos,
-      )..where((t) => t.uploaded.equals(true) & t.formId.isIn(recorded))).go();
+      // Images the server has recorded need not stay on the phone.
+      for (final (kind, key) in [
+        (PhotoKind.face, 'has_photo'),
+        (PhotoKind.eci, 'has_eci'),
+      ]) {
+        final recorded = [
+          for (final r in rows('forms'))
+            if (r[key] == true) r['id'] as String,
+        ];
+        await (db.delete(db.formPhotos)..where(
+              (t) =>
+                  t.uploaded.equals(true) &
+                  t.kind.equals(kind) &
+                  t.formId.isIn(recorded),
+            ))
+            .go();
+      }
 
       final serverTime =
           snap['server_time'] as String? ??
@@ -1024,6 +1076,7 @@ class FieldStore extends ChangeNotifier {
       Outcome.shifted,
       Outcome.dead,
       Outcome.alreadyOnRoll,
+      Outcome.other,
     ];
     for (final o in order) {
       if (outcomes.contains(o)) return o;

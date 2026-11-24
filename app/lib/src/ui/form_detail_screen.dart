@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../l10n/app_localizations.dart';
 import '../data/models.dart';
 import 'dates.dart';
+import 'eci_shot.dart';
 import 'face_photo.dart';
 import 'field_scope.dart';
 import 'labels.dart';
@@ -179,9 +180,20 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
                 const SizedBox(height: 12),
                 _PhotoCard(
                   form: form,
+                  kind: PhotoKind.eci,
+                  // Reloads the preview when a screenshot is added or sent.
+                  key: ValueKey(
+                    'eci${data.localEci.contains(form.id)}${form.hasEci}'
+                    '${form.eciStatus}',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _PhotoCard(
+                  form: form,
+                  kind: PhotoKind.face,
                   // Reloads the preview when a photo is taken or sent.
                   key: ValueKey(
-                    '${data.localPhotos.contains(form.id)}${form.hasPhoto}',
+                    'face${data.localPhotos.contains(form.id)}${form.hasPhoto}',
                   ),
                 ),
               ],
@@ -299,12 +311,14 @@ class _FormDetailScreenState extends State<FormDetailScreen> {
   }
 }
 
-/// The applicant's face photo: taken on this phone (waiting to be sent), on
-/// the server, or not taken yet, with a button to take or retake it.
+/// The ECI screenshot or the applicant's face photo ([kind]): on this phone
+/// (waiting to be sent), on the server, or missing, with a button to add or
+/// change it.
 class _PhotoCard extends StatefulWidget {
-  const _PhotoCard({super.key, required this.form});
+  const _PhotoCard({super.key, required this.form, required this.kind});
 
   final ClaimForm form;
+  final String kind;
 
   @override
   State<_PhotoCard> createState() => _PhotoCardState();
@@ -319,40 +333,56 @@ class _PhotoCardState extends State<_PhotoCard> {
     super.didChangeDependencies();
     if (_loaded) return;
     _loaded = true;
-    FieldScope.of(context).store.photoOf(widget.form.id).then((bytes) {
-      if (mounted && bytes != null) setState(() => _local = bytes);
-    });
+    FieldScope.of(context).store
+        .photoOf(widget.form.id, kind: widget.kind)
+        .then((bytes) {
+          if (mounted && bytes != null) setState(() => _local = bytes);
+        });
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final store = FieldScope.of(context).store;
-    final waiting = _local != null && !widget.form.hasPhoto;
+    final form = widget.form;
+    final eci = widget.kind == PhotoKind.eci;
+    final onServer = eci ? form.hasEci : form.hasPhoto;
+    final waiting = _local != null && !onServer;
+    Future<void> changed(Uint8List? bytes) async {
+      setState(() => _local = bytes);
+      if (bytes == null) {
+        await store.removeFormPhoto(form.id, kind: widget.kind);
+      } else {
+        await store.setFormPhoto(form.id, bytes, kind: widget.kind);
+      }
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            FacePhotoField(
-              photo: _local,
-              onServer: widget.form.hasPhoto,
-              onChanged: (bytes) async {
-                setState(() => _local = bytes);
-                if (bytes == null) {
-                  await store.removeFormPhoto(widget.form.id);
-                } else {
-                  await store.setFormPhoto(widget.form.id, bytes);
-                }
-              },
-            ),
+            if (eci)
+              EciShotField(
+                shot: _local,
+                onServer: form.hasEci,
+                status: form.eciStatus,
+                referenceNo: form.eciReferenceNo,
+                onChanged: changed,
+              )
+            else
+              FacePhotoField(
+                photo: _local,
+                onServer: form.hasPhoto,
+                onChanged: changed,
+              ),
             if (waiting) ...[
               const SizedBox(height: 6),
-              Text(l10n.photoWaiting),
-            ] else if (_local == null && !widget.form.hasPhoto) ...[
+              Text(eci ? l10n.eciWaiting : l10n.photoWaiting),
+            ] else if (_local == null && !onServer) ...[
               const SizedBox(height: 6),
-              Text(l10n.photoMissing),
+              Text(eci ? l10n.eciMissing : l10n.photoMissing),
             ],
           ],
         ),

@@ -1723,19 +1723,19 @@ abstract class AppLocalizations {
   /// No description provided for @photoTitle.
   ///
   /// In hi, this message translates to:
-  /// **'चेहरे की फ़ोटो / ECI स्क्रीनशॉट'**
+  /// **'चेहरे की फ़ोटो'**
   String get photoTitle;
 
   /// No description provided for @photoHint.
   ///
   /// In hi, this message translates to:
-  /// **'व्यक्ति से पूछकर चेहरे की फ़ोटो लें (सामने से, अच्छी रोशनी में), या ECI वेबसाइट का स्क्रीनशॉट अपलोड करें।'**
+  /// **'व्यक्ति से पूछकर सामने से, अच्छी रोशनी में फ़ोटो लें।'**
   String get photoHint;
 
   /// No description provided for @photoTake.
   ///
   /// In hi, this message translates to:
-  /// **'फ़ोटो लें / ECI अपलोड करें'**
+  /// **'फ़ोटो लें'**
   String get photoTake;
 
   /// No description provided for @photoRetake.
@@ -1875,6 +1875,228 @@ abstract class AppLocalizations {
   /// In hi, this message translates to:
   /// **'2027 ड्राफ्ट सूची: भाग {part}, सेक्शन {section}'**
   String draftPartSectionLine(int part, String section);
+
+  /// No description provided for @outcomeOther.
+  ///
+  /// In hi, this message translates to:
+  /// **'अन्य कारण'**
+  String get outcomeOther;
+
+  /// No description provided for @visitChoose.
+  ///
+  /// In hi, this message translates to:
+  /// **'क्या हुआ?'**
+  String get visitChoose;
+
+  /// No description provided for @visitOptNotMetHint.
+  ///
+  /// In hi, this message translates to:
+  /// **'घर पर कोई नहीं था, या यह व्यक्ति नहीं मिला'**
+  String get visitOptNotMetHint;
+
+  /// No description provided for @visitOptForm6.
+  ///
+  /// In hi, this message translates to:
+  /// **'नाम कट गया है, फ़ॉर्म 6 भरना है'**
+  String get visitOptForm6;
+
+  /// No description provided for @visitOptForm6Hint.
+  ///
+  /// In hi, this message translates to:
+  /// **'ECI ऐप में फ़ॉर्म 6 भरें, फिर उसका स्क्रीनशॉट यहाँ लगाएँ'**
+  String get visitOptForm6Hint;
+
+  /// No description provided for @visitOptOther.
+  ///
+  /// In hi, this message translates to:
+  /// **'अन्य कारण'**
+  String get visitOptOther;
+
+  /// No description provided for @visitOptOtherHint.
+  ///
+  /// In hi, this message translates to:
+  /// **'कोई और बात, जैसे नाम सूची में है या मृत्यु हो गई'**
+  String get visitOptOtherHint;
+
+  /// No description provided for @revisitTomorrow.
+  ///
+  /// In hi, this message translates to:
+  /// **'कल'**
+  String get revisitTomorrow;
+
+  /// No description provided for @revisitDayAfter.
+  ///
+  /// In hi, this message translates to:
+  /// **'परसों'**
+  String get revisitDayAfter;
+
+  /// No description provided for @revisitIn3Days.
+  ///
+  /// In hi, this message translates to:
+  /// **'3 दिन बाद'**
+  String get revisitIn3Days;
+
+  /// No description provided for @eciReminderTitle.
+  ///
+  /// In hi, this message translates to:
+  /// **'पहले ECI ऐप में फ़ॉर्म 6 भरें'**
+  String get eciReminderTitle;
+
+  /// No description provided for @eciReminderBody.
+  ///
+  /// In hi, this message translates to:
+  /// **'1. ECI ऐप (Voter Helpline) में इस व्यक्ति का फ़ॉर्म 6 भरकर जमा करें।\n2. फिर ऐप में “Track application status” खोलें और उस पेज का स्क्रीनशॉट लें। ऐप की भाषा अंग्रेज़ी (English) रखें।\n3. वह स्क्रीनशॉट यहाँ लगाएँ। उसके बिना भेंट सेव नहीं होगी।'**
+  String get eciReminderBody;
+
+  /// No description provided for @eciReminderOk.
+  ///
+  /// In hi, this message translates to:
+  /// **'ठीक है'**
+  String get eciReminderOk;
+
+  /// No description provided for @eciExample.
+  ///
+  /// In hi, this message translates to:
+  /// **'उदाहरण देखें'**
+  String get eciExample;
+
+  /// No description provided for @eciExampleTitle.
+  ///
+  /// In hi, this message translates to:
+  /// **'ऐसा स्क्रीनशॉट लगाएँ'**
+  String get eciExampleTitle;
+
+  /// No description provided for @eciExampleNote.
+  ///
+  /// In hi, this message translates to:
+  /// **'Reference Number, नाम (First Name) और Form Type साफ़ दिखने चाहिए। इस उदाहरण में वे छिपाए गए हैं।'**
+  String get eciExampleNote;
+
+  /// No description provided for @eciTitle.
+  ///
+  /// In hi, this message translates to:
+  /// **'ECI स्क्रीनशॉट (ज़रूरी)'**
+  String get eciTitle;
+
+  /// No description provided for @eciHint.
+  ///
+  /// In hi, this message translates to:
+  /// **'ECI ऐप के “Track application status” पेज का स्क्रीनशॉट, अंग्रेज़ी में'**
+  String get eciHint;
+
+  /// No description provided for @eciAdd.
+  ///
+  /// In hi, this message translates to:
+  /// **'स्क्रीनशॉट लगाएँ'**
+  String get eciAdd;
+
+  /// No description provided for @eciOnServer.
+  ///
+  /// In hi, this message translates to:
+  /// **'स्क्रीनशॉट भेजा जा चुका है'**
+  String get eciOnServer;
+
+  /// No description provided for @eciWaiting.
+  ///
+  /// In hi, this message translates to:
+  /// **'स्क्रीनशॉट फ़ोन पर है, नेटवर्क मिलते ही भेजा जाएगा'**
+  String get eciWaiting;
+
+  /// No description provided for @eciMissing.
+  ///
+  /// In hi, this message translates to:
+  /// **'ECI स्क्रीनशॉट नहीं लगा है। इसे लगाएँ।'**
+  String get eciMissing;
+
+  /// No description provided for @eciReadPending.
+  ///
+  /// In hi, this message translates to:
+  /// **'स्क्रीनशॉट पढ़ा जा रहा है…'**
+  String get eciReadPending;
+
+  /// No description provided for @eciReadOk.
+  ///
+  /// In hi, this message translates to:
+  /// **'ECI से पढ़ा गया: {reference}'**
+  String eciReadOk(String reference);
+
+  /// No description provided for @eciReadFailed.
+  ///
+  /// In hi, this message translates to:
+  /// **'स्क्रीनशॉट पढ़ा नहीं जा सका। साफ़ स्क्रीनशॉट दोबारा लगाएँ।'**
+  String get eciReadFailed;
+
+  /// No description provided for @eciNotEci.
+  ///
+  /// In hi, this message translates to:
+  /// **'यह ECI का स्क्रीनशॉट नहीं लगता। सही स्क्रीनशॉट लगाएँ।'**
+  String get eciNotEci;
+
+  /// No description provided for @errEciRequired.
+  ///
+  /// In hi, this message translates to:
+  /// **'ECI ऐप का स्क्रीनशॉट लगाएँ'**
+  String get errEciRequired;
+
+  /// No description provided for @errChooseOption.
+  ///
+  /// In hi, this message translates to:
+  /// **'ऊपर तीन में से एक चुनें'**
+  String get errChooseOption;
+
+  /// No description provided for @otherWhat.
+  ///
+  /// In hi, this message translates to:
+  /// **'क्या कारण है?'**
+  String get otherWhat;
+
+  /// No description provided for @otherOnRoll.
+  ///
+  /// In hi, this message translates to:
+  /// **'नाम सूची में है'**
+  String get otherOnRoll;
+
+  /// No description provided for @otherDead.
+  ///
+  /// In hi, this message translates to:
+  /// **'मृत्यु हो गई'**
+  String get otherDead;
+
+  /// No description provided for @otherShifted.
+  ///
+  /// In hi, this message translates to:
+  /// **'हमेशा के लिए कहीं और चले गए'**
+  String get otherShifted;
+
+  /// No description provided for @otherSomething.
+  ///
+  /// In hi, this message translates to:
+  /// **'कुछ और'**
+  String get otherSomething;
+
+  /// No description provided for @otherReason.
+  ///
+  /// In hi, this message translates to:
+  /// **'कारण लिखें'**
+  String get otherReason;
+
+  /// No description provided for @otherReasonOptional.
+  ///
+  /// In hi, this message translates to:
+  /// **'कुछ और बताना हो तो लिखें'**
+  String get otherReasonOptional;
+
+  /// No description provided for @errOtherReason.
+  ///
+  /// In hi, this message translates to:
+  /// **'कारण लिखें'**
+  String get errOtherReason;
+
+  /// No description provided for @form6AlreadyOpen.
+  ///
+  /// In hi, this message translates to:
+  /// **'इस व्यक्ति का फ़ॉर्म 6 पहले से खुला है। स्क्रीनशॉट उसी में जुड़ेगा।'**
+  String get form6AlreadyOpen;
 }
 
 class _AppLocalizationsDelegate

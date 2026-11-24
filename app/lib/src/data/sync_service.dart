@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase/supabase.dart';
 
 import 'field_store.dart';
+import 'models.dart' show PhotoKind;
 
 /// The server calls sync needs. Split out so the sync can be tested offline.
 abstract class SyncApi {
@@ -16,9 +17,14 @@ abstract class SyncApi {
   /// Everything the user may see, as one JSON document.
   Future<Map<String, dynamic>> pull();
 
-  /// Puts a form's face photo in storage. False if the server refused it
-  /// (e.g. the form was rejected); network trouble throws.
-  Future<bool> uploadPhoto(String formId, Uint8List jpeg);
+  /// Puts a form's face photo, or ([kind] 'eci') its ECI screenshot, in
+  /// storage. False if the server refused it (e.g. the form was rejected);
+  /// network trouble throws.
+  Future<bool> uploadPhoto(String formId, Uint8List jpeg, {String kind});
+
+  /// Asks the server to read these forms' ECI screenshots now. Best effort:
+  /// anything not read now is read later.
+  Future<void> readEci(List<String> formIds);
 }
 
 /// The server could not be reached, or did not answer properly.
@@ -91,12 +97,16 @@ class SupabaseSyncApi implements SyncApi {
   }
 
   @override
-  Future<bool> uploadPhoto(String formId, Uint8List jpeg) async {
+  Future<bool> uploadPhoto(
+    String formId,
+    Uint8List jpeg, {
+    String kind = PhotoKind.face,
+  }) async {
     try {
       await _client.storage
           .from('form-photos')
           .uploadBinary(
-            '$formId.jpg',
+            kind == PhotoKind.eci ? '$formId-eci.jpg' : '$formId.jpg',
             jpeg,
             fileOptions: const FileOptions(
               contentType: 'image/jpeg',
@@ -111,6 +121,13 @@ class SupabaseSyncApi implements SyncApi {
       return false;
     } catch (e) {
       throw SyncNetworkException(e);
+    }
+  }
+
+  @override
+  Future<void> readEci(List<String> formIds) async {
+    for (final id in formIds) {
+      await _client.functions.invoke('eci-read', body: {'form_id': id});
     }
   }
 
@@ -188,7 +205,13 @@ class SyncService extends ChangeNotifier {
       do {
         _again = false;
         await _pushAll();
-        if (await _uploadPhotos()) await _pushAll();
+        final uploaded = await _uploadPhotos();
+        if (uploaded.isNotEmpty) await _pushAll();
+        final screenshots = [
+          for (final p in uploaded)
+            if (p.kind == PhotoKind.eci) p.formId,
+        ];
+        if (screenshots.isNotEmpty) _readEci(screenshots);
         await store.applySnapshot(await api.pull(), userId: userId);
         _problem = SyncProblem.none;
       } while (_again && _userId != null);
@@ -218,16 +241,24 @@ class SyncService extends ChangeNotifier {
     }
   }
 
-  /// Uploads face photos for forms the server has; true if any went up.
-  Future<bool> _uploadPhotos() async {
-    var any = false;
+  /// Uploads images for forms the server has; returns those that went up.
+  Future<List<({String formId, String kind})>> _uploadPhotos() async {
+    final uploaded = <({String formId, String kind})>[];
     for (final photo in await store.photosToUpload()) {
-      if (await api.uploadPhoto(photo.formId, photo.bytes)) {
-        await store.markPhotoUploaded(photo.formId);
-        any = true;
+      if (await api.uploadPhoto(photo.formId, photo.bytes, kind: photo.kind)) {
+        await store.markPhotoUploaded(photo.formId, kind: photo.kind);
+        uploaded.add((formId: photo.formId, kind: photo.kind));
       }
     }
-    return any;
+    return uploaded;
+  }
+
+  /// The server reads new ECI screenshots (a few seconds each) without
+  /// holding up the sync; one more sync then brings back what it read.
+  void _readEci(List<String> formIds) {
+    unawaited(
+      api.readEci(formIds).then((_) => syncNow()).catchError((Object _) {}),
+    );
   }
 
   @override

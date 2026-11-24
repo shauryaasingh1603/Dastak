@@ -48,6 +48,11 @@ CodeLabel outcomeLabel(AppLocalizations l10n, String code) => switch (code) {
     Icons.verified_outlined,
     const Color(0xFF1E5AA8),
   ),
+  Outcome.other => CodeLabel(
+    l10n.outcomeOther,
+    Icons.notes,
+    const Color(0xFF5F5F5F),
+  ),
   _ => CodeLabel(code, Icons.help_outline, const Color(0xFF5F5F5F)),
 };
 
