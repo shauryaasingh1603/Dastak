@@ -69,4 +69,55 @@ void main() {
       expect(fix.flag, 'GPS_TIMEOUT');
     });
   });
+
+  group('locationAccess in a browser', () {
+    test('a granted site permission needs no reading', () async {
+      expect(await locationAccess(web: true), LocationAccess.granted);
+      expect(gps.fixRequests, isEmpty);
+    });
+
+    test(
+      '"blocked" from the browser is not trusted until a reading fails',
+      () async {
+        gps.permission = LocationPermission.deniedForever;
+        expect(await locationAccess(web: true), LocationAccess.denied);
+        // The person allowed it after all: the reading works.
+        expect(
+          await locationAccess(ask: true, web: true),
+          LocationAccess.granted,
+        );
+        expect(gps.fixRequests, hasLength(1));
+      },
+    );
+
+    test('allowed but no fix yet still lets the volunteer work', () async {
+      gps
+        ..permission = LocationPermission.denied
+        ..timesOut = true;
+      expect(
+        await locationAccess(ask: true, web: true),
+        LocationAccess.granted,
+      );
+    });
+
+    test('a real refusal is reported as blocked', () async {
+      gps
+        ..permission = LocationPermission.denied
+        ..error = const PermissionDeniedException('denied');
+      expect(
+        await locationAccess(ask: true, web: true),
+        LocationAccess.blocked,
+      );
+    });
+
+    test('position unavailable means the phone location is off', () async {
+      gps
+        ..permission = LocationPermission.denied
+        ..error = const PositionUpdateException('unavailable');
+      expect(
+        await locationAccess(ask: true, web: true),
+        LocationAccess.serviceOff,
+      );
+    });
+  });
 }

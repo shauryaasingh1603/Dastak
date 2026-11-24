@@ -15,6 +15,9 @@ class FakeGeolocator extends GeolocatorPlatform
   double accuracy = 8;
   bool timesOut = false;
 
+  /// Thrown by the next readings (e.g. a browser refusal).
+  Object? error;
+
   int prompts = 0;
   final fixRequests = <LocationSettings?>[];
 
@@ -40,6 +43,7 @@ class FakeGeolocator extends GeolocatorPlatform
   }) async {
     fixRequests.add(locationSettings);
     if (timesOut) throw TimeoutException('no fix');
+    if (error != null) throw error!;
     return Position(
       latitude: 25.7612,
       longitude: 82.8431,

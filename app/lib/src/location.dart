@@ -22,8 +22,51 @@ enum LocationAccess {
 }
 
 /// Checks location access. With [ask], shows the system permission prompt
-/// when that can still change the answer.
-Future<LocationAccess> locationAccess({bool ask = false}) async {
+/// when that can still change the answer. [web] is for tests.
+Future<LocationAccess> locationAccess({bool ask = false, bool web = kIsWeb}) {
+  return web ? _webLocationAccess(ask: ask) : _phoneLocationAccess(ask: ask);
+}
+
+/// In a browser, the permission state and the plugin's "ask" both say
+/// "blocked" far more often than it is true: any failed fix (phone location
+/// off, no fix yet indoors, a slow GPS) or Samsung Internet's own reporting
+/// comes back as permanently refused. So the only proof is a real reading:
+/// the browser asks the person if needed, and the error, if any, tells
+/// what is actually wrong.
+Future<LocationAccess> _webLocationAccess({required bool ask}) async {
+  LocationPermission state;
+  try {
+    state = await Geolocator.checkPermission();
+  } catch (_) {
+    state = LocationPermission.unableToDetermine;
+  }
+  if (state == LocationPermission.whileInUse ||
+      state == LocationPermission.always) {
+    return LocationAccess.granted;
+  }
+  // Not proven either way: offer "अनुमति दें", which tries for real.
+  if (!ask) return LocationAccess.denied;
+  try {
+    await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        timeLimit: Duration(seconds: 20),
+      ),
+    );
+    return LocationAccess.granted;
+  } on PermissionDeniedException {
+    return LocationAccess.blocked;
+  } on TimeoutException {
+    // Allowed, but no fix yet (indoors, weak GPS). Let the volunteer work;
+    // the visit records "no fix in time" if it still has none at saving.
+    return LocationAccess.granted;
+  } catch (_) {
+    // Position unavailable: the phone's location is switched off.
+    return LocationAccess.serviceOff;
+  }
+}
+
+Future<LocationAccess> _phoneLocationAccess({required bool ask}) async {
   try {
     if (!await Geolocator.isLocationServiceEnabled()) {
       return LocationAccess.serviceOff;
