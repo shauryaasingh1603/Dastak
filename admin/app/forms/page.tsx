@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import ExportDialog, { EMPTY_FILTERS } from "@/components/ExportDialog";
+import PersonPanel from "@/components/PersonPanel";
 import Shell from "@/components/Shell";
 import { formatTime, supabase } from "@/lib/supabase";
 
@@ -16,6 +18,7 @@ type FormRow = {
   photo_at: string | null;
   filer: { name: string } | null;
   voter: {
+    id: string;
     name_hi: string;
     age: number | null;
     gender: string | null;
@@ -86,6 +89,18 @@ function Forms() {
   const [photo, setPhoto] = useState("");
   const [query, setQuery] = useState("");
   const [large, setLarge] = useState<string | null>(null);
+  const [person, setPerson] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [team, setTeam] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("users")
+      .select("id, name")
+      .in("role", ["volunteer", "bla2"])
+      .order("name")
+      .then(({ data }) => setTeam((data ?? []) as { id: string; name: string }[]));
+  }, []);
 
   const load = useCallback(async () => {
     let request = supabase
@@ -93,7 +108,7 @@ function Forms() {
       .select(
         "id, form_type, route, reference_no, filed_on, current_status, created_at, photo_path, photo_at, " +
           "filer:users!forms_filed_by_user_id_fkey(name), " +
-          "voter:voters!inner(name_hi, age, gender, epic, category, new_reason, new_reason_note, family:families!inner(part_no, house_no))",
+          "voter:voters!inner(id, name_hi, age, gender, epic, category, new_reason, new_reason_note, family:families!inner(part_no, house_no))",
       )
       .order("created_at", { ascending: false })
       .limit(LIMIT);
@@ -157,9 +172,14 @@ function Forms() {
               ` ${counts.forms.toLocaleString("en-IN")} forms · ${counts.photos.toLocaleString("en-IN")} with a photo · ${counts.turned18.toLocaleString("en-IN")} new voters who turned 18 this year`}
           </p>
         </div>
-        <button className="small" onClick={() => rows && downloadCsv(shown)} disabled={!rows?.length}>
-          Download CSV
-        </button>
+        <div className="toolbar" style={{ margin: 0 }}>
+          <button className="small" onClick={() => rows && downloadCsv(shown)} disabled={!rows?.length}>
+            CSV of this page
+          </button>
+          <button className="small primary" onClick={() => setExporting(true)}>
+            Export…
+          </button>
+        </div>
       </div>
 
       {error && <div className="notice error">{error}</div>}
@@ -233,7 +253,9 @@ function Forms() {
                           )}
                         </td>
                         <td>
-                          {f.voter.name_hi}
+                          <button className="link" onClick={() => setPerson(f.voter.id)}>
+                            {f.voter.name_hi}
+                          </button>
                           <div className="muted small-text">
                             {[f.voter.age && `${f.voter.age} yrs`, f.voter.epic].filter(Boolean).join(" · ")}
                             {f.voter.new_reason && (
@@ -271,6 +293,15 @@ function Forms() {
           </>
         )}
       </div>
+
+      {person && <PersonPanel voterId={person} onClose={() => setPerson(null)} />}
+      {exporting && (
+        <ExportDialog
+          initial={{ ...EMPTY_FILTERS, kind: "forms", booths: booth, form_type: type, status }}
+          volunteers={team}
+          onClose={() => setExporting(false)}
+        />
+      )}
 
       {large && (
         <div className="photo-overlay" role="dialog" aria-label="Photo" onClick={() => setLarge(null)}>
