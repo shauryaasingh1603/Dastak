@@ -2097,6 +2097,36 @@ abstract class AppLocalizations {
   /// In hi, this message translates to:
   /// **'इस व्यक्ति का फ़ॉर्म 6 पहले से खुला है। स्क्रीनशॉट उसी में जुड़ेगा।'**
   String get form6AlreadyOpen;
+
+  /// No description provided for @phoneTitle.
+  ///
+  /// In hi, this message translates to:
+  /// **'मोबाइल नंबर'**
+  String get phoneTitle;
+
+  /// No description provided for @phoneHint.
+  ///
+  /// In hi, this message translates to:
+  /// **'नंबर ज़रूर पूछें। अगर न दें तो “नंबर देने से मना किया” चुनें।'**
+  String get phoneHint;
+
+  /// No description provided for @phoneFamily.
+  ///
+  /// In hi, this message translates to:
+  /// **'घर वाले का मोबाइल नंबर'**
+  String get phoneFamily;
+
+  /// No description provided for @phoneDeclined.
+  ///
+  /// In hi, this message translates to:
+  /// **'नंबर देने से मना किया'**
+  String get phoneDeclined;
+
+  /// No description provided for @errMobileOrDeclined.
+  ///
+  /// In hi, this message translates to:
+  /// **'मोबाइल नंबर डालें या “नंबर देने से मना किया” चुनें'**
+  String get errMobileOrDeclined;
 }
 
 class _AppLocalizationsDelegate

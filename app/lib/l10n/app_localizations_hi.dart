@@ -1125,4 +1125,21 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get form6AlreadyOpen =>
       'इस व्यक्ति का फ़ॉर्म 6 पहले से खुला है। स्क्रीनशॉट उसी में जुड़ेगा।';
+
+  @override
+  String get phoneTitle => 'मोबाइल नंबर';
+
+  @override
+  String get phoneHint =>
+      'नंबर ज़रूर पूछें। अगर न दें तो “नंबर देने से मना किया” चुनें।';
+
+  @override
+  String get phoneFamily => 'घर वाले का मोबाइल नंबर';
+
+  @override
+  String get phoneDeclined => 'नंबर देने से मना किया';
+
+  @override
+  String get errMobileOrDeclined =>
+      'मोबाइल नंबर डालें या “नंबर देने से मना किया” चुनें';
 }

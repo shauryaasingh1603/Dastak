@@ -46,6 +46,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
   Uint8List? _eci;
   Uint8List? _photo;
   bool _consent = false;
+  bool _declined = false;
 
   String? _error;
   bool _saving = false;
@@ -76,19 +77,24 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
         return null;
       case VisitChoice.form6:
         if (_eci == null) return l10n.errEciRequired;
-        final mobile = _mobile.text.trim();
-        if (mobile.isNotEmpty) {
-          if (normalizeMobile(mobile) == null) return l10n.errMobileInvalid;
-          if (!_consent) return l10n.errConsentRequired;
-        }
-        return null;
+        return _validatePhone(l10n);
       case VisitChoice.other:
         if (_otherOutcome == null) return l10n.errOtherReason;
         if (_otherOutcome == Outcome.other && _reason.text.trim().isEmpty) {
           return l10n.errOtherReason;
         }
-        return null;
+        return _validatePhone(l10n);
     }
+  }
+
+  /// A number is always asked for, never forced: either a number (with
+  /// consent) or "declined".
+  String? _validatePhone(AppLocalizations l10n) {
+    final mobile = _mobile.text.trim();
+    if (mobile.isEmpty) return _declined ? null : l10n.errMobileOrDeclined;
+    if (normalizeMobile(mobile) == null) return l10n.errMobileInvalid;
+    if (!_consent) return l10n.errConsentRequired;
+    return null;
   }
 
   Future<void> _save() async {
@@ -124,9 +130,10 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
     final store = FieldScope.of(context).store;
     final voter = store.data.voter(widget.voterId)!;
     final choice = _choice!;
-    final mobile = choice == VisitChoice.form6
-        ? normalizeMobile(_mobile.text)
-        : null;
+    final mobile = choice == VisitChoice.notMet || _declined
+        ? null
+        : normalizeMobile(_mobile.text);
+    final isForm6 = choice == VisitChoice.form6;
     final MemberEntry member = switch (choice) {
       VisitChoice.notMet => MemberEntry(
         voterId: voter.id,
@@ -137,7 +144,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
         outcome: Outcome.eligible,
         formType: '6',
         mobile: mobile,
-        mobileConsent: mobile != null && _consent,
+        mobileConsent: mobile != null,
         photo: _photo,
         eci: _eci,
       ),
@@ -153,6 +160,10 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
         members: [member],
         remarks: choice == VisitChoice.other ? _reason.text : null,
         revisitOn: choice == VisitChoice.notMet ? _revisitOn : null,
+        // For another reason, the number is the household's.
+        contactMobile: isForm6 ? null : mobile,
+        contactConsent: !isForm6 && mobile != null,
+        contactRefused: choice != VisitChoice.notMet && _declined,
         gpsLat: fix.lat,
         gpsLng: fix.lng,
         gpsAccuracy: fix.accuracy,
@@ -275,32 +286,6 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                       photo: _photo,
                       onChanged: (bytes) => setState(() => _photo = bytes),
                     ),
-                    const Divider(height: 28),
-                    TextField(
-                      controller: _mobile,
-                      keyboardType: TextInputType.phone,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(10),
-                      ],
-                      decoration: InputDecoration(
-                        labelText: l10n.visitMobile,
-                        prefixText: '+91 ',
-                      ),
-                      onChanged: (_) => setState(() => _error = null),
-                    ),
-                    if (_mobile.text.isNotEmpty)
-                      CheckboxListTile(
-                        contentPadding: EdgeInsets.zero,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        value: _consent,
-                        onChanged: (v) => setState(() {
-                          _consent = v ?? false;
-                          _error = null;
-                        }),
-                        title: Text(l10n.visitConsentLabel),
-                        subtitle: Text('“${l10n.visitConsent}”'),
-                      ),
                   ],
                 ),
               ),
@@ -352,6 +337,53 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
             ),
           ],
 
+          if (_choice == VisitChoice.form6 || _choice == VisitChoice.other) ...[
+            SectionTitle(
+              _choice == VisitChoice.form6 ? l10n.phoneTitle : l10n.phoneFamily,
+            ),
+            Text(l10n.phoneHint, style: muted),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _mobile,
+              enabled: !_declined,
+              keyboardType: TextInputType.phone,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
+              ],
+              decoration: InputDecoration(
+                labelText: l10n.phoneTitle,
+                prefixText: '+91 ',
+              ),
+              onChanged: (_) => setState(() => _error = null),
+            ),
+            if (_mobile.text.isNotEmpty && !_declined)
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                value: _consent,
+                onChanged: (v) => setState(() {
+                  _consent = v ?? false;
+                  _error = null;
+                }),
+                title: Text(l10n.visitConsentLabel),
+                subtitle: Text('“${l10n.visitConsent}”'),
+              ),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: _declined,
+              onChanged: (v) => setState(() {
+                _declined = v ?? false;
+                if (_declined) {
+                  _mobile.clear();
+                  _consent = false;
+                }
+                _error = null;
+              }),
+              title: Text(l10n.phoneDeclined),
+            ),
+          ],
           const SizedBox(height: 12),
           Row(
             children: [

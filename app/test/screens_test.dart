@@ -79,7 +79,7 @@ void main() {
     expect(find.text('बूथ 22'), findsOneWidget);
     expect(find.text('बूथ 39'), findsOneWidget);
     expect(find.text('0/5 लोग पूरे'), findsOneWidget);
-    expect(find.text('45 लोग'), findsOneWidget);
+    expect(find.text('आज का लक्ष्य'), findsNothing, reason: 'no daily target');
   });
 
   testWidgets('a booth tab lists its people in roll order, with filters', (
@@ -180,14 +180,26 @@ void main() {
 
     await tapAndSettle(tester, find.text('स्क्रीनशॉट लगाएँ'));
     await tapAndSettle(tester, find.text('फ़ोटो लें'));
+    // The number is always asked for: a number, or "declined".
+    await save(tester);
+    expect(
+      find.text('मोबाइल नंबर डालें या “नंबर देने से मना किया” चुनें'),
+      findsOneWidget,
+    );
     await tester.enterText(
-      find.widgetWithText(TextField, 'मोबाइल नंबर (अगर दें)'),
+      find.widgetWithText(TextField, 'मोबाइल नंबर'),
       '9876543210',
     );
     await tester.pump();
     await save(tester);
     expect(find.text('मोबाइल नंबर के लिए सहमति ज़रूरी है'), findsOneWidget);
-    await tapAndSettle(tester, find.byType(Checkbox));
+    await tapAndSettle(
+      tester,
+      find.widgetWithText(
+        CheckboxListTile,
+        'मतदाता को पढ़कर सुनाया और सहमति ली',
+      ),
+    );
     await save(tester);
     await settle(tester);
 
@@ -232,9 +244,12 @@ void main() {
       find.widgetWithText(TextField, 'कारण लिखें'),
       'परिवार ने बात करने से मना किया',
     );
+    await tapAndSettle(tester, find.text('नंबर देने से मना किया'));
     await save(tester);
     await settle(tester);
     final visit = h.store.data.outbox.single.payload;
+    expect(visit['contact_refused'], isTrue);
+    expect(visit['contact_mobile'], isNull);
     expect(visit['outcome'], Outcome.other);
     expect(visit['remarks'], 'परिवार ने बात करने से मना किया');
     expect(visit['revisit_on'], isNull);
@@ -246,9 +261,25 @@ void main() {
     await tester.pumpAndSettle();
     await tapAndSettle(tester, find.text('अन्य कारण'));
     await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'मृत्यु हो गई'));
+    // The household's number.
+    await tester.enterText(
+      find.widgetWithText(TextField, 'मोबाइल नंबर'),
+      '9876501234',
+    );
+    await tester.pump();
+    await tapAndSettle(
+      tester,
+      find.widgetWithText(
+        CheckboxListTile,
+        'मतदाता को पढ़कर सुनाया और सहमति ली',
+      ),
+    );
     await save(tester);
     await settle(tester);
     final visit = h.store.data.outbox.single.payload;
+    expect(visit['contact_mobile'], '9876501234');
+    expect(visit['contact_consent'], isTrue);
+    expect(visit['contact_refused'], isFalse);
     expect(visit['outcome'], Outcome.dead);
     expect(visit['voters'], [containsPair('voter_outcome', Outcome.dead)]);
   });
@@ -397,7 +428,13 @@ void main() {
     expect(find.text('मोबाइल नंबर के लिए सहमति ज़रूरी है'), findsOneWidget);
     expect(h.store.data.outbox, isEmpty);
 
-    await tapAndSettle(tester, find.byType(Checkbox));
+    await tapAndSettle(
+      tester,
+      find.widgetWithText(
+        CheckboxListTile,
+        'मतदाता को पढ़कर सुनाया और सहमति ली',
+      ),
+    );
     await save(tester);
     expect(find.text('ECI ऐप का स्क्रीनशॉट लगाएँ'), findsOneWidget);
     await tapAndSettle(tester, find.text('स्क्रीनशॉट लगाएँ'));
@@ -544,6 +581,12 @@ void main() {
     );
 
     await tester.enterText(fields.at(3), '18');
+    await save(tester);
+    expect(
+      find.text('मोबाइल नंबर डालें या “नंबर देने से मना किया” चुनें'),
+      findsOneWidget,
+    );
+    await tapAndSettle(tester, find.text('नंबर देने से मना किया'));
     await tapAndSettle(tester, find.text('स्क्रीनशॉट लगाएँ'));
     await save(tester);
     await settle(tester);

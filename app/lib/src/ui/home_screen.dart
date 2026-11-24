@@ -183,11 +183,6 @@ class HomeScreen extends StatelessWidget {
                   _StatsGrid(
                     items: [
                       (
-                        l10n.homeTarget,
-                        l10n.homePeopleCount(data.settings.dailyPeopleTarget),
-                        Icons.flag_outlined,
-                      ),
-                      (
                         l10n.homeDoneToday,
                         '$doneToday',
                         Icons.check_circle_outline,

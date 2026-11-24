@@ -6,7 +6,6 @@ import 'dates.dart';
 import 'field_scope.dart';
 import 'form_detail_screen.dart';
 import 'labels.dart';
-import 'new_voter_screen.dart';
 import 'person_tile.dart';
 import 'visit_form_screen.dart';
 import 'widgets.dart';
@@ -225,16 +224,6 @@ class PersonScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                 ],
               ],
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => NewVoterScreen(familyId: voter.familyId),
-                  ),
-                ),
-                icon: const Icon(Icons.person_add_alt),
-                label: Text(l10n.voterAdd),
-              ),
               SectionTitle(l10n.familyPrevVisits),
               if (visits.isEmpty)
                 Text(l10n.familyNoVisits, style: theme.textTheme.bodyMedium)

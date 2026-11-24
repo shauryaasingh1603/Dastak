@@ -40,6 +40,7 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
   Uint8List? _photo;
   Uint8List? _eci;
   bool _consent = false;
+  bool _declined = false;
   String _relation = 'F';
   String? _gender;
   String _formType = '6';
@@ -106,6 +107,9 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
         ? l10n.errTurned18Age
         : _gender == null
         ? '${l10n.fieldGender}: ${l10n.errRequired}'
+        // Always asked for, never forced: a number or "declined".
+        : _mobile.text.isEmpty && !_declined
+        ? l10n.errMobileOrDeclined
         : _mobile.text.isNotEmpty && normalizeMobile(_mobile.text) == null
         ? l10n
               .errMobileInvalid // R7
@@ -265,9 +269,17 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
             controller: _epic,
             textCapitalization: TextCapitalization.characters,
           ),
-          SectionTitle(l10n.visitMobile),
+          SectionTitle(l10n.phoneTitle),
+          Text(
+            l10n.phoneHint,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 6),
           TextField(
             controller: _mobile,
+            enabled: !_declined,
             keyboardType: TextInputType.phone,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
@@ -276,7 +288,7 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
             decoration: const InputDecoration(prefixText: '+91 '),
             onChanged: (_) => setState(() => _error = null),
           ),
-          if (_mobile.text.isNotEmpty)
+          if (_mobile.text.isNotEmpty && !_declined)
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
@@ -288,6 +300,20 @@ class _NewVoterScreenState extends State<NewVoterScreen> {
               title: Text(l10n.visitConsentLabel),
               subtitle: Text('“${l10n.visitConsent}”'),
             ),
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            value: _declined,
+            onChanged: (v) => setState(() {
+              _declined = v ?? false;
+              if (_declined) {
+                _mobile.clear();
+                _consent = false;
+              }
+              _error = null;
+            }),
+            title: Text(l10n.phoneDeclined),
+          ),
           SectionTitle(l10n.visitWhichForm),
           Wrap(
             spacing: 8,
