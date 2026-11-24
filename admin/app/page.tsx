@@ -218,8 +218,19 @@ function DashboardView() {
 
   useEffect(() => {
     load();
-    const timer = setInterval(load, 60_000);
-    return () => clearInterval(timer);
+    // Refresh every minute while the page is on screen; a tab in the
+    // background costs the database nothing, and catches up when shown.
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") load();
+    }, 60_000);
+    const onShow = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    document.addEventListener("visibilitychange", onShow);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onShow);
+    };
   }, [load]);
 
   if (!data) {
@@ -255,7 +266,7 @@ function DashboardView() {
         <div>
           <h1>Dashboard</h1>
           <p className="muted">
-            Updated {sinceLabel(data.generated_at, now)} · refreshes every minute · India time
+            Updated {sinceLabel(data.generated_at, now)} · refreshes every minute while open · India time
           </p>
         </div>
         <button className="small" onClick={load} disabled={loading}>
