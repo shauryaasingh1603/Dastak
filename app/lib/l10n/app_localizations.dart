@@ -1906,18 +1906,6 @@ abstract class AppLocalizations {
   /// **'ECI ऐप में फ़ॉर्म 6 भरें, फिर उसका स्क्रीनशॉट यहाँ लगाएँ'**
   String get visitOptForm6Hint;
 
-  /// No description provided for @visitOptOther.
-  ///
-  /// In hi, this message translates to:
-  /// **'अन्य कारण'**
-  String get visitOptOther;
-
-  /// No description provided for @visitOptOtherHint.
-  ///
-  /// In hi, this message translates to:
-  /// **'कोई और बात, जैसे नाम सूची में है या मृत्यु हो गई'**
-  String get visitOptOtherHint;
-
   /// No description provided for @revisitTomorrow.
   ///
   /// In hi, this message translates to:
@@ -2041,56 +2029,8 @@ abstract class AppLocalizations {
   /// No description provided for @errChooseOption.
   ///
   /// In hi, this message translates to:
-  /// **'ऊपर तीन में से एक चुनें'**
+  /// **'ऊपर दो में से एक चुनें'**
   String get errChooseOption;
-
-  /// No description provided for @otherWhat.
-  ///
-  /// In hi, this message translates to:
-  /// **'क्या कारण है?'**
-  String get otherWhat;
-
-  /// No description provided for @otherOnRoll.
-  ///
-  /// In hi, this message translates to:
-  /// **'नाम सूची में है'**
-  String get otherOnRoll;
-
-  /// No description provided for @otherDead.
-  ///
-  /// In hi, this message translates to:
-  /// **'मृत्यु हो गई'**
-  String get otherDead;
-
-  /// No description provided for @otherShifted.
-  ///
-  /// In hi, this message translates to:
-  /// **'हमेशा के लिए कहीं और चले गए'**
-  String get otherShifted;
-
-  /// No description provided for @otherSomething.
-  ///
-  /// In hi, this message translates to:
-  /// **'कुछ और'**
-  String get otherSomething;
-
-  /// No description provided for @otherReason.
-  ///
-  /// In hi, this message translates to:
-  /// **'कारण लिखें'**
-  String get otherReason;
-
-  /// No description provided for @otherReasonOptional.
-  ///
-  /// In hi, this message translates to:
-  /// **'कुछ और बताना हो तो लिखें'**
-  String get otherReasonOptional;
-
-  /// No description provided for @errOtherReason.
-  ///
-  /// In hi, this message translates to:
-  /// **'कारण लिखें'**
-  String get errOtherReason;
 
   /// No description provided for @form6AlreadyOpen.
   ///
@@ -2109,12 +2049,6 @@ abstract class AppLocalizations {
   /// In hi, this message translates to:
   /// **'नंबर ज़रूर पूछें। अगर न दें तो “नंबर देने से मना किया” चुनें।'**
   String get phoneHint;
-
-  /// No description provided for @phoneFamily.
-  ///
-  /// In hi, this message translates to:
-  /// **'घर वाले का मोबाइल नंबर'**
-  String get phoneFamily;
 
   /// No description provided for @phoneDeclined.
   ///

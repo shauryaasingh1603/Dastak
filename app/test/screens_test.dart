@@ -116,7 +116,7 @@ void main() {
     expect(find.text('अभी कोई भेंट नहीं'), findsOneWidget);
   });
 
-  testWidgets('a visit is one of three choices; one must be picked', (
+  testWidgets('a visit is one of two choices; one must be picked', (
     tester,
   ) async {
     await setUpHarness(tester);
@@ -124,9 +124,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('कोई नहीं मिला'), findsOneWidget);
     expect(find.text('नाम कट गया है, फ़ॉर्म 6 भरना है'), findsOneWidget);
-    expect(find.text('अन्य कारण'), findsOneWidget);
+    expect(find.text('अन्य कारण'), findsNothing);
     await save(tester);
-    expect(find.text('ऊपर तीन में से एक चुनें'), findsOneWidget);
+    expect(find.text('ऊपर दो में से एक चुनें'), findsOneWidget);
     expect(h.store.data.outbox, isEmpty);
   });
 
@@ -225,63 +225,6 @@ void main() {
       _screenshot,
     );
     expect(await tester.runAsync(() => h.store.photoOf(form.id)), _jpeg);
-  });
-
-  testWidgets('another reason: a quick choice, or words for "something else"', (
-    tester,
-  ) async {
-    await setUpHarness(tester);
-    await tester.pumpWidget(h.wrap(const VisitFormScreen(voterId: 'v4')));
-    await tester.pumpAndSettle();
-    await tapAndSettle(tester, find.text('अन्य कारण'));
-    await save(tester);
-    expect(find.text('कारण लिखें'), findsWidgets);
-
-    await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'कुछ और'));
-    await save(tester);
-    expect(h.store.data.outbox, isEmpty, reason: 'needs the reason in words');
-    await tester.enterText(
-      find.widgetWithText(TextField, 'कारण लिखें'),
-      'परिवार ने बात करने से मना किया',
-    );
-    await tapAndSettle(tester, find.text('नंबर देने से मना किया'));
-    await save(tester);
-    await settle(tester);
-    final visit = h.store.data.outbox.single.payload;
-    expect(visit['contact_refused'], isTrue);
-    expect(visit['contact_mobile'], isNull);
-    expect(visit['outcome'], Outcome.other);
-    expect(visit['remarks'], 'परिवार ने बात करने से मना किया');
-    expect(visit['revisit_on'], isNull);
-  });
-
-  testWidgets('another reason: "died" is recorded as such', (tester) async {
-    await setUpHarness(tester);
-    await tester.pumpWidget(h.wrap(const VisitFormScreen(voterId: 'v1')));
-    await tester.pumpAndSettle();
-    await tapAndSettle(tester, find.text('अन्य कारण'));
-    await tapAndSettle(tester, find.widgetWithText(ChoiceChip, 'मृत्यु हो गई'));
-    // The household's number.
-    await tester.enterText(
-      find.widgetWithText(TextField, 'मोबाइल नंबर'),
-      '9876501234',
-    );
-    await tester.pump();
-    await tapAndSettle(
-      tester,
-      find.widgetWithText(
-        CheckboxListTile,
-        'मतदाता को पढ़कर सुनाया और सहमति ली',
-      ),
-    );
-    await save(tester);
-    await settle(tester);
-    final visit = h.store.data.outbox.single.payload;
-    expect(visit['contact_mobile'], '9876501234');
-    expect(visit['contact_consent'], isTrue);
-    expect(visit['contact_refused'], isFalse);
-    expect(visit['outcome'], Outcome.dead);
-    expect(visit['voters'], [containsPair('voter_outcome', Outcome.dead)]);
   });
 
   testWidgets('saving with location refused asks again and does not save', (

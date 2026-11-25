@@ -1022,13 +1022,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'ECI ऐप में फ़ॉर्म 6 भरें, फिर उसका स्क्रीनशॉट यहाँ लगाएँ';
 
   @override
-  String get visitOptOther => 'अन्य कारण';
-
-  @override
-  String get visitOptOtherHint =>
-      'कोई और बात, जैसे नाम सूची में है या मृत्यु हो गई';
-
-  @override
   String get revisitTomorrow => 'कल';
 
   @override
@@ -1096,31 +1089,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get errEciRequired => 'ECI ऐप का स्क्रीनशॉट लगाएँ';
 
   @override
-  String get errChooseOption => 'ऊपर तीन में से एक चुनें';
-
-  @override
-  String get otherWhat => 'क्या कारण है?';
-
-  @override
-  String get otherOnRoll => 'नाम सूची में है';
-
-  @override
-  String get otherDead => 'मृत्यु हो गई';
-
-  @override
-  String get otherShifted => 'हमेशा के लिए कहीं और चले गए';
-
-  @override
-  String get otherSomething => 'कुछ और';
-
-  @override
-  String get otherReason => 'कारण लिखें';
-
-  @override
-  String get otherReasonOptional => 'कुछ और बताना हो तो लिखें';
-
-  @override
-  String get errOtherReason => 'कारण लिखें';
+  String get errChooseOption => 'ऊपर दो में से एक चुनें';
 
   @override
   String get form6AlreadyOpen =>
@@ -1132,9 +1101,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get phoneHint =>
       'नंबर ज़रूर पूछें। अगर न दें तो “नंबर देने से मना किया” चुनें।';
-
-  @override
-  String get phoneFamily => 'घर वाले का मोबाइल नंबर';
 
   @override
   String get phoneDeclined => 'नंबर देने से मना किया';

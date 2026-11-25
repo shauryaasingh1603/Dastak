@@ -14,17 +14,16 @@ import 'labels.dart';
 import 'location_gate.dart';
 import 'widgets.dart';
 
-/// The three things that can happen at the door.
-enum VisitChoice { notMet, form6, other }
+/// The two things that can happen at the door.
+enum VisitChoice { notMet, form6 }
 
-/// "भेंट दर्ज करें": one visit to one listed person, in three choices:
+/// "भेंट दर्ज करें": one visit to one listed person, in two choices:
 ///
 /// * कोई नहीं मिला: pick when to come back.
 /// * नाम कट गया है, फ़ॉर्म 6 भरना है: the volunteer files Form 6 in the ECI
 ///   app first (a reminder says so), then adds the screenshot of its "Track
 ///   application status" page, which is required. The server reads the
 ///   reference number from it.
-/// * अन्य कारण: what it was, in a few taps or in words.
 ///
 /// Saves on the phone at once, with the location taken when save is pressed.
 class VisitFormScreen extends StatefulWidget {
@@ -37,12 +36,10 @@ class VisitFormScreen extends StatefulWidget {
 }
 
 class _VisitFormScreenState extends State<VisitFormScreen> {
-  final _reason = TextEditingController();
   final _mobile = TextEditingController();
 
   VisitChoice? _choice;
   String _revisitOn = Ist.addDays(Ist.today(), 1);
-  String? _otherOutcome; // an Outcome code, for "अन्य कारण"
   Uint8List? _eci;
   Uint8List? _photo;
   bool _consent = false;
@@ -55,7 +52,6 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
 
   @override
   void dispose() {
-    _reason.dispose();
     _mobile.dispose();
     super.dispose();
   }
@@ -77,12 +73,6 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
         return null;
       case VisitChoice.form6:
         if (_eci == null) return l10n.errEciRequired;
-        return _validatePhone(l10n);
-      case VisitChoice.other:
-        if (_otherOutcome == null) return l10n.errOtherReason;
-        if (_otherOutcome == Outcome.other && _reason.text.trim().isEmpty) {
-          return l10n.errOtherReason;
-        }
         return _validatePhone(l10n);
     }
   }
@@ -133,7 +123,6 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
     final mobile = choice == VisitChoice.notMet || _declined
         ? null
         : normalizeMobile(_mobile.text);
-    final isForm6 = choice == VisitChoice.form6;
     final MemberEntry member = switch (choice) {
       VisitChoice.notMet => MemberEntry(
         voterId: voter.id,
@@ -148,21 +137,13 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
         photo: _photo,
         eci: _eci,
       ),
-      VisitChoice.other => MemberEntry(
-        voterId: voter.id,
-        outcome: _otherOutcome!,
-      ),
     };
     await store.saveVisit(
       VisitDraft(
         familyId: voter.familyId,
         nobodyHome: choice == VisitChoice.notMet,
         members: [member],
-        remarks: choice == VisitChoice.other ? _reason.text : null,
         revisitOn: choice == VisitChoice.notMet ? _revisitOn : null,
-        // For another reason, the number is the household's.
-        contactMobile: isForm6 ? null : mobile,
-        contactConsent: !isForm6 && mobile != null,
         contactRefused: choice != VisitChoice.notMet && _declined,
         gpsLat: fix.lat,
         gpsLng: fix.lng,
@@ -225,14 +206,6 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
             hint: l10n.visitOptForm6Hint,
             selected: _choice == VisitChoice.form6,
             onTap: () => _choose(VisitChoice.form6),
-          ),
-          _ChoiceCard(
-            icon: Icons.notes,
-            color: const Color(0xFF5F5F5F),
-            title: l10n.visitOptOther,
-            hint: l10n.visitOptOtherHint,
-            selected: _choice == VisitChoice.other,
-            onTap: () => _choose(VisitChoice.other),
           ),
 
           if (_choice == VisitChoice.notMet) ...[
@@ -301,46 +274,8 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
               ),
           ],
 
-          if (_choice == VisitChoice.other) ...[
-            SectionTitle(l10n.otherWhat),
-            Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: [
-                for (final (code, text) in [
-                  (Outcome.alreadyOnRoll, l10n.otherOnRoll),
-                  (Outcome.dead, l10n.otherDead),
-                  (Outcome.shifted, l10n.otherShifted),
-                  (Outcome.other, l10n.otherSomething),
-                ])
-                  ChoiceChip(
-                    label: Text(text),
-                    selected: _otherOutcome == code,
-                    onSelected: (_) => setState(() {
-                      _otherOutcome = code;
-                      _error = null;
-                    }),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _reason,
-              maxLines: 2,
-              maxLength: 500,
-              decoration: InputDecoration(
-                labelText: _otherOutcome == Outcome.other
-                    ? l10n.otherReason
-                    : l10n.otherReasonOptional,
-              ),
-              onChanged: (_) => setState(() => _error = null),
-            ),
-          ],
-
-          if (_choice == VisitChoice.form6 || _choice == VisitChoice.other) ...[
-            SectionTitle(
-              _choice == VisitChoice.form6 ? l10n.phoneTitle : l10n.phoneFamily,
-            ),
+          if (_choice == VisitChoice.form6) ...[
+            SectionTitle(l10n.phoneTitle),
             Text(l10n.phoneHint, style: muted),
             const SizedBox(height: 6),
             TextField(
