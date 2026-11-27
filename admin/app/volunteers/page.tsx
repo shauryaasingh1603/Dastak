@@ -46,6 +46,11 @@ function Team() {
   const [editValue, setEditValue] = useState("");
   const [filter, setFilter] = useState("");
 
+  // Correcting a volunteer's name or mobile number.
+  const [details, setDetails] = useState<string | null>(null);
+  const [detailName, setDetailName] = useState("");
+  const [detailMobile, setDetailMobile] = useState("");
+
   const load = useCallback(async () => {
     const { data, error } = await supabase
       .from("users")
@@ -148,6 +153,43 @@ function Team() {
     setSaving(false);
     if (results.some((r) => r?.error)) return fail("Some booth changes were not saved. Check the row and try again.");
     setEditing(null);
+    load();
+  }
+
+  function startDetails(user: FieldUser) {
+    setError("");
+    setNotice("");
+    setDetails(user.id);
+    setDetailName(user.name);
+    setDetailMobile(user.mobile);
+  }
+
+  async function saveDetails(user: FieldUser) {
+    setError("");
+    setNotice("");
+    const cleanName = detailName.trim();
+    const cleanMobile = detailMobile.replace(/\D/g, "").slice(-10);
+    if (!cleanName) return fail("Enter the volunteer's name.");
+    if (!/^[6-9]\d{9}$/.test(cleanMobile)) return fail("Enter a 10-digit mobile number starting with 6–9.");
+    if (cleanName === user.name && cleanMobile === user.mobile) {
+      setDetails(null);
+      return;
+    }
+    if (
+      cleanMobile !== user.mobile &&
+      !confirm(`Change ${user.name}'s mobile number to ${cleanMobile}? They will sign in with the new number from now on.`)
+    )
+      return;
+    setSaving(true);
+    const { error } = await supabase.from("users").update({ name: cleanName, mobile: cleanMobile }).eq("id", user.id);
+    setSaving(false);
+    if (error) {
+      return fail(
+        error.code === "23505" ? "That mobile number is already registered to someone else." : "Could not save the changes.",
+      );
+    }
+    setDetails(null);
+    setNotice(`Saved: ${cleanName}, ${cleanMobile}.`);
     load();
   }
 
@@ -270,8 +312,45 @@ function Team() {
                   const signedIn = user.is_active && !!user.active_session_id;
                   return (
                     <tr key={user.id} className={user.is_active ? "" : "inactive"}>
-                      <td>{user.name}</td>
-                      <td>{user.mobile}</td>
+                      {details === user.id ? (
+                        <>
+                          <td>
+                            <div className="inline-edit">
+                              <input
+                                value={detailName}
+                                onChange={(e) => setDetailName(e.target.value)}
+                                aria-label="Name"
+                                autoFocus
+                              />
+                              <button className="small primary" disabled={saving} onClick={() => saveDetails(user)}>
+                                Save
+                              </button>
+                              <button className="small" onClick={() => setDetails(null)}>
+                                Cancel
+                              </button>
+                            </div>
+                          </td>
+                          <td>
+                            <input
+                              value={detailMobile}
+                              onChange={(e) => setDetailMobile(e.target.value)}
+                              inputMode="numeric"
+                              aria-label="Mobile number"
+                              style={{ width: 130 }}
+                            />
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td>
+                            {user.name}{" "}
+                            <button className="link" onClick={() => startDetails(user)}>
+                              Edit
+                            </button>
+                          </td>
+                          <td>{user.mobile}</td>
+                        </>
+                      )}
                       <td>{ROLE_LABEL[user.role]}</td>
                       <td>
                         {editing === user.id ? (
